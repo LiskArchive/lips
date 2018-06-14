@@ -12,3 +12,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 
 | Number                        | Title                                       | Author                        | Type           | Module        | Status        |
 | ------------------------------|---------------------------------------------| ------------------------------| ---------------|---------------|---------------|
+| [0001](proposals/lip-0001.md) | LIP Purpose and Guidelines                  | Lisk Foundation               | Process        | -             | Active        |
