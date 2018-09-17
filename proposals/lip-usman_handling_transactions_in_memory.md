@@ -76,7 +76,7 @@ So, to summarise, there are 7 scenarios which transaction pool should handle con
 7. Round has finished/rolled back.
 
 ## Specification
-In order to cater for all the scenarios, we define following rules for properly managing transactions in pool
+In order to cater for all the scenarios, we define following rules for properly managing transactions in pool:
 1. There can be at max 25 transactions from the same account in the pool. So, for every transaction received by the pool, pool should check that the sender account of incoming transaction has less than 25 transactions in the pool before adding it to the transaction pool queue. (If an account wants to send more than 25 transactions, it should configure it’s own node to accept more than 25 local transactions.)
 2. For every transaction received by the pool, it should be verified against confirmed state of the blockchain before adding it to the transaction pool queue.
 3. For every transaction received by the pool, if it’s transaction type is unique for an account or if it’s transaction type contains data which should be unique across blockchain, transaction pool should verify the transaction against transactions of the same type in the pool before adding it to the transaction pool queue.
