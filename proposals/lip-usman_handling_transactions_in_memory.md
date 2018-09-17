@@ -11,7 +11,8 @@ Updated: -
 ## Abstract
 This LIP addresses the performance impact of applying transactions on the unconfirmed state of the accounts in the database prior to block application and proposes a performance efficient solution where transactions only update accounts state while node is processing a new block.
 
-This LIP addresses the performance impact of applying transactions on the state of the accounts in the database prior to block application and proposes a performance efficient solution where transactions only update accounts state while node is processing a new block. 
+## Copyright
+This LIP is licensed under the [GNU General Public License, version 3](http://www.gnu.org/licenses/gpl-3.0.html "GNU General Public License, version 3").
 
 ## Motivation
 Application maintains the unconfirmed state for transactions in the transaction pool by using unconfirmed columns in the `mem_accounts` table. For every transaction added to the unconfirmed queue in the transaction pool, application performs database writes. Since transaction moves from queued to unconfirmed queue back and forth multiple times before (possibly) becoming part of a block, application takes a huge performance hit because of it.
