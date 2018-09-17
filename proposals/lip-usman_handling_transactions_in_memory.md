@@ -102,5 +102,5 @@ Rule 4 will ensure that the transactions related to the affected accounts due to
 ## Backwards Compatibility
 This LIP limits the number of transactions in the transaction pool from an account to be 25. It's important to note that blocks with more than 25 transactions from the same account will still be valid. Another impact of this LIP is that since node will recalculate the unconfirmed state of the accounts (or return the same response for account's unconfirmed state as it does for confirmed state), the behaviour of endpoints like `/api/node/transactions/unconfirmed` and `/api/accounts` will be affected.
 
-## Relevant changes in the rest of the applicaiton
+## Related changes 
 The application should prioritze local transactions and broadcast them in such a way (it should only broadcast 25 transactions from the same account) so they are not rejecting by the network because of max transactions from the same account limit introduced in this LIP.
