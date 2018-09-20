@@ -10,7 +10,7 @@ Module: All
 # Abstract
 
 This LIP proposes a new application architecture for Lisk Core, that would be flexible and modular.
-The goal is to have an architecture which can be extended easily and stay resilient for the current and future growth targets.
+The goal is to have an architecture which can be extended easily whilst staying resilient for the current, and future growth targets.
 
 # Copyright
 
@@ -18,35 +18,35 @@ This LIP is licensed under the [GNU General Public License, version 3](http://ww
 
 # Motivation
 
-Currently, the Lisk Core node software is composed of one single entity or an executable process which can consume only a single core of the available processor. It does have additional worker processes for our P2P layer (implementation of socketcluster) but since the master process is tightly coupled with the app script, we cannot consider it to be an independent unit in the application.
+Currently, the Lisk Core node software is composed of one single entity or an executable process which can consume only a single core of the available processor. It does have an additional worker processes for our P2P layer (implementation of socketcluster), but since the master process is tightly coupled with the app script, we cannot consider it to be an independent unit in the application.
 
-A limitation of single-entity architectures and tightly coupled logic is that a failure in one location can have a fatal impact on the whole system. For example consider the following scenarios:
+A limitation of single-entity architectures, and tightly coupled logic is that a failure in one location can have a fatal impact on the whole system. For example consider the following scenarios:
 
 * If a failure occurred while processing blocks received over the P2P network, the HTTP API layer would also crash.
 * If an error occurred in the websockets master process, the node would also fail to respond over HTTP layer.
 
-These are just a few use cases, the list goes on. In short, due to tight coupling of the various parts of the code and the fact that we use a single isolated process, we cannot ensure that each individual component of the application remains functional, in case another component (or more than one component) faces a problem.
+These are just a few use cases, the list goes on. In short, due to tight coupling of various parts of the code, and the fact that we use a single isolated process, we cannot ensure that each individual component of the application remains functional, whilst another component (or more than one component) faces a problem.
 
 # Rationale
 
-When designing the architecture for a distributed and decentralised system, a few points need to be borne in mind:
+When designing the architecture for a distributed and decentralised system, a few points need to considered:
 
 * The network cannot be assumed to be reliable, so our P2P communication should be fail-safe.
-* There is always a latency in the network, so our code should follow a principle of expected latency.
+* There is always latency in the network, so our code should follow a principle of expected latency.
 * We have no control or direct guidance over how most individuals install the node software, so the distribution of our software should be as easy to install as possible.
-* A corollary of the previous point is that we have no control over the physical resources available on systems running our software, so we should aim to build software which can work well with a range of physical resources.
+* A corollary of the previous point is that we have no control over the physical resources available on systems that run our software, so we should aim to build software which can work well with a range of physical resources.
 * All systems are susceptible to unplanned crashes, so our architecture should be resilient in such cases and support fail-over.
 
 Taking note of the above points, our aim in redesigning the architecture of the Lisk Core node software is to achieve the following:
 
-1. Identify components which should stay **functionally isolated** from each other
+1. Identify components which should stay **functionally isolated** from each other.
 2. Design an architecture such that functionally isolated components can form the basis of a **multi-process application**, in order to utilise the potential of multiple hardware cores of the physical processor if available.
-3. Design each component in **resilient way to tackle brittleness** of the distributed processing, so failure of one component have least impact on other. And components can recover individually.
-4. Each or most of the components should **scale elastically** depending upon the available physical resources
-5. Individual components should be flexible enough to be installed via **plugin pattern**.
-6. Foundation work to extend scalability to network, to run different components on **different physical machines** and still operate mutually exclusive
-7. Provide an **elegant API which can be extended easily** when creating new components for the Lisk Core software.
-8. The work performed as part of the redesign should provide a **foundation for the Lisk SDK and DApp creation**, and afford us with insights into how to provide those products to users
+3. Design each component in **resilient way to tackle brittleness** of the distributed processing, meaning failure of one component will have minimal impact on other components, and that components can recover individually.
+4. Most of the components should **scale elastically** depending upon the available physical resources.
+5. Individual components should be flexible enough to be installed using the **plugin pattern**.
+6. Foundation work to extend scalability of the network, to run different components on **different physical machines** and still operate in a mutually exclusive manner.
+7. Provide an **elegant API which can be extended easily** when creating new components for Lisk Core software.
+8. The work performed as part of the redesign should provide a **foundation for the Lisk SDK and DApp creation**, and afford us with insights into how to provide those products to users.
 
 These considerations have led us to the following architecture:
 
@@ -85,11 +85,11 @@ Lisk Core in the above diagram denotes the complete ecosystem of the node softwa
 
 ## Controller
 
-The Controller will be a parent process responsible for managing every user interaction with each component of the ecosystem. E.g. restarting the node, starting a snapshot process, etc. It is an executable file which is the entry point to interacting with Lisk Core.
+The Controller will be a parent process responsible for managing every user interaction with each component of the ecosystem. E.g. restarting the node, starting a snapshot process, etc. It is an executable file which will be the entry point to interacting with Lisk Core.
 
-* The Controller will be responsible for the initialization of infrastructure-level components e.g. Database, Cache, Logger, etc.
-* The Controller will also initialize each module separately. If any module is configured to load as a child process, then the Controller is responsible to do so.
-* The Controller will define a set of events, such that each component can subscribe as an object in same process or over an IPC channel in case of different process. Most of the data flow will be handled through the propagation of such events.
+* The Controller will be responsible for initialization of infrastructure-level components e.g. Database, Cache, Logger, etc.
+* The Controller will also initialize each module separately. If any module is configured to load as a child process, then it is the Controller's responsibility to do so.
+* The Controller will define a set of events, such that each component can subscribe as an object in same process, or over an IPC channel in case of a different process. Most of the data flow will be handled through the propagation of such events.
 * Each module can also define its own custom events or actions and will register that list with the Controller at the point of initialization. Thus the Controller will have a complete list of events which may occur in the modules of Lisk Core at any given time.
 
 ## Components
@@ -116,7 +116,7 @@ This component will provide a central registry of up-to-date system information,
 
 ## Modules
 
-Modules are a vital part of the proposal here. These will contain all of the business logic and operational code for the ecosystem. Each module can reside within the main Controller process or can designate that it should be spawned as a child process of the Controller. This will enable the Lisk Core instance to distribute the necessary processing and utilize multiple cores. I.e. to make efficient use of the physical resources of the underlying system.
+Modules are a vital part of the proposal here. These will contain all of the business logic and operational code for the ecosystem. Each module can reside within the main Controller process, or can designate that it should be spawned as a child process of the Controller. This will enable the Lisk Core instance to distribute the necessary processing and utilize multiple cores. I.e. to make efficient use of the physical resources of the underlying system.
 
 Modules can be further categorized into two types:
 
@@ -126,7 +126,7 @@ Modules can be further categorized into two types:
 
 ### Interface
 
-The implementation details of a module are ultimately up to the module developer, but by default a module should export an object with this structure.
+The implementation details of a module are ultimately up to the module developer, but by default a module should export an object with this structure:
 
 ```js
 // Exported from the main file of the JavaScript package
@@ -234,7 +234,7 @@ For the initial implementation, sequential processing is recommended as shown ab
 
 ## Channels
 
-Modules will communicate to each other through channels. These channels will be event-based, triggering events across the various listeners. Modules running in different processes will communicate with each other over IPC channels.
+Modules will communicate to each other through channels. These channels will be event-based, triggering events across various listeners. Modules running in different processes will communicate with each other over IPC channels.
 
 Every module must export a `load` method, which accepts two arguments: a channel and an options object. The options object is simply the JSON object containing the options provided in the config file.
 
@@ -304,7 +304,7 @@ Event objects should conform to a unified interface for all event communication 
 
 ### Action
 
-Action object should be a unified be a unified interface for all action based communication between modules. It should be a simple javascript object with following attributes. Event must implement a serialize and deserialize mechanism to get unified data format to be transported over channels.
+Action object should be a unified interface for all action based communication between modules. It should be a simple javascript object with attributes listed below.. Events must implement a serialize and deserialize mechanism to get unified data format to be transported over channels.
 
 | Property | Type   | Description                                                      |
 | -------- | ------ | ---------------------------------------------------------------- |
@@ -331,46 +331,45 @@ In the first phase of implementation, the suggestion is to separate three module
 
 **How debugging will work with this architecture**
 
-I felt nothing will change in regard to debugging. It would be same as we are doing right now. You will start the whole ecosystem of modules with one command and you you will see consolidated logs on console. So you will be doing same kind of debugging what we do right now by looking into logs.
+I felt nothing will change in regard to debugging. It would be same as we are doing right now. You will start the whole ecosystem of modules with one command and you you will see consolidated logs on console. So you will be doing same kind of debugging that we do right now by looking into logs.
 
 For debugging IPC channels we, we will add extensive logging to catch any activity, so that would not be any issue. Fo node interactive debugging, I don’t think it will be break with this architecture.
 
 **Using modules in other products**
 
-Any module we design or create is designed to used in lisk-core ecosystem. As every module have a dependency of Lisk Controller to be available. So I don’t see using lisk-core module to any other product like “Commander” makes any sense.
+Any module we create is designed to used in lisk-core ecosystem. As every module have a dependency of Lisk Controller to be available. I don’t see that using lisk-core modules in other products like “Commander” makes sense.
 
-For sidechains (not sure about what exactly sidechains would be), they can use lisk-core modules. As each module will have a very well defined set of actions and events and protocol to communicate. So if used properly, their functionality can be achieved in sidechains.
+For sidechains, they can use lisk-core modules. As each module will have a very well defined set of actions and events and protocol to communicate. If used properly, their functionality can be achieved in sidechains.
 
 **Which tool we use for IPC communication**
 
-We not finalizing any tool at the moment to implement IPC channel concept. Probable and available options are Custom Node implementation, PM2 implementation or look for any other tool for this purpose. But none of it been finalized, we will probably experiment with all options to choose to right one for us.
+We are not finalizing any tool at the moment to implement IPC channel concept. Probable and available options are Custom Node implementation, PM2 implementation or to look for any other tool for this purpose. This has not yet been finalized, we will probably experiment with all options to choose to right one for us.
 
 **What is database component?**
 
-First thing first, every component, module and plugin mentioned in this proposal are standard npm packages. Afterwards, database component, that will be used to perform any kind of RDBMS activity. We call it component because it will be initialized and stay available on controller layer to be utilized by any other module (the way we are doing right now).
+First thing first, every component, module and plugin mentioned in this proposal are standard npm packages. Afterwards, a database component, will be used to perform any kind of RDBMS activity. We call it component because it will be initialized and stay available on controller layer to be utilized by any other module (the way we are doing right now).
 
 For modules which are spawned independently they create instance of this component on their end. For creating new instance, either they can pass the configuration from themself or can ask controller to share ONLY the configuration (json object) of particular component. So the respective module can use same configuration, override some or pass new configuration. In the end it will have its own instance of the component.
 
 **How to refactor current code base?**
 
-The above architecture require a lot of code change, or theoretically almost rewrite to all major components of the system. So to achieve this final target we suggest to go through following steps:
+The above architecture requires a considerable code change, or theoretically almost a complete rewrite to all major components of the system. So to achieve this final target we suggest to go through following steps:
 
 1. Convert app.js to a controller with module bootstrapping support
 2. Convert current database, logger, cache and system to re-initializable components
-3. Create “Chain” module actually consists of following modules:
+3. Create a “Chain” module that actually consists of following modules:
    * Blocks Manager
    * Transactions Manager
    * Delegates Manager
    * Sync Manager
    * Transaction Pool
    * Forging Manager
-4. Create “P2P” module actually consists of following modules:
+4. Create a “P2P” module that actually consists of following modules:
    * Network Manager
    * Network Broadcaster
-5. Create “API” module actually consists of:
+5. Create an “API” module that actually consists of:
    * HTTP API
-6. Only “API” and “P2P” module will spawn their own child process, while rest of “Chain” module will reside inside controller.
-7. The “Chain” module will contain everything as it is which currently reside in core, with same file structure
-8. In upcoming iterations we can split up “Chain” module into role specific modules
+6. Only “API” and “P2P” module will spawn their own child process, while rest of “Chain” module will reside inside the controller7. The “Chain” module will contain everything as it is which currently reside in core, with same file structure
+7. In upcoming iterations we can split up “Chain” module into role specific modules
 
 Also look at [detail action plan to migrate](https://github.com/LiskHQ/lisk-modular/issues/12) to new architecture.
