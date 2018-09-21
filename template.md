@@ -12,6 +12,10 @@ Updated: <YYYY-MM-DD>
 
 Describe in brief what this proposal achieves and how.
 
+## Copyright
+
+This LIP is licensed under the [GNU General Public License, version 3][gpl-3].
+
 ## Motivation
 
 Describe the motivations for this proposal.
