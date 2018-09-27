@@ -331,13 +331,13 @@ In the first phase of implementation, the suggestion is to separate three module
 
 **How debugging will work with this architecture**
 
-I felt nothing will change in regard to debugging. It would be same as we are doing right now. You will start the whole ecosystem of modules with one command and you you will see consolidated logs on console. So you will be doing same kind of debugging that we do right now by looking into logs.
+Nothing will change in regard to debugging. It would be same as we are doing right now. You will start the whole ecosystem of modules with one command and you you will see consolidated logs on console. So you will be doing same kind of debugging that we do right now by looking into logs.
 
-For debugging IPC channels we, we will add extensive logging to catch any activity, so that would not be any issue. Fo node interactive debugging, I don’t think it will be break with this architecture.
+For debugging IPC channels we, we will add extensive logging to catch any activity, so that would not be any issue. Fo node interactive debugging, all native Node.js debugging features intended to work with this architecture.
 
 **Using modules in other products**
 
-Any module we create is designed to used in lisk-core ecosystem. As every module have a dependency of Lisk Controller to be available. I don’t see that using lisk-core modules in other products like “Commander” makes sense.
+Any module we create is designed to used in lisk-core ecosystem. As every module have a dependency of Lisk Controller to be available. It is not an intended use case to run lisk-core modules as part of other products like “Commander” makes sense.
 
 For sidechains, they can use lisk-core modules. As each module will have a very well defined set of actions and events and protocol to communicate. If used properly, their functionality can be achieved in sidechains.
 
