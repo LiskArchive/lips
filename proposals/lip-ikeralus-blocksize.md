@@ -4,15 +4,15 @@ Title: Change to byte based block size limit
 Authors: Iker Alustiza, iker@lightcurve.io
          Nazar Hussain, nazar@lightcurve.io
 Status: Draft
-Type: Standards Track       
-Module: Block, Transaction Pool
+Type: Standards Track
+Module: Chain, Pool
 Created: -
 Updated: -
 ```
 
 ## Abstract
 
-This LIP proposes to remove the 25 transactions (txs from now on) limit per block and set a byte based block size where a maximum block size of 15Kb is implemented.
+This LIP proposes to replace the literal 25 transactions per block size limit with a byte based block size limit.
 
 ## Copyright
 
@@ -20,108 +20,109 @@ This LIP is licensed under the [GNU General Public License, version 3](http://ww
 
 ## Motivation
 
-With the incoming Lisk network and protocol improvements (fee system, voting system, P2P network improvement, etc) a clear increase in usage and activity in the network is expected. For the Lisk network, this basically implies more balance txs and more voting activity. Currently, there is a maximum number of txs per block of 25 txs, which we believe is not going to be enough in the future. Therefore in this LIP we propose a byte based block size limit.
+As the Lisk protocol evolves and gains popularity, a clear increase in usage and activity in the network is expected. To cater for this increased demand a more flexible and higher throughput is required. The current maximum of 25 transactions per block imposes a limit that is based on a literal number of transactions per block. This limitation method also conflicts with the varying byte size of each transaction type that can be processed within any given block. We therefore propose a byte based block size limit.
 
 ## Rationale
 
-We propose to set a maximum of 15Kb block size. This size will keep the blockchain growth below 50Gb per year even assuming 100% full blocks always and delegates missing no blocks. The summary of the numerical implications is as follows:
+We propose to set a maximum block size of 15kb. This size will maintain the yearly blockchain growth below 50gb, even when blocks are always at full capacity, and the active delegates do not miss any blocks. The summary of the numerical implications are as follows:
 
-* Maximum block size: 15Kb
-* Blockchain size will grow a **maximum** of 47.3Gb per year.
-* According to the tx sizes given in [the documentation](https://lisk.io/documentation/lisk-protocol/transactions), each tx type will use the following space in the block:
+* Maximum block size: 15kb.
+* Blockchain size will grow a **maximum** of 47.3gb per year.
+* According to the transaction sizes given in [the protocol documentation](https://lisk.io/documentation/lisk-protocol/transactions), each transaction type will use the following space in a block:
 
-| Transaction Type                | Block usage (%) |
-| ------------------------------- | --------------- |
-| 0 - Transfer (basic)            | 0.78%           |
-| 0 - Transfer (2nd pass)         | 1.2%            |
-| 0 - Transfer (2nd + data field) | 1.63%           |
-| 1 - Second Secret               | 1%              |
-| 2 - Delegate                    | 0.91%           |
-| 3 - Vote (33 votes tx)          | 15.08%          |
-| 4 - Multisignature (16 signs)   | 8.15%           |
-| 5 - Dapp                        | 1.66%           |
-| 6 - InTransfer                  | 1.33%           |
-| 7 - OutTransfer                 | 1.33%           |
+| Tx type                            | Block usage (%) |
+| ---------------------------------- | --------------- |
+| 0 - Transfer (basic)               | 0.78%           |
+| 0 - Transfer (2nd signature)       | 1.2%            |
+| 0 - Transfer (2nd + data field)    | 1.63%           |
+| 1 - Second Signature               | 1%              |
+| 2 - Delegate                       | 0.91%           |
+| 3 - Vote (33 votes)                | 15.08%          |
+| 4 - Multisignature (16 signatures) | 8.15%           |
+| 5 - Dapp                           | 1.66%           |
+| 6 - InTransfer                     | 1.33%           |
+| 7 - OutTransfer                    | 1.33%           |
 
-* Given the previous numbers, each block will be able to fit:
+* Given the previous numbers stated, each block will be able to accommodate:
 
-       - 6 votes and [ 8tx(a)  or 5tx(b)  or 4tx(c) ]
-       - 4 votes and [ 48tx(a) or 31tx(b) or 23tx(c) ]
-       - 2 votes and [ 88tx(a) or 57tx(b) or 42tx(c) ]
-       - 128tx(a) or 82tx(b) or 61tx(c)
+  - 6 `votes` and [ 8 `tx(a)`  or 5 `tx(b)`  or 4 `tx(c)` ]
+  - 4 `votes` and [ 48 `tx(a)` or 31 `tx(b)` or 23 `tx(c)` ]
+  - 2 `votes` and [ 88 `tx(a)` or 57 `tx(b)` or 42 `tx(c)` ]
+  - 128 `tx(a)` or 82 `tx(b)` or 61 `tx(c)`
 
-  Where _tx(a)_ is a basic Type 0 tx, _tx(b)_ is a 2nd passphrase Type 0 tx and _tx(c)_ is 2nd pass Type 0 + 64B data field tx. A 2nd passphrase Type 0 tx and a basic Type 0 tx + 64B data field tx are almost the same size, so only one is considered. Here _votes_ is assumed to be a full vote tx with 33 votes inside.
+Where `tx(a)` is a type `0 - Transfer (basic)` transaction, `tx(b)` is a type `0 - Transfer (2nd signature)` transaction, and `tx(c)` is a type `0 - Transfer (2nd + data field)` transaction. A type `0 - Transfer (2nd signature)` transaction and a `0 - Transfer (basic + data field)` transaction are almost the same size, therefore only one is considered. Here votes are assumed to be a transaction containing 33 votes.
 
-* 1000 users will require at least 27 minutes (166 blocks) to change a third of their votes (33 votes per vote tx). They will need around 90 minutes to change all their votes.
+* 1000 users will require at least 27 minutes (166 blocks) to change a third of their votes (33 votes per vote transaction). They will require approximately 90 minutes to change all of their votes.
 
-To get this data, the size of the block header (112 bytes) is ignored which can imply an extra 300Mb of growth per year. We have excluded other tx types of the last table because they are either one-time per wallet txs (Delegate txs, 2nd passphrase reg, etc), or seldom used txs (Dapp reg txs, In/out transfer txs). In the latter case, depending on the future development these types of txs can be more common but the size is going to be similar to a Type 0 tx.
+To get this data, the size of the block header (112 bytes) is ignored, which can imply an extra 300mb of yearly blockchain growth. We have excluded other transaction types from the previous table because they are either one-time transactions per account (delegate registration, second signature registration, etc), or seldom used transaction types (dapp registration, in/out transfer). In the latter case, depending on future development of these transaction types, they can become more common, but the size is assumed to be equivalent to a type `0 - Transfer (basic)` transaction.
 
-Moreover, we can compare the maximum txs throughput per day for current and proposed implementations:
+Moreover, we can compare the maximum transaction throughput per day for current and proposed implementations:
 
-### Throughput comparison (assuming full blocks)
+### Throughput Comparison (Assuming Full Blocks)
 
-| Transaction Type                | Tx per day (current) | Tx per day (after) | Change |
+| Tx type                         | Tx per day (current) | Tx per day (after) | Change |
 | ------------------------------- | -------------------- | ------------------ | ------ |
 | 0 - Transfer (basic)            | 216,000              | 1,080,000          | +500%  |
 | 0 - Transfer (2nd + data field) | 216,000              | 589,090            | +272%  |
-| 1 - Second Secret               | 216,000              | 869,798            | +402%  |
+| 1 - Second signature            | 216,000              | 869,798            | +402%  |
 | 2 - Delegate                    | 216,000              | 644,776            | +298%  |
 | 3 - Vote                        | 216,000              | 55,717             | -387%  |
 | 4 - Multisignature              | 216,000              | 105,968            | +49%   |
 
-### Tx Ratio Per Block comparison
+### Transaction Ratio Per Block Comparison
 
-To support the previous table, it is interesting to have a look at Lisk mainnet historical data:
+To support the previous table, it is also interesting to take note of historical data from the Lisk mainnet:
 
-| Transaction Type   | Tx Count (Current Avg) | Ratio   | Proposed Capacity |
-| ------------------ | ---------------------- | ------- | ----------------- |
-| 0 - Transfer       | 2.04184768             | 95.422% | 65                |
-| 1 - Second Secret  | 0.00438445             | 0.205%  | 0.21              |
-| 2 - Delegate       | 0.00200557             | 0.094%  | 0.07              |
-| 3 - Vote           | 0.09154353             | 4.278%  | 0.28              |
-| 4 - Multisignature | 0.00001629             | 0.001%  | 0.00012264        |
-| 5 - Dapp           | 0.00000376             | 0%      | 0.0               |
-| 6 - InTransfer     | 0.00000000             | 0%      | 0.0               |
-| 7 - OutTransfer    | 0.00000251             | 0%      | 0.0               |
+| Tx Type              | Tx Count (Current Avg) | Ratio   | Proposed Capacity |
+| -------------------- | ---------------------- | ------- | ----------------- |
+| 0 - Transfer         | 2.04184768             | 95.422% | 65                |
+| 1 - Second signature | 0.00438445             | 0.205%  | 0.21              |
+| 2 - Delegate         | 0.00200557             | 0.094%  | 0.07              |
+| 3 - Vote             | 0.09154353             | 4.278%  | 0.28              |
+| 4 - Multisignature   | 0.00001629             | 0.001%  | 0.00012264        |
+| 5 - Dapp             | 0.00000376             | 0%      | 0.0               |
+| 6 - InTransfer       | 0.00000000             | 0%      | 0.0               |
+| 7 - OutTransfer      | 0.00000251             | 0%      | 0.0               |
 
-Where we can see that Type 0 txs account for more than 95% of all the tx in the blockchain currently.
+Where we can see that type `0 - Transfer` transactions account for more than 95% of all transactions in the blockchain.
 
-We believe that given these numbers, 15Kb is the most adequate choice in terms of **network requirements** (bandwidth of the nodes, blockchain growth, etc) vs **network capabilities** (txs/s, votes per hour, etc). Moreover, it could be _easily_ extended in the future if the network usage requires it.
+We believe that given these numbers, 15kb is the most adequate choice in terms of **network requirements** (node bandwidth, blockchain growth, etc) vs **network capabilities** (transaction per second, votes per hour, etc). Moreover, it could be _easily_ extended in the future if the network usage requires it.
 
 ## Specification
 
-### General implementation logic
+### General Implementation Logic
 
-* A full block (block payload) must not weigh more than 15kB. If a delegate generates a bigger block, it will be invalid.
+* The payload of a block must not weigh more than 15kb. If a delegate generates a bigger block, it should be deemed invalid.
 
-* During the filling of a new block from the pool with unconfirmed txs, the node should optimize the available _space vs txs_. For example, when there is less than 2kB free for the next block (a vote tx is 2.3kB), the delegate should fill the remaining gap with smaller txs, even though the next txs in the queue in terms of fee (when new fee system is implemented) or age (currently) would be a vote tx. In this LIP, we propose a basic algorithm to do this (refer to 3 of Implementation Details Section). However, it is up to each delegate in the last instance to implement a different algorithm for their node if they believe it will optimize the profit.
-* When a delegate generates a block, it should fetch the unconfirmed txs from pool and verify the size again.
+* When filling a new block with unconfirmed transactions from the pool, the node should optimize the usage of the available space in the block versus available transactions in the pool. For example, when there is less than 2kb available for the next block (a vote transaction is 2.3kb), the delegate should fill the remaining space using smaller transactions, even though the next transaction in the queue in terms of fee or relative age would be a vote transaction. In this LIP, we propose a basic algorithm to cater for this scenario (please refer to 3. of [Implementation Details](#implementation-details). However, it is for each delegate to decide whether to implement a different algorithm should they believe it to be more optimal.
+
+* When a delegate generates a block, it should fetch the unconfirmed transactions from the pool and verify their size again.
 
 ### Implementation Details
 
-1. Add `getListByteSize` in `logic.transactionPool`
+1. Add `getListByteSize` to `logic.transactionPool`
 
-   - The proposed implementation is to maintain a static counter for size and update those on every call of the following methods `add<Queue>Transaction`, `remove<Queue>Transaction`. For example, `addUnconfirmedTransaction` and `removeUnconfirmedTransaction` methods.
-   
-   - Other possibility can be to check in realtime `getBytes` on all txs in the queue.
+	- Maintain a static counter for size and update it on every call of the following methods `add<Queue>Transaction`, `remove<Queue>Transaction`. For example, `addUnconfirmedTransaction` and `removeUnconfirmedTransaction` functions.
 
-2. Add `getListItem(index = 0)` in `logic.transactionPool` which will return a tx in the list at given index. By default, it should return the tx at the top of the list.
+	- Or call in realtime the `getBytes` function on each transaction within the queue.
 
-3. Reimplementing the method `fillPool` in `logic.transactionPool` with the [algorithm](#algorithm-for-logictransactionpoolfillpool).
+2. Add `getListItem(index = 0)` to `logic.transactionPool` which will return a transaction within the list at a given index. By default, it should return the transaction at the top of the list.
+
+3. Reimplement the `fillPool` function in `logic.transactionPool` using the proposed [algorithm](#algorithm-for-logictransactionpoolfillpool).
 
 4. Update `modules.blocks.process.generateBlock`:
 
-   * Call `modules.transactions.getUnconfirmedTransactionList` without limit to get all the unconfirmed transactions. As those will be always equal to 15kb approximately.
+	- Call `modules.transactions.getUnconfirmedTransactionList` without a limit to get all the unconfirmed transactions. As those transactions should always be approximately equal to 15kb.
 
-5. Update `constants.maxPayloadLength` to 15kb
+5. Update `constants.maxPayloadLength` to 15kb.
 
-6. Remove `constants.maxTxsPerBlock` from 'constants.js'.
+6. Remove `constants.maxTxsPerBlock` from `constants.js`.
 
-7. Remove `numberOfTransactions` check from blocks verification for the historical data since it is redundant as it is included in block's signature.
+7. Remove the redundant `numberOfTransactions` check from blocks verification for historical data, as it is already included in block's signature.
 
-8. Remove `payloadLength` check from blocks verification for historical data (up to 1048576kb) since it is redundant as it is included in block's signature.
+8. Remove the redundant `payloadLength` check from blocks verification for historical data (up to 1048576kb), as it is already included in block's signature.
 
-9. Set `maxPayloadLength` checks up to 15 kb for recent blocks.
+9. Add `maxPayloadLength` checks up to 15kb for recent blocks.
 
 #### Algorithm for logic.transactionPool#fillPool
 
@@ -161,7 +162,7 @@ procedure pickTransactionFromList
 	Set selectedTransaction to getListItem(listName, skipIndex)
 
 	If selectedTransaction.getBytes() < maxAllowedByteSize
-	    Call logic.transactionPool.remove<listName>Transaction(selectedTransaction.id)
+	  Call logic.transactionPool.remove<listName>Transaction(selectedTransaction.id)
 		return selectedTransaction
 	Else
 		Call pickTransactionForPool(listName, maxAllowedByteSize, skipIndex + 1)
@@ -169,18 +170,18 @@ procedure pickTransactionFromList
 
 ### Related Implementation
 
-For completeness, we add here a related implementation to these proposal which consists of refactoring the `transactionPool` for multisignature txs:
+For completeness, we add here a related implementation to this proposal which consists of refactoring the `transactionPool` for multisignature transactions:
 
-1. Only pending multisignature txs should stay in the `multisignature` list.
-2. As soon as the multisignature tx is ready it should be pushed to `queued` list.
+1. Only pending multisignature transactions should stay in the `multisignature` list.
+2. As soon as the multisignature transaction is ready it should be pushed to `queued` list.
 3. In the previous step, we only look into the `queued` list to fill the pool while generating blocks.
 
 ## Backwards Compatibility
 
 * This proposal will cause a hard fork in the network.
-* Once implemented, blocks with more than 25 txs will be valid and blocks with more than 7 voting txs will be invalid .
-* The proposed changes will not imply any change in the blocks schema. It will contain the same fields of the current implementation.
-* There is no need to add any exception validation logic, as `numberOfTransaction` property is already part of the block signature. So validating previous blocks will work fine.
+* Once implemented, blocks with more than 25 transactions will be valid, and blocks with more than 7 voting transactions will be invalid.
+* The proposed changes will not imply any change in the blocks schema. It will contain the same fields as the current implementation.
+* There is no need to add any exception validation logic, as the `numberOfTransaction` property is already part of the block signature. So validating previous blocks will work before.
 
 ## Reference Implementation
 
