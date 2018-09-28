@@ -10,6 +10,7 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 
 ## Proposals
 
-| Number                        | Title                                       | Author                        | Type           | Module        | Status        |
-| ------------------------------|---------------------------------------------| ------------------------------| ---------------|---------------|---------------|
-| [0001](proposals/lip-0001.md) | LIP Purpose and Guidelines                  | Lisk Foundation               | Process        | -             | Active        |
+| Number                        | Title                                       | Author                        | Type            | Module        | Status        |
+| ------------------------------|---------------------------------------------| ------------------------------| ----------------|---------------|---------------|
+| [0001](proposals/lip-0001.md) | LIP Purpose and Guidelines                  | Lisk Foundation               | Process         | -             | Active        |
+| [0002](proposals/lip-0002.md) | Change to byte based block size limit       | Iker Alustiza, Nazar Hussain  | Standards Track | Chain, Pool   | Draft         |
