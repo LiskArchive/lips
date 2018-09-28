@@ -44,7 +44,7 @@ As every peer will be only connected to a subset of all the peers in the network
 Below we give a high level description of the basic mechanism regarding incoming and outgoing connections, details are then given in the section ‘’Specification’’. The default choice of parameters will be further refined via testing.
 
 - Every peer makes 20 outgoing connections to randomly chosen peers from its list of known peers.
-- If an outgoing connection is closed by the other peer, a different peer is randomly selected as replacement.
+- If an outgoing connection is closed by the other peer, a different peer is randomly selected as a replacement.
 - Every peer accepts up to 100 incoming connections from other peers, which are distinct from the outgoing peers.
 
 ### Periodic Shuffling
