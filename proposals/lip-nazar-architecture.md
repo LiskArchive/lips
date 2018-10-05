@@ -10,7 +10,7 @@ Module: All
 # Abstract
 
 This LIP proposes a new application architecture for Lisk Core, that would be flexible and modular.
-The goal is to have an architecture which can be extended easily whilst staying resilient for the current, and future growth targets.
+The goal is to have an architecture which can be extended easily whilst staying resilient for the current, and future growth.
 
 # Copyright
 
@@ -18,12 +18,12 @@ This LIP is licensed under the [GNU General Public License, version 3](http://ww
 
 # Motivation
 
-Currently, the Lisk Core node software is composed of one single entity or an executable process which can consume only a single core of the available processor. It does have an additional worker processes for our P2P layer (implementation of socketcluster), but since the master process is tightly coupled with the app script, we cannot consider it to be an independent unit in the application.
+Currently, the Lisk Core software is an executable process which can consume only a single core of the available processor. It does have additional worker processes within P2P layer (due to multi-process nature of SocketCluster library), but since the master process is tightly coupled with the app script, we cannot consider it to be an independent unit in the application.
 
-A limitation of single-entity architectures, and tightly coupled logic is that a failure in one location can have a fatal impact on the whole system. For example consider the following scenarios:
+A limitation of single-entity architectures and tightly coupled logic is that a failure in one location can have a fatal impact on the whole system. For example, consider the following scenarios:
 
 * If a failure occurred while processing blocks received over the P2P network, the HTTP API layer would also crash.
-* If an error occurred in the websockets master process, the node would also fail to respond over HTTP layer.
+* If an error occurred in the websockets master process, the node would also fail to respond over HTTP API layer.
 
 These are just a few use cases, the list goes on. In short, due to tight coupling of various parts of the code, and the fact that we use a single isolated process, we cannot ensure that each individual component of the application remains functional, whilst another component (or more than one component) faces a problem.
 
@@ -31,17 +31,17 @@ These are just a few use cases, the list goes on. In short, due to tight couplin
 
 When designing the architecture for a distributed and decentralised system, a few points need to considered:
 
-* The network cannot be assumed to be reliable, so our P2P communication should be fail-safe.
-* There is always latency in the network, so our code should follow a principle of expected latency.
-* We have no control or direct guidance over how most individuals install the node software, so the distribution of our software should be as easy to install as possible.
-* A corollary of the previous point is that we have no control over the physical resources available on systems that run our software, so we should aim to build software which can work well with a range of physical resources.
-* All systems are susceptible to unplanned crashes, so our architecture should be resilient in such cases and support fail-over.
+* The network cannot be assumed to be reliable, so P2P communication should be fail-safe.
+* There is always latency in the network, so code should expect it and handle properly.
+* We have no control or direct guidance over how most individuals install the node software, so the distribution of software should be as easy to install as possible.
+* A corollary of the previous point is that we have no control over the physical resources available on systems that run Lisk Core, so we should aim to build software which can work well with a range of physical resources.
+* All systems are susceptible to unplanned crashes, so this architecture should be resilient in such cases and support fail-over.
 
-Taking note of the above points, our aim in redesigning the architecture of the Lisk Core node software is to achieve the following:
+Taking note of the above points, aim for redesigning the architecture of the Lisk Core node software is to achieve the following:
 
 1. Identify components which should stay **functionally isolated** from each other.
 2. Design an architecture such that functionally isolated components can form the basis of a **multi-process application**, in order to utilise the potential of multiple hardware cores of the physical processor if available.
-3. Design each component in **resilient way to tackle brittleness** of the distributed processing, meaning failure of one component will have minimal impact on other components, and that components can recover individually.
+3. Design each component in a **resilient way to tackle brittleness** of the distributed processing. This means that a failure of one component will have minimal impact on other components and that components can recover individually.
 4. Most of the components should **scale elastically** depending upon the available physical resources.
 5. Individual components should be flexible enough to be installed using the **plugin pattern**.
 6. Foundation work to extend scalability of the network, to run different components on **different physical machines** and still operate in a mutually exclusive manner.
@@ -81,7 +81,7 @@ Here you can find the specification for the each component and detailed diagram 
 
 ## Lisk
 
-Lisk Core in the above diagram denotes the complete ecosystem of the node software as composed by various units. The units should be glued together to work and drive the blockchain.
+Lisk Core in the above diagram denotes the complete ecosystem of the node software as composed by various units. The units should be connect with each other to work and drive the blockchain.
 
 ## Controller
 
@@ -120,9 +120,9 @@ Modules are a vital part of the proposal here. These will contain all of the bus
 
 Modules can be further categorized into two types:
 
-**Core Modules** will be shipped along with the Lisk Core distribution itself. These modules would constitute the minimum requirements to run a Lisk Core instance. That is, these modules together will provide the basic features required to run a functional node.
+**Core Modules** should be shipped along with the Lisk Core distribution itself. These modules should constitute the minimum requirements to run a Lisk Core instance. That is, these modules together should provide the basic features required to run a functional node.
 
-**Plugable Modules** should be distributed individually, such that they can be plugged into any Lisk Core instance and can be removed/disabled any time. Each pluggable module will extend the existing instance with a specific (and circumscribed) set of features.
+**Plugable Modules** should be distributed individually, such that they can be plugged into any Lisk Core instance and can be removed/disabled any time. Each pluggable module should extend the existing instance with a specific (and circumscribed) set of features.
 
 ### Interface
 
@@ -219,16 +219,16 @@ The module life cycle consists of the following events in the order listed below
 1. m1:loading:started
 1. m1:loading:finished
 1. m2:registeredToBus
-1. m1:loading:started
-1. m1:loading:finished
+1. m2:loading:started
+1. m2:loading:finished
 1. lisk:ready
 
 **Unloading**
 
 1. m1:unloading:started
 1. m1:unloading:finished
-1. m1:unloading:started
-1. m1:unloading:finished
+1. m2:unloading:started
+1. m2:unloading:finished
 
 For the initial implementation, sequential processing is recommended as shown above. The feasibility of loading modules in parallel could be researched as a potential future improvement.
 
@@ -304,7 +304,7 @@ Event objects should conform to a unified interface for all event communication 
 
 ### Action
 
-Action object should be a unified interface for all action based communication between modules. It should be a simple javascript object with attributes listed below.. Events must implement a serialize and deserialize mechanism to get unified data format to be transported over channels.
+Action object should be a unified interface for all action based communication between modules. It should be a simple javascript object with attributes listed below. Events must implement a serialize and deserialize mechanism to get unified data format to be transported over channels.
 
 | Property | Type   | Description                                                      |
 | -------- | ------ | ---------------------------------------------------------------- |
