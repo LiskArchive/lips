@@ -10,7 +10,7 @@ Module: All
 # Abstract
 
 This LIP proposes a new application architecture for Lisk Core, that would be flexible and modular.
-The goal is to have an architecture which can be extended easily whilst staying resilient for the current, and future growth.
+The goal is to have an architecture which can be extended easily whilst staying resilient for the current and the future.
 
 # Copyright
 
@@ -20,33 +20,33 @@ This LIP is licensed under the [GNU General Public License, version 3](http://ww
 
 Currently, the Lisk Core software is an executable process which can consume only a single core of the available processor. It does have additional worker processes within P2P layer (due to multi-process nature of SocketCluster library), but since the master process is tightly coupled with the app script, we cannot consider it to be an independent unit in the application.
 
-A limitation of single-entity architectures and tightly coupled logic is that a failure in one location can have a fatal impact on the whole system. For example, consider the following scenarios:
+Limitation of single-entity architectures and tightly coupled code logic means failure in one location can have a fatal impact on the whole system. For example, consider the following scenarios:
 
 * If a failure occurred while processing blocks received over the P2P network, the HTTP API layer would also crash.
-* If an error occurred in the websockets master process, the node would also fail to respond over HTTP API layer.
+* If an error occurred in the P2P master process, the node would also fail to respond over HTTP API layer.
 
-These are just a few use cases, the list goes on. In short, due to tight coupling of various parts of the code, and the fact that we use a single isolated process, we cannot ensure that each individual component of the application remains functional, whilst another component (or more than one component) faces a problem.
+These are just a few use cases, the list goes on. In short, due to tight coupling of various parts of the code, and the fact that we use a single isolated process, we cannot ensure that each individual component of the application remains functional, whilst any other component (or more than one component) faces a problem.
 
 # Rationale
 
-When designing the architecture for a distributed and decentralised system, a few points need to considered:
+When designing the architecture for a distributed and decentralised system, a few points needs to be considered:
 
 * The network cannot be assumed to be reliable, so P2P communication should be fail-safe.
 * There is always latency in the network, so code should expect it and handle properly.
-* We have no control or direct guidance over how most individuals install the node software, so the distribution of software should be as easy to install as possible.
-* A corollary of the previous point is that we have no control over the physical resources available on systems that run Lisk Core, so we should aim to build software which can work well with a range of physical resources.
+* We have no control or direct guidance over how most individuals install the software, so the distribution should be easy to install.
+* A corollary of the previous point is that we have no control over the physical machines that run Lisk Core, so we should aim to build software which can work well with a range of physical resources.
 * All systems are susceptible to unplanned crashes, so this architecture should be resilient in such cases and support fail-over.
 
-Taking note of the above points, aim for redesigning the architecture of the Lisk Core node software is to achieve the following:
+Taking note of the above points, aim for redesigning the architecture of the Lisk Core is to achieve the following:
 
 1. Identify components which should stay **functionally isolated** from each other.
-2. Design an architecture such that functionally isolated components can form the basis of a **multi-process application**, in order to utilise the potential of multiple hardware cores of the physical processor if available.
-3. Design each component in a **resilient way to tackle brittleness** of the distributed processing. This means that a failure of one component will have minimal impact on other components and that components can recover individually.
+2. Design an architecture such that functionally isolated components can form the basics of a **multi-process application**, in order to utilise the potential of multiple hardware cores of the physical processor if available.
+3. Design each component in a **resilient way to tackle brittleness** of the multi-processing. This means that a failure of one component will have minimal impact on other components and that components can recover individually.
 4. Most of the components should **scale elastically** depending upon the available physical resources.
 5. Individual components should be flexible enough to be installed using the **plugin pattern**.
-6. Foundation work to extend scalability of the network, to run different components on **different physical machines** and still operate in a mutually exclusive manner.
+6. Foundation work to extend scalability of the node, to run different components on **different physical machines** and still operate in a mutually exclusive manner.
 7. Provide an **elegant API which can be extended easily** when creating new components for Lisk Core software.
-8. The work performed as part of the redesign should provide a **foundation for the Lisk SDK and DApp creation**, and afford us with insights into how to provide those products to users.
+8. The work performed as part of the redesign should provide a **foundation for the Lisk SDK and DApp creation**, and support us with insights into how to provide those products to users.
 
 These considerations have led us to the following architecture:
 
@@ -77,34 +77,32 @@ These considerations have led us to the following architecture:
 
 # Specification
 
-Here you can find the specification for the each component and detailed diagram of the architecture.
+Here you can find the specification for each component of the architecture in details.
 
 ## Lisk
 
-Lisk Core in the above diagram denotes the complete ecosystem of the node software as composed by various units. The units should be connect with each other to work and drive the blockchain.
+Lisk Core in the above diagram denotes the complete ecosystem of the software as composed by various components. The components should be connected with each other to work and drive the blockchain.
 
 ## Controller
 
-The Controller will be a parent process responsible for managing every user interaction with each component of the ecosystem. E.g. restarting the node, starting a snapshot process, etc. It is an executable file which will be the entry point to interacting with Lisk Core.
+The Controller will be a parent process responsible for managing every user interaction with each component of the ecosystem. E.g. restarting the node, starting a snapshot process, etc. It is derived by executable file which will be the entry point to interact with Lisk Core.
 
-* The Controller will be responsible for initialization of infrastructure-level components e.g. Database, Cache, Logger, etc.
+* The Controller will be responsible for initialization of infrastructure-level components: Database, Cache, Logger, System.
 * The Controller will also initialize each module separately. If any module is configured to load as a child process, then it is the Controller's responsibility to do so.
-* The Controller will define a set of events, such that each component can subscribe as an object in same process, or over an IPC channel in case of a different process. Most of the data flow will be handled through the propagation of such events.
-* Each module can also define its own custom events or actions and will register that list with the Controller at the point of initialization. Thus the Controller will have a complete list of events which may occur in the modules of Lisk Core at any given time.
+* The Controller will define a set of events, such that each component can subscribe in the same process, or over an IPC channel in case of a child process. Most of the data flow will be handled through the propagation of such events.
+* Each module can also define its own custom events or actions and will register that list with the Controller at the time of initialization. Thus the Controller will have a complete list of events which may occur in the modules of Lisk Core at any given time.
 
 ## Components
 
-Components are shared objects within the Controller layer which each module can utilize, e.g. database objects, loggers, cache etc.
-
-The following components are proposed currently.
+Components are shared objects within the Controller layer which any module can utilize. The following components are proposed currently.
 
 ### Database
 
-This component will be responsible for all database activity in the system. This component will expose an interface with specific features for getting or setting particular database entities. But it will also expose a raw handler to the database object, so that each module can extend it if required on its end.
+This component will be responsible for all database activity in the system. This component will expose an interface with specific features for getting or setting particular database entities. It will also expose a raw handler to the database object, so that any module can extend it for its own use. **Insert a reference to child DB entities LIP.**
 
 ### Logger
 
-This will be responsible for all application-level logging activity, and will log everything in JSON format. This central logger component will be passed to each module, where each module will extend the logger by adding module-specific fields to the JSON that gets logged.
+Logger will be responsible for all application-level logging activity, and log everything in JSON format. This central logger component can be passed to any module, where it can be extend by adding module-specific fields.
 
 ### Cache
 
@@ -112,21 +110,21 @@ This component will provide basic caching capabilities, generic enough for any m
 
 ### System
 
-This component will provide a central registry of up-to-date system information, whether it is the current height of the network or constants such as the block version of the current installation.
+This component will provide a central registry of up-to-date system information. Specially network height, nonce, broadhash, nethash and network specific constants.
 
 ## Modules
 
-Modules are a vital part of the proposal here. These will contain all of the business logic and operational code for the ecosystem. Each module can reside within the main Controller process, or can designate that it should be spawned as a child process of the Controller. This will enable the Lisk Core instance to distribute the necessary processing and utilize multiple cores. I.e. to make efficient use of the physical resources of the underlying system.
+Modules are a vital part of the proposal. These will contain all of the business logic and operational code for the ecosystem. Each module can reside within the main Controller process, or can designate that it should be spawned as a child process. This will enable the Lisk Core instance to distribute the processing and utilize multiple cores.
 
-Modules can be further categorized into two types:
+Modules can be further categorized in two types:
 
-**Core Modules** should be shipped along with the Lisk Core distribution itself. These modules should constitute the minimum requirements to run a Lisk Core instance. That is, these modules together should provide the basic features required to run a functional node.
+**Core Modules** should be shipped along with the Lisk Core distribution itself. These modules should constitute the minimum requirements to run a functional Lisk Core instance.
 
-**Plugable Modules** should be distributed individually, such that they can be plugged into any Lisk Core instance and can be removed/disabled any time. Each pluggable module should extend the existing instance with a specific (and circumscribed) set of features.
+**Pluggable Modules** should be distributed separately, such that they can be plugged into any Lisk Core instance and can be removed/disabled any time. These should extend the existing instance with a specific (and circumscribed) set of features.
 
 ### Interface
 
-The implementation details of a module are ultimately up to the module developer, but by default a module should export an object with this structure:
+The implementation details of a module are ultimately up to the module development team, but by default a module must export an object from main entry file of `package.json` adhering to the following structure:
 
 ```js
 // Exported from the main file of the JavaScript package
@@ -190,18 +188,20 @@ export default {
 
 ### Default Events & Actions
 
-The following events and actions should be implemented in the redesigned Lisk Core and accessible by all custom modules.
+The following events and actions should be implemented in the redesigned Lisk Core and be accessible by all modules.
 
 #### Events
 
-| Event                       | Description                                                                                                                                                                                                           |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| _module_:registeredToBus    | Fired when the module has completed registering its events and actions with the controller. So when this event is fired, the module can be sure that the Controller has whitelisted its requested events and actions. |
-| _module_:loading:started    | Fired just before the Controller calls the module’s `load` method.                                                                                                                                                    |
-| _module_:loading:finished   | Fired just after the module’s `load` method has completed execution.                                                                                                                                                  |
-| _module_:unloading:started  | Fired just before the Controller calls the module’s `unload` method.                                                                                                                                                  |
-| _module_:unloading:finished | Fired just after the module’s `unload` method has completed execution.                                                                                                                                                |
-| lisk:ready                  | Fired when the Controller has finished initialising the modules and each module has been successfully loaded.                                                                                                         |
+| Event                       | Description                                                                                                                                                                                                                                |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| _module_:registeredToBus    | Triggered when the module has completed registering its events and actions with the controller. So when this event is triggered, the subscriber of event can be sure that the Controller has whitelisted its requested events and actions. |
+| _module_:loading:started    | Triggered just before the Controller calls the module’s `load` method.                                                                                                                                                                     |
+| _module_:loading:error      | Triggered if any error occurred during call of the module's `load` method.                                                                                                                                                                 |
+| _module_:loading:finished   | Triggered just after the module’s `load` method has completed execution.                                                                                                                                                                   |
+| _module_:unloading:started  | Triggered just before the Controller calls the module’s `unload` method.                                                                                                                                                                   |
+| _module_:unloading:error    | Triggered if any error occurred during call of module’s `unload` method.                                                                                                                                                                   |
+| _module_:unloading:finished | Triggered just after the module’s `unload` method has completed execution.                                                                                                                                                                 |
+| lisk:ready                  | Triggered when the Controller has finished initialising the modules and each module has been successfully loaded.                                                                                                                          |
 
 #### Actions
 
@@ -211,7 +211,7 @@ The following events and actions should be implemented in the redesigned Lisk Co
 
 ### Life Cycle
 
-The module life cycle consists of the following events in the order listed below, assuming two modules m1 and m2.
+The module life cycle consists of the following events in the order listed below, assuming two modules **m1** and **m2** are defined to be loaded.
 
 **Loading**
 
@@ -230,46 +230,46 @@ The module life cycle consists of the following events in the order listed below
 1. m2:unloading:started
 1. m2:unloading:finished
 
-For the initial implementation, sequential processing is recommended as shown above. The feasibility of loading modules in parallel could be researched as a potential future improvement.
+For the initial implementation, sequential loading/unloading is recommended as shown above. The feasibility of loading modules in parallel could be researched as a potential future improvement.
 
 ## Channels
 
 Modules will communicate to each other through channels. These channels will be event-based, triggering events across various listeners. Modules running in different processes will communicate with each other over IPC channels.
 
-Every module must export a `load` method, which accepts two arguments: a channel and an options object. The options object is simply the JSON object containing the options provided in the config file.
+Every module export a `load` method, which accepts two parameters: a **channel** and an **options** object. The options object is simply the JSON object containing the module specific options provided in the config file.
 
-The `channel` parameter will be an instance of a channel, which will depend to some extent upon the type of module. For now we propose two types of channel:
+The `channel` parameter will be an instance of a channel and its type depends upon the type of module. For now we propose two types of channels:
 
-| Channel Type        | Description                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| EventEmitterChannel | An implementation which facilitates communication with modules which reside in the same process as the Controller.        |
-| ChildProcessChannel | An implementation which facilitates communication with modules which do not reside in the same process as the Controller. |
+| Channel Type        | Description                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| EventEmitterChannel | Communicates with modules which reside in the same process as the Controller.        |
+| ChildProcessChannel | Communicates with modules which do not reside in the same process as the Controller. |
 
-The Controller will be responsible for creating channels of the relevant sort depending on how it loads each module.
+The Controller will be responsible for creating channels of the relevant type depending on how it loads each module.
 
 ### Interface
 
-Whichever channel implementation the module receives when its load method is called, it must expose a consistent interface defining the following four methods.
+Whichever channel implementation the module receives when it's `load` method is called, it must expose a consistent interface defining the at least following four methods.
 
 #### `subscribe`
 
-Used to subscribe to events occurring on the main bus.
+Used to subscribe to events occurring on the controller bus.
 
 ```js
 channel.subscribe("lisk:ready", event => {});
 ```
 
-This function accepts two arguments. The first is the event name, specifying also the name of the relevant module. The second argument is a callback which accepts one argument, which will be an instance of an [event object](#specification_channels_event).
+This function accepts two arguments. The first is the event name prefixed with the name of the relevant module. The second argument is a callback which accepts one argument, which will be an instance of an [event object](#specification_channels_event).
 
 #### `publish`
 
-Used to publish events to the main bus, which will be delivered to all subscribers.
+Used to publish events to the controller bus, which will be delivered to all events subscribers.
 
 ```js
 channel.publish("chain:newTransaction", transactionObject);
 ```
 
-This function accepts two arguments. The first one is the event name, specifying also the name of the relevant module. The second argument is the data object to be passed on by way of the event.
+This function accepts two arguments. The first one is the event name prefixed with the name of the relevant module. The second argument is the data object to be passed along the event.
 
 #### `action`
 
@@ -279,7 +279,7 @@ Defines an action for the module, which can be invoked later by other modules.
 channel.action("verifyTransaction", async action => {});
 ```
 
-This function accepts two arguments. The first one is the action name without specifying a module name as the current module’s name will always be prefixed when the Controller registers the action. An action cannot be defined for an external module. The second argument is a callback which accepts one argument, which will be an instance of an [action object](#specification_channels_action).
+This function accepts two arguments. The first one is the action name without prefixing a module name. As the current module’s name will always be prefixed when the Controller registers the action. An action cannot be defined for an external module. The second argument is a callback which accepts one argument, which will be an instance of an [action object](#specification_channels_action).
 
 #### `invoke`
 
@@ -289,11 +289,11 @@ Used to invoke an action for a module.
 result = await channel.invoke('chain:verifyTransaction', transactionObject);
 ```
 
-This function accepts two arguments. The first on is the event name, specifying also the name of the relevant module. The second argument is the data object to be passed on by way of the action.
+This function accepts two arguments. The first on is the event name prefixed with the name of the relevant module. The second argument is the data object to be passed along the action.
 
 ### Event
 
-Event objects should conform to a unified interface for all event communication between modules. It should be a simple JavaScript object with the following attributes. Each event must implement a serialize and deserialize mechanism so that a unified data format can be transported over channels.
+Event objects should conform to an unified interface for all event communication between modules. Each event must implement a serialize and deserialize mechanism so that a unified data format can be transported over channels. It should be a simple JavaScript object with the following attributes.
 
 | Property | Type   | Description                                              |
 | -------- | ------ | -------------------------------------------------------- |
@@ -304,14 +304,14 @@ Event objects should conform to a unified interface for all event communication 
 
 ### Action
 
-Action object should be a unified interface for all action based communication between modules. It should be a simple javascript object with attributes listed below. Events must implement a serialize and deserialize mechanism to get unified data format to be transported over channels.
+Action object should be an unified interface for all action based communication between modules. Actions must implement a serialize and deserialize mechanism to get unified data format to be transported over channels. It should be a simple javascript object with attributes listed below.
 
-| Property | Type   | Description                                                      |
-| -------- | ------ | ---------------------------------------------------------------- |
-| name     | string | Name of the event which is triggered on the bus                  |
-| module   | string | The name of target module for which event was triggered.         |
-| source   | string | The name of source module which invoked that event.              |
-| params   | mixed  | The data which was associated with the invocation for the action |
+| Property | Type   | Description                                                       |
+| -------- | ------ | ----------------------------------------------------------------- |
+| name     | string | Name of the action which is invoked on the bus.                   |
+| module   | string | The name of target module for which action was invoked.           |
+| source   | string | The name of source module which invoked that action.              |
+| params   | mixed  | The data which was associated with the invocation for the action. |
 
 # Reference implementation
 
@@ -319,57 +319,36 @@ A complete prototype implementing this proposal can be found at [https://github.
 
 # Backwards compatibility
 
-This proposal is intended to conform to the existing protocol specification without any amendments. So it will be 100% backward compatible at the point when this proposal is adopted.
+This proposal is intended to conform to the existing blockchain protocol specification without any amendments. So it will be 100% backward compatible at the point when this proposal is adopted.
 
 # Appendix
 
 **How deep the segregation of functionality should be?**
 
-This proposal is not suggesting a microservices application design. The suggestion is to decouple the code into separate modules and later decide, which of these modules can run as separate independent process.
-
-In the first phase of implementation, the suggestion is to separate three modules which will be run in separate processes. Once this reorganisation is complete we can investigate how best to improve the architecture with further segregations.
+In the first phase of implementation, the suggestion is to separate three modules which will be run in child processes. Once this reorganisation is complete we can investigate how best to improve the architecture by dividing a module into further chunks.
 
 **How debugging will work with this architecture**
 
-Nothing will change in regard to debugging. It would be same as we are doing right now. You will start the whole ecosystem of modules with one command and you you will see consolidated logs on console. So you will be doing same kind of debugging that we do right now by looking into logs.
+Nothing will change in regard to debugging. You will start the whole ecosystem of modules with one command and you will see consolidated logs on console.
 
-For debugging IPC channels we, we will add extensive logging to catch any activity, so that would not be any issue. Fo node interactive debugging, all native Node.js debugging features intended to work with this architecture.
+For debugging IPC channels, we could add extensive logging to log any activity on the bus, so we can deeply track inter-process communication. For interactive debugging, all native Node.js debugging features are intended to work with this architecture.
 
 **Using modules in other products**
 
-Any module we create is designed to used in lisk-core ecosystem. As every module have a dependency of Lisk Controller to be available. It is not an intended use case to run lisk-core modules as part of other products like “Commander” makes sense.
+Any module we would create is designed to used in Lisk Core. As every module have a dependency of Lisk Controller to be available. It is not an intended use case to run Lisk Core modules as part of other products like “Commander”.
 
-For sidechains, they can use lisk-core modules. As each module will have a very well defined set of actions and events and protocol to communicate. If used properly, their functionality can be achieved in sidechains.
+As each module will have a very well defined set of events, actions and protocol to communicate. If used properly, modules functionality can be in other Node.js projects or sidechains.
 
-**Which tool we use for IPC communication**
+**Which tool we will use for IPC communication**
 
-We are not finalizing any tool at the moment to implement IPC channel concept. Probable and available options are Custom Node implementation, PM2 implementation or to look for any other tool for this purpose. This has not yet been finalized, we will probably experiment with all options to choose to right one for us.
+We are not finalizing any tool at the moment to implement IPC channel concept. Probable and available options are Custom Node implementation, PM2 implementation or to look for any other tool for this purpose. We will probably experiment with all options to choose the best one for our architecture.
 
 **What is database component?**
 
-First thing first, every component, module and plugin mentioned in this proposal are standard npm packages. Afterwards, a database component, will be used to perform any kind of RDBMS activity. We call it component because it will be initialized and stay available on controller layer to be utilized by any other module (the way we are doing right now).
+The database component, will be used to perform any kind of RDBMS activity. We call it component because it will be initialized and stay available on controller layer to be utilized by any other module (the way we are doing right now).
 
-For modules which are spawned independently they create instance of this component on their end. For creating new instance, either they can pass the configuration from themself or can ask controller to share ONLY the configuration (json object) of particular component. So the respective module can use same configuration, override some or pass new configuration. In the end it will have its own instance of the component.
+For modules which are spawned as child processes they create instance of this component on their own. For creating new instance, either they can pass new configuration or ask the controller to share ONLY the configuration for database (json object). So the respective module can use same configuration, override or pass new configuration. In the end module will have its own instance of the database component.
 
 **How to refactor current code base?**
 
-The above architecture requires a considerable code change, or theoretically almost a complete rewrite to all major components of the system. So to achieve this final target we suggest to go through following steps:
-
-1. Convert app.js to a controller with module bootstrapping support
-2. Convert current database, logger, cache and system to re-initializable components
-3. Create a “Chain” module that actually consists of following modules:
-   * Blocks Manager
-   * Transactions Manager
-   * Delegates Manager
-   * Sync Manager
-   * Transaction Pool
-   * Forging Manager
-4. Create a “P2P” module that actually consists of following modules:
-   * Network Manager
-   * Network Broadcaster
-5. Create an “API” module that actually consists of:
-   * HTTP API
-6. Only “API” and “P2P” module will spawn their own child process, while rest of “Chain” module will reside inside the controller7. The “Chain” module will contain everything as it is which currently reside in core, with same file structure
-7. In upcoming iterations we can split up “Chain” module into role specific modules
-
-Also look at [detail action plan to migrate](https://github.com/LiskHQ/lisk-modular/issues/12) to new architecture.
+The above architecture requires a considerable code changes. A viable plan is defined as milestone can be looked at https://github.com/LiskHQ/lisk-modular/issues/12
