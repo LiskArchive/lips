@@ -25,7 +25,7 @@ Limitation of single-entity architectures and tightly coupled code logic means f
 * If a failure occurred while processing blocks received over the P2P network, the HTTP API layer would also crash.
 * If an error occurred in the P2P master process, the node would also fail to respond over HTTP API layer.
 
-These are just a few use cases, the list goes on. In short, due to the tight coupling of various parts of the code, and the fact that we use a single isolated process, we cannot ensure that each individual component of the application remains functional, whilst any other component (or more than one component) faces a problem.
+These are just a few use cases, the list goes on. In short, due to the tight coupling of various parts of the code, and the fact that we use a single isolated process, we cannot ensure that each individual component of the application remains functional, whilst any other component (or more than one component) faces a problem. Additionally with single process limitation we can't utilize the all available cores, so that can become a bottleneck for the application.     
 
 # Rationale
 
