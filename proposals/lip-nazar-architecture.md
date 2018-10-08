@@ -94,7 +94,7 @@ The Controller will be a parent process responsible for managing every user inte
 
 ## Components
 
-Components are shared objects within the Controller layer which any module can utilize. The following components are proposed currently.
+Components are shared objects within the Controller layer which any module can utilize. Component can use channels if required for implementation behavior. The following components are proposed currently.
 
 ### Database
 
@@ -110,7 +110,7 @@ This component will provide basic caching capabilities, generic enough for any m
 
 ### System
 
-This component will provide a central registry of up-to-date system information. Especially network height, nonce, broadhash, nethash and network specific constants.
+This component will provide a central registry of up-to-date system information. Especially network height, nonce, broadhash, nethash and network specific constants. This component will use channels and events to make all instances of the component stay in sync in different modules.
 
 ## Modules
 
@@ -253,7 +253,7 @@ Whichever channel implementation the module receives when it's `load` method is 
 
 #### `subscribe`
 
-Used to subscribe to events occurring on the controller bus.
+Used to subscribe to events occurring on the controller.
 
 ```js
 channel.subscribe("lisk:ready", event => {});
@@ -263,7 +263,7 @@ This function accepts two arguments. The first is the event name prefixed with t
 
 #### `publish`
 
-Used to publish events to the controller bus, which will be delivered to all events subscribers.
+Used to publish events to the controller, which will be delivered to all events subscribers.
 
 ```js
 channel.publish("chain:newTransaction", transactionObject);
@@ -297,7 +297,7 @@ Event objects should conform to a unified interface for all event communication 
 
 | Property | Type   | Description                                              |
 | -------- | ------ | -------------------------------------------------------- |
-| name     | string | The name of the event which is triggered on the bus.     |
+| name     | string | The name of the event which is triggered.     |
 | module   | string | The name of the target module for which event was triggered. |
 | source   | string | The name of source module which published that event.    |
 | data     | mixed  | The data which was sent while publishing the event.      |
@@ -308,7 +308,7 @@ Action object should be a unified interface for all action based communication b
 
 | Property | Type   | Description                                                       |
 | -------- | ------ | ----------------------------------------------------------------- |
-| name     | string | Name of the action which is invoked on the bus.                   |
+| name     | string | Name of the action which is invoked.                   |
 | module   | string | The name of the target module for which action was invoked.           |
 | source   | string | The name of source module which invoked that action.              |
 | params   | mixed  | The data which was associated with the invocation for the action. |
@@ -325,13 +325,13 @@ This proposal is intended to conform to the existing blockchain protocol specifi
 
 **How deep the segregation of functionality should be?**
 
-In the first phase of implementation, the suggestion is to separate three modules which will be run in child processes. Once this reorganisation is complete we can investigate how best to improve the architecture by dividing a module into further chunks.
+In the first phase of implementation, the suggestion is to openseparate three modules which will be run in child processes. Once this reorganisation is complete we can investigate how best to improve the architecture by dividing a module into further chunks.
 
 **How debugging will work with this architecture?**
 
 Nothing will change in regard to debugging. You will start the whole ecosystem of modules with one command and you will see consolidated logs on a console.
 
-For debugging IPC channels, we could add extensive logging to log any activity on the bus, so we can deeply track inter-process communication. For interactive debugging, all native Node.js debugging features are intended to work with this architecture.
+For debugging IPC channels, we could add extensive logging to log any activity on the controller, so we can deeply track inter-process communication. For interactive debugging, all native Node.js debugging features are intended to work with this architecture.
 
 **Using modules in other products?**
 
