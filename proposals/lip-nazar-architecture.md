@@ -120,7 +120,7 @@ Modules can be further categorized into two types:
 
 **Core Modules** should be shipped along with the Lisk Core distribution itself. These modules should constitute the minimum requirements to run a functional Lisk Core instance.
 
-**Pluggable Modules** should be distributed separately, such that they can be plugged into any Lisk Core instance and can be removed/disabled at any time. These should extend the existing instance with a specific (and circumscribed) set of features.
+**Pluggable Modules** should be distributed separately, such that they can be plugged into any Lisk Core instance and can be removed/disabled at any time. These should extend the existing instance with a specific (and circumscribed) set of features. Community can also develop such modules for Lisk Core and distribute as npm packages.  
 
 ### Interface
 
