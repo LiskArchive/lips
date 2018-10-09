@@ -323,32 +323,32 @@ This proposal is intended to conform to the existing blockchain protocol specifi
 
 # Appendix
 
-**How deep the segregation of functionality should be?**
+**How deep should the segregation of functionality be?**
 
-In the first phase of implementation, the suggestion is to openseparate three modules which will be run in child processes. Once this reorganisation is complete we can investigate how best to improve the architecture by dividing a module into further chunks.
+In the first phase of implementation, the suggestion is to open three separate modules, which will be run in child processes. Once this reorganisation is complete, we can investigate how to best improve the architecture by dividing a module into further modules.
 
-**How debugging will work with this architecture?**
+**How will debugging work with this architecture?**
 
-Nothing will change in regard to debugging. You will start the whole ecosystem of modules with one command and you will see consolidated logs on a console.
+Nothing will change in regard to debugging. User will start the whole ecosystem of modules with one command and you will see consolidated logs on a console.
 
 For debugging IPC channels, we could add extensive logging to log any activity on the controller, so we can deeply track inter-process communication. For interactive debugging, all native Node.js debugging features are intended to work with this architecture.
 
 **Using modules in other products?**
 
-Any module we would create is designed to used in Lisk Core. As every module have a dependency of Lisk Controller to be available. It is not an intended use case to run Lisk Core modules as part of other products like “Commander”.
+Any module we would create is designed to be used in Lisk Core. As every module is dependent on Lisk Controller to be available, hence it is not an intended use case to run Lisk Core modules as part of other products like Lisk Commander.
 
-As each module will have a very well defined set of events, actions and protocol to communicate. If used properly, modules functionality can be in other Node.js projects or sidechains.
+As each module will have a well defined set of events, actions and protocol to communicate. So if used properly, modules functionality can be in other Node.js projects or sidechains.
 
-**Which tool we will use for IPC communication?**
+**Which tool will we use for IPC communication?**
 
 We are not finalizing any tool at the moment to implement IPC channel concept. Probable and available options are Custom Node implementation, PM2 implementation or to look for any other tool for this purpose. We will probably experiment with all options to choose the best one for our architecture.
 
-**What is database component?**
+**What is the database component?**
 
-The database component will be used to perform any kind of RDBMS activity. We call it component because it will be initialized and stay available on controller layer to be utilized by any other module (the way we are doing right now).
+The database component will be used to perform any kind of RDBMS activity. We call it component because it will be initialized and stay available on the controller layer to be utilized by any other module (the way we are doing right now).
 
-For modules which are spawned as child processes, they create an instance of this component on their own. For creating a new instance, either they can pass new configuration or ask the controller to share ONLY the configuration for the database (json object). So the respective module can use the same configuration, override or pass new configuration. In the end, module will have its own instance of the database component.
+Modules, which are spawned as child processes, create an instance of this component on their own. For creating a new instance, a module can either pass custom configuration or ask the controller to share only the configuration for the database (json object). So the respective module can use the same configuration, override or pass custom configuration. In the end, module will have its own instance of the database component.
 
-**How to refactor current code base?**
+**How to refactor the current code base?**
 
-The above architecture requires a considerable code changes. A viable plan is defined as milestone can be looked at https://github.com/LiskHQ/lisk-modular/issues/12
+The above architecture requires a considerable code changes. A viable plan is defined as a milestone can be looked at https://github.com/LiskHQ/lisk-modular/issues/12
