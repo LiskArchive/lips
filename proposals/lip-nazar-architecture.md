@@ -18,14 +18,15 @@ This LIP is licensed under the [GNU General Public License, version 3](http://ww
 
 # Motivation
 
-Currently, the Lisk Core software is an executable process which can consume only a single core of the available processor. It does have additional worker processes within P2P layer (due to multi-process nature of SocketCluster library), but since the master process is tightly coupled with the app script, we cannot consider it to be an independent unit in the application.
-
-Limitation of single-entity architectures and tightly coupled code logic means failure in one location can have a fatal impact on the whole system. For example, consider the following scenarios:
+Lisk Core is a NodeJS application running on a single process. Limitation of single-process architectures and tightly coupled code logic can have different impacts on the system. For example, consider the following scenarios: 
 
 * If a failure occurred while processing blocks received over the P2P network, the HTTP API layer would also crash.
 * If an error occurred in the P2P master process, the node would also fail to respond over HTTP API layer.
+* We can't utilize all available hardware cores, as long as application runs in single process due to nature of NodeJS.  
+* Due to tightly coupled code, we can't easily refactor any particular module without an impact on the whole application.
+* We cannot ensure that each individual component of the application remains functional, whilst any other component (or more than one component) faces a problem.
 
-These are just a few use cases, the list goes on. In short, due to the tight coupling of various parts of the code, and the fact that we use a single isolated process, we cannot ensure that each individual component of the application remains functional, whilst any other component (or more than one component) faces a problem. Additionally with single process limitation we can't utilize the all available cores, so that can become a bottleneck for the application.     
+Such problems encouraged us to orchestrate new flexible, easy to manage, scalable and resilient architecture for Lisk Core. 
 
 # Rationale
 
@@ -329,26 +330,26 @@ In the first phase of implementation, the suggestion is to open three separate m
 
 **How will debugging work with this architecture?**
 
-Nothing will change in regard to debugging. User will start the whole ecosystem of modules with one command and you will see consolidated logs on a console.
+Nothing will change in regard to debugging. User will start the whole ecosystem of modules with one command and will see consolidated logs on a console.
 
 For debugging IPC channels, we could add extensive logging to log any activity on the controller, so we can deeply track inter-process communication. For interactive debugging, all native Node.js debugging features are intended to work with this architecture.
 
 **Using modules in other products?**
 
-Any module we would create is designed to be used in Lisk Core. As every module is dependent on Lisk Controller to be available, hence it is not an intended use case to run Lisk Core modules as part of other products like Lisk Commander.
+Any module we would create is designed to be used in Lisk Core. As every module is dependent on Lisk Controller to be available, it is not an intended use case to run Lisk Core modules as part of other products like Lisk Commander.
 
-As each module will have a well defined set of events, actions and protocol to communicate. So if used properly, modules functionality can be in other Node.js projects or sidechains.
+As each module will have a well defined set of events, actions and protocol to communicate. So if used properly, a modules's functionality can be used in other Node.js projects or sidechains.
 
 **Which tool will we use for IPC communication?**
 
-We are not finalizing any tool at the moment to implement IPC channel concept. Probable and available options are Custom Node implementation, PM2 implementation or to look for any other tool for this purpose. We will probably experiment with all options to choose the best one for our architecture.
+We are not finalizing any tool at the moment to implement the IPC channel concept. Probable and available options are Custom Node implementation, PM2 implementation or to look for any other tool for this purpose. We will probably experiment with all options to choose the best one for our architecture.
 
 **What is the database component?**
 
 The database component will be used to perform any kind of RDBMS activity. We call it component because it will be initialized and stay available on the controller layer to be utilized by any other module (the way we are doing right now).
 
-Modules, which are spawned as child processes, create an instance of this component on their own. For creating a new instance, a module can either pass custom configuration or ask the controller to share only the configuration for the database (json object). So the respective module can use the same configuration, override or pass custom configuration. In the end, module will have its own instance of the database component.
+Modules, which are spawned as child processes, create an instance of this component on their own. For creating a new instance, a module can either pass a custom configuration or ask the controller to share only the configuration for the database (json object). So the respective module can use the same configuration, override or pass a custom configuration. In the end, each module will have its own instance of the database component.
 
 **How to refactor the current code base?**
 
-The above architecture requires a considerable code changes. A viable plan is defined as a milestone can be looked at https://github.com/LiskHQ/lisk-modular/issues/12
+The above architecture requires a considerable code changes. A viable plan is defined as a milestone and can be found at https://github.com/LiskHQ/lisk-modular/issues/12
