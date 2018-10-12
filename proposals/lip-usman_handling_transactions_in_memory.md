@@ -9,98 +9,123 @@ Updated: -
 ```
 
 ## Abstract
-This LIP addresses the performance impact of applying transactions on the unconfirmed state of the accounts in the database prior to block application and proposes a performance efficient solution where transactions only update accounts state while node is processing a new block.
+This LIP proposes a new implementation of the transaction pool. We suggest aggregating database queries, verifying transactions against other transactions in the transaction pool and processing transactions in memory. The goal is to improve the performance of the transaction pool by decreasing the number of database queries and unnecessarily repeated verifications of transactions.
+
 
 ## Copyright
 This LIP is licensed under the [GNU General Public License, version 3](http://www.gnu.org/licenses/gpl-3.0.html "GNU General Public License, version 3").
 
 ## Motivation
-Application maintains the unconfirmed state for transactions in the transaction pool by using unconfirmed columns in the `mem_accounts` table. For every transaction added to the unconfirmed queue in the transaction pool, application performs database writes. Since transaction moves from queued to unconfirmed queue back and forth multiple times before (possibly) becoming part of a block, application takes a huge performance hit because of it.
+In the current implementation, the transaction pool verifies the transactions by performing application logic and database queries alternately. Moreover, the transaction pool maintains a queue of up to 25 transactions that are ready to be included into a block, and the database keeps track of the account state that would result if all these transactions were applied. Consequently, the relevant entries in the database get updated whenever this queue receives a new transaction. These transactions are called *unconfirmed transactions*, and the resulting state is called *unconfirmed* state. Furthermore, all entries of the unconfirmed state get set to the actual state of the blockchain whenever a block gets added or deleted.
 
-These unnecessary database updates are done in two places:
+The current transaction pool does not scale and is inefficient. This is due to the transaction pool performing application logic and database queries alternately, the way unconfirmed transactions are maintained in a queue, and due to keeping the unconfirmed state in the database. The inefficiency of the transaction pool is highlighted when executing stress tests where the transaction pool receives thousands of transactions. 
 
-1. fillpool
-2. applyBlock
-
-From [fillpool](https://github.com/LiskHQ/lisk/blob/development/logic/transaction_pool.js#L749) in transaction pool, application applies the effects of transactions to the unconfirmed columns of the relevant accounts in the `mem_accounts` table before transaction becomes part of the blockchain. The purpose of fillPool is to check the validity of transactions against the confirmed state as well as with other unconfirmed transactions in the database.
-
-From [applyBlock](https://github.com/LiskHQ/lisk/blob/development/modules/blocks/chain.js#L502), we perform [undoUnconfirmedListStep](https://github.com/LiskHQ/lisk/blob/development/modules/blocks/chain.js#L316), [applyUnconfirmedStep](https://github.com/LiskHQ/lisk/blob/development/modules/blocks/chain.js#L336) where node updates relevant accounts rows in the database.
-
-These database update calls are unnecessary because block application is done atomically now as opposed to earlier when application didn’t have the ability of atomic database writes.
-
-## Assumption
-A block is the smallest atomic step in a blockchain, this means that when transactions are put in a block, they should behave as if they are all applied at the same time. This assumption will imply that all transactions in the current block of the blockchain should on their own be valid against the state of the blockchain present as of the last block. This assumption also implies that it’s not possible to have a transaction which is invalid based on the state of the blockchain as of the last block of the blockchain but is only valid because of some transaction which came before it in the same block.
-
-This assumption ensures that the order of transactions in a block do not matter. Which ensures that application will behave in a consistent way in many edge cases like:
-
-* An account A sends 10 LSK to another account B where B does not have any LSK then B cannot spend that money in the same block irrespective of order of the transactions in the block.
-* An account A sends a transfer transaction and a second signature registeration transaction and both of these transactions go in the same block, then transfer transaction will not require a second signature irrespective of order of the transactions in the block.
+This proposal addresses the performance inefficiencies and scalability issues in the current transaction pool. It suggests to aggregate database queries, retrieve relevant records from the database in parallel, and then perform application logic for the verification of transactions. Furthermore, this proposal improves the processing of unconfirmed transactions by removing columns related to the unconfirmed state from the database and by recalculating the state of accounts in memory, when required. The suggested changes reduce and parallelize database queries, thus, improving transaction pool performance and increasing the number of transactions processable in the transaction pool.
 
 ## Rationale
-Removing the maintenance of unconfirmed state from the database means that application has to ensure same level of consistency through application logic. Therefore, it is the responsibility of transaction pool to do the following things:
-* Transaction pool should be able to handle conflicting transactions.
-* Transaction pool should revalidate transactions when the state of blockchain has changed.
+The purpose of the transaction pool is to validate and store transactions efficiently and to provide valid transactions to delegates when the node is forging a block. Therefore, in order to improve the performance of these tasks, this proposal focuses on three improvements:
+* Refactor and optimize the verification of transactions against the blockchain state.
+* Perform validation of transactions against transactions in the transaction pool.
+* Remove maintaining the unconfirmed state in the database and perform state calculations in memory.
 
-Conflicting transactions are the transactions which depend on each other in a way that they are valid separately, but when processed together, can lead to the invalidation of one or more transaction. There are various types of conflicting transactions, and in order to derive a thorough solution, we need to first understand the different kinds of conflicting transactions. One example of a conflicting transactions is that say one user has 10 LSK in his account if he makes two transactions sending 10 LSK and sends it to a node then only one of these transactions can become part of the blockchain.
+We will explain the rationale behind these improvements in the following sub-sections.
 
-And since transaction pool will maintain transactions in memory, it should be able removes the transactions which become invalid due to a change in the state of the blockchain after they’ve been initially verified.
+### Refactor and optimize the verification of transactions
+In the current implementation, the verification of transactions includes static validations on the transaction body and verification based on the database state. Moreover, the transaction verification requires multiple database queries, which are executed alternately with the application logic. Executing I/O tasks in series is inefficient because of the single-threaded nature of applications. Therefore, serially executing database queries impacts the performance of verifying a transaction.
+In this proposal, we suggest to refactor the verification of a transaction by dividing it into three steps:
+* In the first step, static validation checks should be performed on the transaction like schema and signature validation.
+* In the second step, the database queries required for the transaction verification should be aggregated and executed in parallel.
+* In the third step, the transaction gets verified against the database state using the state retrieved in the second step, e.g., by verifying account balances.
 
-Both of these points are explained in detail in the following sections.
+By refactoring the transaction verification process, we divide the task of the verification process into discrete steps. Therefore, the control flow does not jump back and forth between executing database queries and application logic. Furthermore, when verifying multiple transactions, the process can be further optimized by performing static validation on all transaction, then aggregating and executing database queries for all transactions and finally performing the verification of all transactions based on the database state. 
 
-### Handling conflicting transactions:
-Transactions can be conflicting based on how they affect the sender or recipient account and also the state of the blockchain. In Lisk, there are 6 different transaction types (currently active), and here we list the effects of each transaction type on the blockchain, and how it can possibly become conflicting.
-#### For transfer transaction:
-If there are two or more transfer transactions from the same account, then it means that when both of the transactions are processed together, the balance of the account may become less than zero leading to a conflicting state.
-#### For second signature transaction:
-If there are two or more second signature registration transactions from the same account, then it means that those transactions are definitely conflicting. And all transactions that come after second signature registration transaction has become part of the blockchain are affected by second signature transaction for that account. (Note: An account can have a second signature registration transaction and transfer transaction in the same block but the transfer transaction will not require second signature.)
-#### For delegate registration transaction:
-Delegate usernames are unique, so all the delegate registration transactions are possibly conflicting transactions with each other. Also, there can be only one delegate registration transaction from an account.
-#### For vote transaction:
-All vote transactions from the same account are possibly conflicting because it’s possible that account tried to vote same delegate in two different transactions and also in the case that multiple vote transactions together make the total votes greater than 101 (which is not allowed).
-#### For multi transaction:
-All multisignature registration transactions from the same account are conflicting. And all transactions that come after multi registration transaction has become part of the blockchain are affected by multi registration transaction for that account. (Note: An account can have a multisignature registration transaction and transfer transaction in the same block but the transfer transaction will not require multisignatures.)
-#### For dapp registration transaction:
-All dapp registration transactions are possibly conflicting with other dapp registration transactions.
+### Perform validation of transactions against transactions in the transaction pool
+Transactions in the transaction pool can be conflicting in such a way that they cannot be processed irrespective of the blockchain state. For example:
+* Transactions contain duplicated data that is required to be unique for that transaction type. E.g, two delegate registration transactions using the same username.
+* Multiple transactions of a specific type are received from an account where an account can only make one transaction of that type. E.g, two second signature registration transactions from one account.
+ 
+Validating transactions with other transactions in the transaction pool is inexpensive because it does not require any database state. Therefore, incoming transactions should be validated against other transactions in the transaction pool before further verification.
 
-### Handling events which change the state of the blockchain:
-The state of the blockchain is updated when a block is forged or deleted and when a round finishes or gets reverted. These changes affect accounts state, which can lead to a transaction in transaction pool becoming invalid and vice versa. So, whenever any of these events happen, application should reverify all transactions in the pool which are related to accounts which were involved in the block/round change.
+### Perform state calculation for handling unconfirmed transactions
+As mentioned before, the transaction pool maintains a queue for the unconfirmed transactions, which we call the `unconfirmed` queue. The transactions in the `unconfirmed` queue change the state of accounts by updating the *unconfirmed state* in the database.  The unconfirmed state is stored in the `u_*` columns of the `mem_accounts` table like `u_balance` and `u_delegate`. 
 
-### Summary of scenarios:
-So, to summarise, there are 7 scenarios which transaction pool should handle consistently:
-1. Transactions from the same account are conflicting with each other.
-2. Transaction type effects the state of the account for all transactions after that one.
-3. An account can only have one transaction of a particular type in the blockchain.
-4. Transaction type contain some data which needs to be unique across blockchain.
-5. There is a new block forged/received which has transactions affecting accounts in the pool.
-6. There is a  block deletion which has transactions affecting accounts in the pool.
-7. Round has finished/rolled back.
+By calculating the unconfirmed state, the transaction pool validates that transactions can be processed together. Transactions that are valid separately, but may become invalid when processed together, are called *conflicting transactions*. By storing the unconfirmed state in the database, the transaction pool does not only verify transactions against the blockchain state, but also against the other transactions in the `unconfirmed` queue. This approach allows the transaction pool to handle conflicting transactions. The drawback of using this approach is that the transaction pool performs extraneous database queries because it maintains the unconfirmed state in the database.
+
+In this proposal, we suggest to remove the maintenance of the unconfirmed state in the database and to perform calculations of the unconfirmed state in memory, when required. The new transaction pool should sanitize transactions in the transaction pool periodically by calculating the unconfirmed state in memory. Furthermore, valid transactions can become invalid due to a change in the blockchain state. Therefore, relevant transactions in the transaction pool should be verified when there is a change in the blockchain state. 
+
+By calculating the unconfirmed state of transactions in memory and revalidating transactions on the blockchain state changes, the invalid transactions will be removed from the transaction pool. Hence, the delegates will be able to extract valid transactions from the transaction pool quickly when forging a block.
 
 ## Specification
-In order to cater for all the scenarios, we define following rules for properly managing transactions in pool:
-1. There can be at max 25 transactions from the same account in the pool. So, for every transaction received by the pool, pool should check that the sender account of incoming transaction has less than 25 transactions in the pool before adding it to the transaction pool queue. (If an account wants to send more than 25 transactions, it should configure it’s own node to accept more than 25 local transactions.)
-2. For every transaction received by the pool, it should be verified against confirmed state of the blockchain before adding it to the transaction pool queue.
-3. For every transaction received by the pool, if it’s transaction type is unique for an account or if it’s transaction type contains data which should be unique across blockchain, transaction pool should verify the transaction against transactions of the same type in the pool before adding it to the transaction pool queue.
-4. If there is an event (block addition/deletion round finish/rollback), which changes the state of an account, application should reverify all transactions related to that account, retain the transactions which are valid and remove the transactions which are invalid from the transaction pool queue.
+### Data structures used in the transaction pool 
+The new transaction pool manages transactions in multiple queues. The queues are listed with their short description below:
+Received: This queue contains newly received transactions from other peers.
+Validated: This queue contains transactions which are validated by performing schema and signature validations. 
+Verified: This queue contains transactions which are independently verified against the blockchain state.
+Multisignature: This queue contains transactions which are independently verified against the blockchain state and are awaiting signatures to be processed.
+Ready: This queue contains transactions which are verified against the blockchain state and can be processed in the same block.
+
+For each queue there will additionally be a hashmap where the keys are the transaction IDs and the values are the corresponding transaction objects. This hashmap is useful for quick lookup of transactions in a queue. 
+
+### Lifetime of transactions in the transaction pool
+Transactions are received in the transaction pool from clients and peers. Transactions in the transaction pool move between different queues during their lifetime before they are rejected or become part of the blockchain. 
+The transactions received from the peers are put in the `received` queue. The transactions move between queues by a job called `processQueues`, which runs periodically.
+The `processQueue` job will call the functions `validateTransactions` and `verifyTransactions`. Firstly, the `validateTransactions` function performs schema validation and signature validation on all transactions in the received queue. The transactions for which the validation check fails are removed from the transaction pool. Whereas, the transactions for which the validation check passes are moved to the `validated` queue. Secondly, the `verifyTransactions` function performs verification of all transactions in the `validated` queue against other transactions in the transaction pool (this is explained later in a separate section) and against the blockchain state. The transactions for which the verification check fails are removed from the transaction pool. The transactions for which the verification check passes and that require further signatures for the multi-signature processing are moved to the `multi-signature` queue. The transactions for which the verification check passes and that do not require further signatures are moved to the `verified` queue.
+Once a transaction from the `multi-signature` queue has the required signatures, it is moved to the `verified` queue.
+Transactions received from a client are processed as soon as they are received and the client is notified about success or failure. On receiving a transaction from a client, the transaction is validated and verified. A transaction for which validation and verification checks pass is added to the `verified` queue and the client is notified about the success. Whereas, a transaction for which validation or verification checks fail is discarded and the client is notified about the failure. 
+The transaction pool also defines a `processTransactions` job. This job takes transactions from the `verified` queue, and checks whether transactions can be processed together by calculating the resulting state in memory. If the state is valid, the transactions are moved to the `ready` queue, otherwise, the transactions are rejected. 
+When forging a block, transactions are taken from the `ready` queue. The details of processing transactions in memory are explained later in a separate section.
+In the case of a blockchain state change event, the relevant transactions from the `verified`, the `multisignature` and the `ready` queue are moved back to the `validated` queue. The details of this process are also explained later in a separate section.
+When a block is deleted, the transactions included in the block are also removed from the blockchain. The transactions from the deleted block are put into the `validated` queue such that they can be processed again.
+
  
-We will discuss these specifications in detail in order to understand their impact on the application.
+### Refactor verification of transactions
+The verification of transactions requires the blockchain state, which is stored in the database. In order to optimize fetching the state from the database, there will be a function  `getRequiredState` for each transaction type.This function will return information required to fetch the state from the database for a particular transaction. For example, for a delegate registration transaction, this function will return:
+```
+{
+‘ACCOUNT’: <sender_account_id>,
+‘UNIQUE_USERNAME’: <username specified in the transaction>
+}
+```
+Using this information, the database module will execute the queries in parallel. In the case of a delegate registration transaction, as described above, one query will be executed for fetching the sender account and another for checking if the username already exists in the database. 
+When verifying multiple transactions, the required state for verifying those transactions will be queried from the database and aggregated. Afterwards, the transactions will be verified using the relevant data fetched from the database. 
 
-### Rule 1:
-Rule 1 is to ensure that an account cannot spam the node’s transaction pool with invalid conflicting transactions. It will act as an anti-spamming check, helpling node mitigate possible issues raised by **scenario 1**. In order to decide whether a group of transaction are conflicting with each other (which can be at max 25 transactions), node will do it once it’s creating/processing a block by applying those transactions on the accounts on top of each other. We set the limit to 25 transactions because block can contains at max 25 transactions.
+### Verifying transactions against transactions in transaction pool
+In order to check whether transactions are conflicting, the transactions are verified against existing transactions in the transaction pool. The verification of transactions against other transactions is triggered by the `verifyTransactions` function. In `verifyTransactions`, every transaction that is supposed to be moved from `validated` will be verified against all transactions in the `verified`, `multisignature` and `ready` queues.
+In order to understand the verifications performed at this step, we look at how various transaction types affect the accounts and blockchain state.
 
-### Rule 2:
-Rule 2 will ensure that node does not add an invalid transaction in the transaction pool queue according to the current state of the blockchain. This will ensure that **scenario 2** is handled properly. Which means that, for example, if there is a second signature and transfer transaction from the same account in the pool, then transfer transaction will not require second signature irrespective of the order of transactions in the pool until second signature transaction has become part of the blockchain. (If both of these transactions become part of the same block in the blockchain, then transfer transaction will not require second signature because of the assumption specified at the beginning of the document)
+As shown in the table below, second signature registration, delegate registration, and multi-signature registration transactions are only allowed once per account. Therefore, if an account sends two or more transactions of one of these types to the transaction pool, then all of these transactions following the first one will be rejected during the verification against the transaction pool. In the same way, delegate registration transactions and dapp registration transactions contain unique data. Therefore, if the transaction pool receives two or more transactions of one of these types, then the transactions following the first one will be rejected.
 
-### Rule 3:
-Rule 3 will ensure that transactions in the pool are not conflicting with each other irrespective of the state of the blockchain. Every transaction type will have its custom implementation of *verifyTransactionAgainstTransactionsInPool* function. This function will have two responsibilities:
+| Transaction type                          | Allowed once for an account | Contains unique data |
+|-------------------------------------------|-----------------------------|----------------------|
+| Transfer transaction                      |                             |                      |
+| Second signature registration transaction |              X              |                      |
+| Delegate registration transaction         |              X              |           X          |
+| Vote transaction                          |                             |          X           |
+| Multi-signature registration transaction  |              X              |                      |
+| Dapp registration transaction             |                             |           X          |
+| In transfer transaction            |                             |                             |
+| Out transfer transaction             |                             |                             |
 
-1. It will ensure that incoming transaction is rejected if it’s related to **scenario 3** because if pool receives a transaction which can only be made once from an account and the transaction pool already contains a transaction of the same type from the same account, it will reject the incoming transaction.
-2. It will ensure that incoming transaction is rejected if it’s related to **scenario 4** because if the pool receives a transaction which contains data needed to be unique across blockchain, the function implementation will verify the transaction against all the transactions of the same type in the pool and reject the incoming transaction if the data is not unique. 
+To perform these checks, there will be a function `verifyAgainstOtherTransactions` for every transaction type. This function will accept two parameters. Firstly, the transaction that needs to be verified and secondly, an array of already verified transactions of the same type. It will check the transaction against the verified transactions and return an error if the transaction is invalid due to another transaction based on some constraints for that transaction.
 
-### Rule 4:
-Rule 4 will ensure that the transactions related to the affected accounts due to the change in the blockchain state are reverified. This rule will ensure **scenarios 5, 6 and 7** are handled properly.
+### Processing transactions in memory
+In order to check whether transactions can become part of the blockchain, the transactions need to be processed on top of each other. The transaction pool processes transactions together via the `processTransactions` job. The `processTransactions` job tries to process the maximum number of transactions allowed in a block. It takes transactions from the `verified` queue, and it puts the transactions that can be processed together to the `ready` queue and removes the unprocessable transactions from the transaction pool.
+More precisely, the data required for processing transactions are aggregated and fetched from the database in `processTransactions`. Afterward, the transactions are applied on the fetched accounts in memory. The transactions that are processable with each other are kept whereas if there are some conflicting transactions, they are removed from the transaction pool. For example, if the balance of an account is 10 LSK and there were two transfer transactions of 10 LSK each, then after applying both of these transactions, the balance of the account would be less than 0 LSK. Therefore, one of the transactions will be rejected.
+
+### Verify transactions on blockchain state change
+The transactions are verified against the blockchain state. The blockchain state changes may cause some transactions to become invalid. The following changes in the blockchain state may invalidate transactions in the transaction pool:
+1. A new block is added to the blockchain. Therefore, new transactions that affect the validity of transactions in the transaction pool may be added to the blockchain.
+2. A block is deleted from the blockchain. Therefore, transactions that affect the validity of transactions in the transaction pool may be removed from blockchain. 
+3. The application rolls back to the previous round. Therefore, the balance of active delegates is updated.
+
+A blockchain state change only affects a subset of accounts and transactions. Therefore, only the affected transactions in the transaction pool should be verified again. Upon a change in the blockchain state, the transactions in the `verified`, the `multisignature` and the `ready` queues should be reverified if
+- the transaction is from an account affected by the blockchain state change, or
+- the transaction is of a type that requires unique data and this transaction type was included in the block causing the blockchain change
+
+The transaction pool registers to `onNewBlock`, `onDeleteBlock` and `onRoundRollback` events. Upon these events, it deduces the affected transactions in the transaction pool. Afterwards, the transaction pool moves all the affected transactions from the `verifed`, the `multisignature` and the `ready` queue to the `validated` queue where they will be verified again via the `processQueue` job. Moreover, in the case of the `onDeleteBlock` event, the transactions included in the deleted block are put back in the `validated` queue such that they can become part of the blockchain in a later block.
 
 ## Backwards Compatibility
-This LIP limits the number of transactions in the transaction pool from an account to be 25. It's important to note that blocks with more than 25 transactions from the same account will still be valid. Another impact of this LIP is that since node will recalculate the unconfirmed state of the accounts (or return the same response for account's unconfirmed state as it does for confirmed state), the behaviour of endpoints like `/api/node/transactions/unconfirmed` and `/api/accounts` will be affected.
+This LIP is backward compatible. 
 
-## Related changes 
-The application should prioritze local transactions and broadcast them in such a way (it should only broadcast 25 transactions from the same account) so they are not rejecting by the network because of max transactions from the same account limit introduced in this LIP.
+## Reference Implementation
+TBD
