@@ -46,8 +46,8 @@ Transactions in the transaction pool can be conflicting in such a way that they 
  
 Validating transactions with other transactions in the transaction pool is inexpensive because it does not require any database state. Therefore, incoming transactions should be validated against other transactions in the transaction pool before further verification.
 
-### Perform state calculation for handling unconfirmed transactions
-As mentioned before, the transaction pool maintains a queue for the unconfirmed transactions, which we call the `unconfirmed` queue. The transactions in the `unconfirmed` queue change the state of accounts by updating the *unconfirmed state* in the database.  The unconfirmed state is stored in the `u_*` columns of the `mem_accounts` table like `u_balance` and `u_delegate`. 
+### Perform state calculation for handling unconfirmed transactions in memory
+As mentioned before, currently the transaction pool maintains a queue for the unconfirmed transactions, which we call the `unconfirmed` queue. The transactions in the `unconfirmed` queue change the state of accounts by updating the *unconfirmed state* in the database.  The unconfirmed state is stored in the `u_*` columns of the `mem_accounts` table like `u_balance` and `u_delegate`. 
 
 By calculating the unconfirmed state, the transaction pool validates that transactions can be processed together. Transactions that are valid separately, but may become invalid when processed together, are called *conflicting transactions*. By storing the unconfirmed state in the database, the transaction pool does not only verify transactions against the blockchain state, but also against the other transactions in the `unconfirmed` queue. This approach allows the transaction pool to handle conflicting transactions. The drawback of using this approach is that the transaction pool performs extraneous database queries because it maintains the unconfirmed state in the database.
 
@@ -58,11 +58,11 @@ By calculating the unconfirmed state of transactions in memory and revalidating 
 ## Specification
 ### Data structures used in the transaction pool 
 The new transaction pool manages transactions in multiple queues. The queues are listed with their short description below:
-Received: This queue contains newly received transactions from other peers.
-Validated: This queue contains transactions which are validated by performing schema and signature validations. 
-Verified: This queue contains transactions which are independently verified against the blockchain state.
-Multisignature: This queue contains transactions which are independently verified against the blockchain state and are awaiting signatures to be processed.
-Ready: This queue contains transactions which are verified against the blockchain state and can be processed in the same block.
+`received`: This queue contains newly received transactions from other peers.
+`validated`: This queue contains transactions which are validated by performing schema and signature validations. 
+`verified`: This queue contains transactions which are independently verified against the blockchain state.
+`multisignature`: This queue contains transactions which are independently verified against the blockchain state and are awaiting signatures to be processed.
+`ready`: This queue contains transactions which are verified against the blockchain state and can be processed in the same block.
 
 For each queue there will additionally be a hashmap where the keys are the transaction IDs and the values are the corresponding transaction objects. This hashmap is useful for quick lookup of transactions in a queue. 
 
@@ -79,7 +79,7 @@ When a block is deleted, the transactions included in the block are also removed
 
  
 ### Refactor verification of transactions
-The verification of transactions requires the blockchain state, which is stored in the database. In order to optimize fetching the state from the database, there will be a function  `getRequiredState` for each transaction type.This function will return information required to fetch the state from the database for a particular transaction. For example, for a delegate registration transaction, this function will return:
+The verification of transactions requires the blockchain state, which is stored in the database. In order to optimize fetching the state from the database, there will be a function  `getRequiredState` for each transaction type. This function will return information required to fetch the state from the database for a particular transaction. For example, for a delegate registration transaction, this function will return:
 ```
 {
 ‘ACCOUNT’: <sender_account_id>,
