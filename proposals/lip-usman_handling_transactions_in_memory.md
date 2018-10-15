@@ -127,7 +127,7 @@ A blockchain state change only affects a subset of accounts and transactions. Th
 - the transaction is from an account affected by the blockchain state change, or
 - the transaction is of a type that requires unique data and this transaction type was included in the block causing the blockchain change
 
-The transaction pool registers to `onNewBlock`, `onDeleteBlock` and `onRoundRollback` events. Upon these events, it deduces the affected transactions in the transaction pool. Afterwards, the transaction pool moves all the affected transactions from the `verifed`, the `multisignature` and the `ready` queue to the `validated` queue where they will be verified again via the `processQueue` job. Moreover, in the case of the `onDeleteBlock` event, the transactions included in the deleted block are put back in the `validated` queue such that they can become part of the blockchain in a later block.
+The transaction pool registers to `onNewBlock`, `onDeleteBlock` and `onRoundRollback` events. Upon these events, it deduces the affected transactions in the transaction pool. Afterwards, the transaction pool moves all the affected transactions from the `verifed`, the `multisignature` and the `ready` queue to the `validated` queue where they will be verified again via the `processQueue` job. Moreover, in the case of the `onDeleteBlock` event, the transactions included in the deleted block are put back in the `verified` queue such that they can become part of the blockchain in a later block.
 
 ## Backwards Compatibility
 This LIP is backward compatible. 
