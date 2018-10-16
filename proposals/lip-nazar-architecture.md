@@ -18,13 +18,12 @@ This LIP is licensed under the [GNU General Public License, version 3](http://ww
 
 # Motivation
 
-Lisk Core is a NodeJS application running on a single process. Limitation of single-process architectures and tightly coupled code logic can have different impacts on the system. For example, consider the following scenarios: 
+Lisk Core is a NodeJS application running on a single process. The limitation of single-process architectures and tightly coupled code logic can have different impacts on the system. For example, consider the following scenarios: 
 
-* If a failure occurred while processing blocks received over the P2P network, the HTTP API layer would also crash.
-* If an error occurred in the P2P master process, the node would also fail to respond over HTTP API layer.
-* We can't utilize all available hardware cores, as long as application runs in single process due to nature of NodeJS.  
-* Due to tightly coupled code, we can't easily refactor any particular module without an impact on the whole application.
+* We cannot utilize all available hardware cores, as long as the application runs in a single process due to the nature of NodeJS.  
+* Due to tightly coupled code, we cannot easily refactor any particular module without an impact on the whole application.
 * We cannot ensure that each individual component of the application remains functional, whilst any other component (or more than one component) faces a problem.
+* If we face a heavy load on the HTTP API which blocks the resources, will impact the performance of block propagation and other components.  
 
 Such problems encouraged us to orchestrate new flexible, easy to manage, scalable and resilient architecture for Lisk Core. 
 
@@ -334,7 +333,7 @@ Nothing will change in regard to debugging. User will start the whole ecosystem 
 
 For debugging IPC channels, we could add extensive logging to log any activity on the controller, so we can deeply track inter-process communication. For interactive debugging, all native Node.js debugging features are intended to work with this architecture.
 
-**Using modules in other products?**
+**Will the modules be used in other products?**
 
 Any module we would create is designed to be used in Lisk Core. As every module is dependent on Lisk Controller to be available, it is not an intended use case to run Lisk Core modules as part of other products like Lisk Commander.
 
@@ -342,7 +341,7 @@ As each module will have a well defined set of events, actions and protocol to c
 
 **Which tool will we use for IPC communication?**
 
-We are not finalizing any tool at the moment to implement the IPC channel concept. Probable and available options are Custom Node implementation, PM2 implementation or to look for any other tool for this purpose. We will probably experiment with all options to choose the best one for our architecture.
+We are not finalizing any tool at the moment to implement the IPC channel concept. Probable and available options are custom node implementation, PM2 implementation or to look for any other tool for this purpose. We will probably experiment with all options to choose the best one for our architecture.
 
 **What is the database component?**
 
