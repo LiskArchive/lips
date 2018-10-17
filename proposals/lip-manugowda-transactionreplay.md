@@ -13,6 +13,10 @@
 
 This LIP proposes to mitigate transaction replay on different chains by introducing a network identifier as a constitutive component of the signature of a transaction.
 
+## Copyright
+
+This LIP is licensed under the [GNU General Public License, version 3](http://www.gnu.org/licenses/gpl-3.0.html "GNU General Public License, version 3").
+
 ## Motivation
 
 Currently, transactions included in a blockchain on the Lisk platform [can be replayed on other chains](https://github.com/LiskHQ/lisk/issues/1610). For example, transactions sent on Testnet can be replayed on Mainnet, and the problem is likely to be exacerbated by the introduction of sidechains into this system. Current mitigation methods include (1) discouraging passphrase reuse across blockchains, and (2) encouraging registration of distinct second passphrases on distinct blockchains in situations where (1) is not feasible. However, one of the touted advantages of the Lisk platform is the ability to reuse passphrases on multiple blockchains, including the mainchain and sidechains, which conflicts with this strategy.
