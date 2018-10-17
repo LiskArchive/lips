@@ -9,7 +9,7 @@ Updated: -
 ```
 
 ## Abstract
-This LIP proposes a new implementation of the transaction pool. We suggest aggregating database queries, verifying transactions against other transactions in the transaction pool and processing transactions in memory. The goal is to improve the performance of the transaction pool by decreasing the number of database queries and unnecessarily repeated verifications of transactions.
+This LIP proposes a new implementation of the transaction pool. We suggest executing database queries in parallel, verifying transactions against other transactions in the transaction pool and processing transactions in memory. The goal is to improve the performance of the transaction pool by decreasing the number of database queries and unnecessarily repeated verifications of transactions.
 
 
 ## Copyright
@@ -20,7 +20,7 @@ In the current implementation, the transaction pool verifies the transactions by
 
 The current transaction pool does not scale and is inefficient. This is due to the transaction pool performing application logic and database queries alternately, the way unconfirmed transactions are maintained in a queue, and due to keeping the unconfirmed state in the database. The inefficiency of the transaction pool is highlighted when executing stress tests where the transaction pool receives thousands of transactions. 
 
-This proposal addresses the performance inefficiencies and scalability issues in the current transaction pool. It suggests to aggregate database queries, retrieve relevant records from the database in parallel, and then perform application logic for the verification of transactions. Furthermore, this proposal improves the processing of unconfirmed transactions by removing columns related to the unconfirmed state from the database and by recalculating the state of accounts in memory, when required. The suggested changes reduce and parallelize database queries, thus, improving transaction pool performance and increasing the number of transactions processable in the transaction pool.
+This proposal addresses the performance inefficiencies and scalability issues in the current transaction pool. It suggests to collect database queries, retrieve relevant records from the database in parallel, and then perform application logic for the verification of transactions. Furthermore, this proposal improves the processing of unconfirmed transactions by removing columns related to the unconfirmed state from the database and by recalculating the state of accounts in memory, when required. The suggested changes reduce and parallelize database queries, thus, improving transaction pool performance and increasing the number of transactions processable in the transaction pool.
 
 ## Rationale
 The purpose of the transaction pool is to validate and store transactions efficiently and to provide valid transactions to delegates when the node is forging a block. Therefore, in order to improve the performance of these tasks, this proposal focuses on three improvements:
@@ -34,10 +34,10 @@ We will explain the rationale behind these improvements in the following sub-sec
 In the current implementation, the verification of transactions includes static validations on the transaction body and verification based on the database state. Moreover, the transaction verification requires multiple database queries, which are executed alternately with the application logic. Executing I/O tasks in series is inefficient because of the single-threaded nature of applications. Therefore, serially executing database queries impacts the performance of verifying a transaction.
 In this proposal, we suggest to refactor the verification of a transaction by dividing it into three steps:
 * In the first step, static validation checks should be performed on the transaction like schema and signature validation.
-* In the second step, the database queries required for the transaction verification should be aggregated and executed in parallel.
+* In the second step, the database queries required for the transaction verification should be executed in parallel.
 * In the third step, the transaction gets verified against the database state using the state retrieved in the second step, e.g., by verifying account balances.
 
-By refactoring the transaction verification process, we divide the task of the verification process into discrete steps. Therefore, the control flow does not jump back and forth between executing database queries and application logic. Furthermore, when verifying multiple transactions, the process can be further optimized by performing static validation on all transaction, then aggregating and executing database queries for all transactions and finally performing the verification of all transactions based on the database state. 
+By refactoring the transaction verification process, we divide the task of the verification process into discrete steps. Therefore, the control flow does not jump back and forth between executing database queries and application logic. Furthermore, when verifying multiple transactions, the process can be further optimized by performing static validation on all transaction, then executing database queries for all transactions and finally performing the verification of all transactions based on the database state. 
 
 ### Perform validation of transactions against transactions in the transaction pool
 Transactions in the transaction pool can be conflicting in such a way that they cannot be processed irrespective of the blockchain state. For example:
@@ -92,7 +92,7 @@ The verification of transactions requires the blockchain state, which is stored 
 }
 ```
 Using this information, the database module will execute the queries in parallel. In the case of a delegate registration transaction, as described above, one query will be executed for fetching the sender account and another for checking if the username already exists in the database. 
-When verifying multiple transactions, the required state for verifying those transactions will be queried from the database and aggregated. Afterwards, the transactions will be verified using the relevant data fetched from the database. 
+When verifying multiple transactions, the required state for verifying those transactions will be queried from the database and collected. Afterwards, the transactions will be verified using the relevant data fetched from the database. 
 
 ### Verifying transactions against transactions in transaction pool
 In order to check whether transactions are conflicting, the transactions are verified against existing transactions in the transaction pool. The verification of transactions against other transactions is triggered by the `verifyTransactions` function. In `verifyTransactions`, every transaction that is supposed to be moved from `validated` will be verified against all transactions in the `verified`, `multisignature` and `ready` queues.
@@ -115,7 +115,7 @@ To perform these checks, there will be a function `verifyAgainstOtherTransaction
 
 ### Processing transactions in memory
 In order to check whether transactions can become part of the blockchain, the transactions need to be processed on top of each other. The transaction pool processes transactions together via the `processTransactions` job. The `processTransactions` job tries to process the maximum number of transactions allowed in a block. It takes transactions from the `verified` queue, and it puts the transactions that can be processed together to the `ready` queue and removes the unprocessable transactions from the transaction pool.
-More precisely, the data required for processing transactions are aggregated and fetched from the database in `processTransactions`. Afterward, the transactions are applied on the fetched accounts in memory. The transactions that are processable with each other are kept whereas if there are some conflicting transactions, they are removed from the transaction pool. For example, if the balance of an account is 10 LSK and there were two transfer transactions of 10 LSK each, then after applying both of these transactions, the balance of the account would be less than 0 LSK. Therefore, one of the transactions will be rejected.
+More precisely, the data required for processing transactions are collected and fetched from the database in `processTransactions`. Afterward, the transactions are applied on the fetched accounts in memory. The transactions that are processable with each other are kept whereas if there are some conflicting transactions, they are removed from the transaction pool. For example, if the balance of an account is 10 LSK and there were two transfer transactions of 10 LSK each, then after applying both of these transactions, the balance of the account would be less than 0 LSK. Therefore, one of the transactions will be rejected.
 
 ### Verify transactions on blockchain state change
 The transactions are verified against the blockchain state. The blockchain state changes may cause some transactions to become invalid. The following changes in the blockchain state may invalidate transactions in the transaction pool:
