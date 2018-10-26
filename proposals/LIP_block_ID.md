@@ -1,0 +1,100 @@
+```
+LIP: <LIP number>
+Title: Use SHA3-256 hash of block header as blockID
+Author: Andreas Kendziorra, andreas.kendziorra@lightcurve.io
+Type: Standards Track
+Module: Blocks
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+```
+
+## Abstract
+
+This LIP proposes to take the SHA3-256 hash of the block header as the blockID of a block. This implies an increase of the blockID length and the usage of a different hash function. The motivation of the proposal is to increase the security of the Lisk blockchain.
+
+## Copyright
+
+This LIP is licensed under the [GNU General Public License, version 3](http://www.gnu.org/licenses/gpl-3.0.html "GNU General Public License, version 3").
+
+## Motivation
+
+In the current Lisk protocol, a blockID consists of 8 bytes of the SHA-256 digest of the block header. This small length comes with some advantages, such as less stored data or better visualisation on small displays. However, it comes at the price of providing low resistance to collisions and pre-images. More precisely, the low resistance could be exploited in the following scenario: An attacker could try to a find another block with the same blockID for a given block in the past. If the attacker succeeds, other community members may be convinced by this  altered history, as the altered chain might appear to be valid.
+
+Therefore, the length of the blockID shall be increased to exclude this kind of attack. Moreover, the hash function used to compute the blockID shall be replaced by its successor, namely SHA3-256.
+
+## Specification
+
+### Current protocol
+
+We briefly recall the current protocol in order to explain the proposed changes.
+
+In the current protocol, the data of the header of the signed block is put into a data block in a specified way. Afterwards, the data block is used as the input message for SHA-256. The first 8 bytes of the output are reversed and used as the blockID.
+
+Here, we do not want to elaborate on how this data block is generated, especially since the specification may change in the future, e.g. when data fields get added or removed. However, we can assume that there is a specification for it, which we denote by **SPEC**. In Lisk Core 1.0.0, for example, the data block generation is implemented in [Block.prototype.getBytes](https://github.com/LiskHQ/lisk/blob/v1.0.0/logic/block.js#L385).
+
+### Proposed protocol
+
+In the proposed protocol, the blockID is generated as follows:
+
+1. Generate the data block of the header of the signed block according to **SPEC**.
+2. Use the data block as the input for SHA3-256. The output is used as the blockID.
+
+The hash function SHA3-256 is an instance of the [KECCAK](https://keccak.team/keccak.html) function. Its form is
+
+```
+SHA3-256(M) = KECCAK[512](M||01, 256)
+```
+for a message M according to NIST [FIPS 202](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf).
+
+#### BlockIDs in JSON objects
+
+In the JSON schema for blocks, the blockID shall be represented in hexadecimal.
+
+#### BlockID verification
+
+During the verification of a received block, the blockID must be verified as correct. If the blockID verification fails, the block has to be rejected.
+
+#### Implementation of SHA-3
+
+The open source library [js-sha3](https://github.com/emn178/js-sha3) could be forked and integrated into the Lisk source code in order to compute SHA-3 hashes. If this library is not desired, for any reason, [jsSHA](https://github.com/Caligatio/jsSHA) represents an alternative.
+Note that this is only a recommendation. Any correct implementation of SHA3-256 may be used.
+
+## Rationale
+
+### Why 256 bit length?
+
+An attacker could try to a find another block with the same blockID for a given block in the blockchain. In the successful case, other community members may also be convinced by this altered history, as the altered chain might appear to be valid. The bit length of the blockIDs determines the resistance against such an attack. I.e., n-bit blockIDs yield n-bit resistance against such an attack.
+
+128 bit is the recommended security level by ECRYPT to provide sufficient security for at least the next [10 years
+](http://www.ecrypt.eu.org/csa/documents/D5.4-FinalAlgKeySizeProt.pdf#chapter.2). NIST is recommending 128 bit to be the minimum security level for applications intended to run [beyond 2030](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r4.pdf#%5B%7B%22num%22%3A196%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C81%2C721%2Cnull%5D). 
+With a blockID length of 256 bit, we choose a security level that is beyond the recommendations, and provides enormous trust that the mentioned attack is infeasible, even for a time span that significantly exceeds the next decade.
+Choosing this extra security comes at a low price. We use 128 bit extra compared to the minimum requirement. This sums up to ~50 Mb extra size in the blockchain per year (~100 Mb if blockIDs are stored in hexadecimal representation in character arrays); a small value compared to the overall size of the chain.
+Since blockIDs are rarely handled by users, i.e. writing, reading or spelling blockIDs is a rare use case, the extra length does also not yield any significant disadvantages for the user experience.
+
+### Why SHA-3?
+
+The hash function SHA-3, or rather the  [KECCAK](https://keccak.team/keccak.html) function, was the winner of the public NIST hash function competition. Due to the 5 year long competition and review process, it received fundamental attention and analysis. NIST chose KECCAK to be the winner of the competition due to its security, performance and flexibility aspects. We choose SHA-3 mainly for its high security due to its construction and the heavy analysis it received.
+
+#### Alternatives
+
+The hash function [BLAKE2](https://blake2.net/) received great attention and analysis as well. It is assumed to be as secure as KECCAK, and is even faster than KECCAK. However, we give preference to KECCAK as BLAKE2 did not go through the entire SHA-3 review process.
+
+SHA-256 is the currently used hash function for generating blockIDs. Although there are no known weaknesses of this hash function that could be exploited with regard to blockIDs, is has weaknesses due to its construction (these can be exploited in length extension attacks). Therefore, we give a preference to SHA-3, a hash function without known weaknesses.
+
+### Library recommendation
+
+We recommend js-sha3 to be forked and integrated into the Lisk source code because of the following reasons: It comes with a very compact and readable implementation, has a high test coverage and no dependencies. Moreover, it provides implementations for KECCAK, SHAKE and SHA-3 which allows flexible usage of the KECCAK function family also for other use cases in Lisk.
+
+The library jsSHA has a longer history and implements the SHA hash function family from SHA-1 to SHA-3 including SHAKE. However, it does not provide a generic implementation of KECCAK. Moreover, it is less compact and less readable than js-sha3. Therefore, we recommend js-sha3 more than jsSHA.
+
+### Representation in JSON objects
+
+A hexadecimal representation is preferred over a decimal representation due to length efficiency. We do not choose Base64 since it contains special characters. Base32 is also not preferred as it could lead to some confusion due to the lack of standardisation.
+
+## Backwards Compatibility
+
+The change introduces a hard fork, because of the following: Blocks forged by nodes following the proposed protocol get rejected by nodes following the current protocol and vice versa.
+
+The proposed protocol will become effective from a certain block height on. Nodes that need to be able to sync blocks below this height need to be able to compute and verify the current and the proposed blockIDs.
+
+
