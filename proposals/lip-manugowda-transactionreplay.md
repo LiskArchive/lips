@@ -104,7 +104,7 @@ Assume we have a transaction `T1` from network `TNI` and a transaction `T2` from
 
 ## Backwards Compatibility
 
-This change will introduce a hard fork. After the change is implemented, transactions’ signatures will be fundamentally different. This means that transactions will be verified in a different way, and thus, nodes on the old protocol version will reject transactions that have been signed using the new protocol, and vice versa.
+This change will introduce a hard fork. After the change is implemented, transaction signatures will be fundamentally different. This means that transactions will be verified in a different way, and thus, nodes on the old protocol version will reject transactions that have been signed using the new protocol, and vice versa.
 
 Moreover, the history of versions must be stored in order for nodes to verify old transactions during node synchronization. This history of versions must specify the block height range for every version within the same community identifier. This way, when a node is synchronizing with the network, the corresponding network identifiers for the corresponding heights will be in place for the transaction verification.
 
@@ -137,4 +137,4 @@ Example of the construction of a new network identifier in the original Lisk Mai
 - Hash function `H()` is SHA3-256
 
 With these parameters, the network identifier will be calculated as:
-`network_ID = SHA3-256(NH + ‘Lisk’ + ‘2.0’)= '89487c3779eab51b2ec07ed86d0abbdef46c0311911b108334b52322041cea03'`
+`network_ID = SHA3-256(NH + ‘Lisk’ + ‘2.0’)= 'cd9a34062feec2b368656efb99d9f710534c4a6c5d8dd0e36e66fad0e5ea10d0'`
