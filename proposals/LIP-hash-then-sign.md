@@ -94,7 +94,7 @@ In the proposed protocol, a signature for a multisignature transaction is genera
 
 The hash-then-sign paradigm is typically used to achieve better performance, ensure integrity and to avoid existential forgery attacks. In the following, we show why this can work for some signature schemes, and why these improvements do not apply in combination with Ed25519-SHA-512 or have negligible impact. Moreover, we show that pre-hashing reduces the security of EdDSA.
 
-It is worth mentioning, that none of the points discussed below are critical. That means, the current protocol is secure, and there are no drastic performance issues. Nevertheless, using pre-hashing adds minor disadvantages with respect to security and performance, and adds unnecessary complexity to the protocol and implementation.
+It is worth mentioning that none of the points discussed below are critical. That means, the current protocol is secure, and there are no drastic performance issues. Nevertheless, using pre-hashing adds minor disadvantages with respect to security and performance, and adds unnecessary complexity to the protocol and implementation.
 
 ### Performance
 
