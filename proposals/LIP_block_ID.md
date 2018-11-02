@@ -52,9 +52,9 @@ In the JSON schema for blocks, the blockID shall be represented in hexadecimal.
 
 During the verification of a received block, the blockID must be verified as correct. If the blockID verification fails, the block has to be rejected.
 
-#### Implementation of SHA-3
+#### Implementation of SHA3-256
 
-The open source library [js-sha3](https://github.com/emn178/js-sha3) could be forked and integrated into the Lisk source code in order to compute SHA-3 hashes. If this library is not desired, for any reason, [jsSHA](https://github.com/Caligatio/jsSHA) represents an alternative.
+The open source library [js-sha3](https://github.com/emn178/js-sha3) could be forked and integrated into the Lisk source code in order to compute SHA3-256 hashes. If this library is not desired, for any reason, [jsSHA](https://github.com/Caligatio/jsSHA) represents an alternative.
 Note that this is only a recommendation. Any correct implementation of SHA3-256 may be used.
 
 ## Rationale
@@ -73,13 +73,13 @@ Since blockIDs are rarely handled by users, i.e. writing, reading or spelling bl
 
 ### Why SHA-3?
 
-The hash function SHA-3, or rather the  [KECCAK](https://keccak.team/keccak.html) function, was the winner of the public NIST hash function competition. Due to the 5 year long competition and review process, it received fundamental attention and analysis. NIST chose KECCAK to be the winner of the competition due to its security, performance and flexibility aspects. We choose SHA-3 mainly for its high security due to its construction and the heavy analysis it received.
+The hash function family SHA-3, or rather the  [KECCAK](https://keccak.team/keccak.html) function, was the winner of the public NIST hash function competition. Due to the 5 year long competition and review process, it received fundamental attention and analysis. NIST chose KECCAK to be the winner of the competition due to its security, performance and flexibility aspects. We choose SHA-3 mainly for its high security due to its construction and the heavy analysis it received.
 
 #### Alternatives
 
 The hash function [BLAKE2](https://blake2.net/) received great attention and analysis as well. It is assumed to be as secure as KECCAK, and is even faster than KECCAK. However, we give preference to KECCAK as BLAKE2 did not go through the entire SHA-3 review process.
 
-SHA-256 is the currently used hash function for generating blockIDs. Although there are no known weaknesses of this hash function that could be exploited with regard to blockIDs, is has weaknesses due to its construction (these can be exploited in length extension attacks). Therefore, we give a preference to SHA-3, a hash function without known weaknesses.
+SHA-256 is the currently used hash function for generating blockIDs. Although there are no known weaknesses of this hash function that could be exploited with regard to blockIDs, is has weaknesses due to its construction (these can be exploited in length extension attacks). Therefore, we give a preference to KECCAK, a hash function without known weaknesses.
 
 ### Library recommendation
 
