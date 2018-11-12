@@ -7,6 +7,7 @@ Module: Transaction Pool, Transactions
 Created: <2018-09-07>
 Updated: -
 ```
+
 ## Abstract
 This LIP proposes to improve the processing of transactions by optimizing the verification of transactions, applying transactions in memory, and consolidating database queries. Additionally, it suggests improvements for managing transactions in the transaction pool.
 
@@ -35,7 +36,7 @@ Moreover, these individual steps can be performed on a group of transactions in 
 #### Perform static validations
 In this step, all schema and signature validations required for verifying transactions are performed. These validation checks are performed on the transaction body and do not depend on the blockchain state. Therefore, if transactions are validated once, they will always be valid.
 
-### Fetch blockchain state
+#### Fetch blockchain state
 In this step, the blockchain state required for verifying transactions is fetched from the database. Since each transaction type requires specific data for verification, there should be a `getRequiredAttributes`  function for each type. This function returns the information required to fetch the state from the database for a particular transaction. For example, for a delegate registration transaction, this function returns:
 ```
 {
@@ -58,15 +59,15 @@ Processing blocks includes saving the resulting account state affected by the tr
 We improve the performance of saving the resulting state of transactions by applying all the transactions on accounts in memory, and later performing the database update for all accounts only once, at the end.
 
 ## Changes in the transaction pool
-The purpose of the transaction pool is to validate and store transactions efficiently and to provide a list of valid, verified and non conflicting transactions when the node is forging a block. In order to reflect the changes made in transaction processing, the implementation of the transaction pool needs to be updated. Furthermore, we suggests to verify incoming transactions against existing transactions in the transaction pool and re-verify affected transactions on changes in the blockchain state. The details are explained in separate sections below.
+The purpose of the transaction pool is to validate and store transactions efficiently and to provide a list of valid, verified and non-conflicting transactions when the node is forging a block. In order to reflect the changes made in transaction processing, the implementation of the transaction pool needs to be updated. Furthermore, we suggests to verify incoming transactions against existing transactions in the transaction pool and re-verify affected transactions on changes of the blockchain state. The details are explained in separate sections below.
 
 ### Queues used in the transaction pool
-Transactions in the transaction pool are managed in multiple queues. Transactions are placed in different queues based on the stage of verification. Therefore, in order to reflect the changes in the transaction verification process, the new transaction pool manages transactions in the following queues.
-`received`: This queue contains newly received transactions from other peers.
-`validated`: This queue contains transactions which are validated by performing schema and signature validations. 
-`verified`: This queue contains transactions which are independently verified against the blockchain state.
-`pending`: This queue contains transactions which are independently verified against the blockchain state and are awaiting signatures to be processed.
-`ready`: This queue contains transactions which are verified against the blockchain state and can be processed in the same block.
+Transactions in the transaction pool are managed in multiple queues. Transactions are placed in different queues based on the stage of verification. Therefore, in order to reflect the changes in the transaction verification process, the new transaction pool manages transactions in the following queues.  
+`received`: This queue contains newly received transactions from other peers.  
+`validated`: This queue contains transactions which are validated by performing schema and signature validations.  
+`verified`: This queue contains transactions which are independently verified against the blockchain state. 
+`pending`: This queue contains transactions which are independently verified against the blockchain state and are awaiting signatures to be processed.  
+`ready`: This queue contains transactions which are verified against the blockchain state and can be processed in the same block. 
 
 ### Verifying transactions against transactions in transaction pool
 In order to check whether transactions are conflicting, the transactions are verified against existing transactions in the transaction pool. During this process, every transaction that leaves the `validated` queue will be checked against all transactions in the `verified`, `pending` and `ready` queues.
@@ -79,11 +80,11 @@ As shown in the table below, second signature registration, delegate registratio
 | Transfer transaction                      |                             |                      |
 | Second signature registration transaction |              X              |                      |
 | Delegate registration transaction         |              X              |           X          |
-| Vote transaction                          |                             |           X          |
+| Vote transaction                          |                             |          X           |
 | Multi-signature registration transaction  |              X              |                      |
 | Dapp registration transaction             |                             |           X          |
-| In transfer transaction										|                             |                      |
-| Out transfer transaction				          |															|                      |
+| In transfer transaction            |                             |                             |
+| Out transfer transaction             |                             |                             |
 
 To perform these checks, there will be a function `verifyAgainstOtherTransactions` for every transaction type. This function will accept two parameters: the transaction that needs to be verified and an array of already verified transactions of the same type. It will check the transaction against the verified transactions and return an error if the transaction is invalid due to another transaction based on some constraints for that transaction type.
 
@@ -96,18 +97,19 @@ The transactions are verified against the blockchain state. Changes in the block
 A blockchain state change only affects a subset of accounts and transactions. Therefore, only the affected transactions in the transaction pool should be verified again. 
 
 In case of a new block, the transactions in the `verified`, the `pending` and the `ready` queues should be moved to the `validated` queue if:
-- the transaction is from an account which is included in the new block, or
-- the transaction is of a type that requires unique data and this transaction type is included the new block
+- The transaction is from an account which is included in the new block.
+- The transaction is of a type that requires unique data and this transaction type is included the new block.
 
 In case of a block deletion, the transactions in the `verified`, the `pending` and the `ready` queues should be moved to the `validated` queue if:
-- the transaction is from an account included in the deleted block
+- The transaction is from an account included in the deleted block.
 Moreover, the transactions included in the deleted block are put back in the `verified` queue such that they can become part of the blockchain in a later block.
 
 In case of round rollback, the transactions in the `verified`, the `pending` and the `ready` queues should be moved to the `validated` queue if:
-- the transaction is from an account which was part of the active delegates of the round.
+- The transaction is from an account which was part of the active delegates of the round.
 
 ## Backwards Compatibility
 This LIP is backward compatible. 
 
 ## Reference Implementation
 TBD
+
