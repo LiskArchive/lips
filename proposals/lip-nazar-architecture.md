@@ -124,7 +124,7 @@ Modules can be further categorized into two types:
 
 #### Interface
 
-The implementation details of a module are ultimately up to the module development team, but by default, a module must export an object from main entry file of `package.json` adhering to the following structure:
+The implementation details of a module are ultimately up to the module developer, but by default, a module must export an object from main entry file of `package.json` adhering to the following structure:
 
 ```js
 // Exported from the main file of the JavaScript package
