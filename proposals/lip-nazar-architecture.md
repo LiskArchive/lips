@@ -10,7 +10,12 @@ Module: All
 ## Abstract
 
 This LIP proposes a new application architecture for Lisk Core, that would be flexible and modular.
-The goal is to have an architecture which can be extended easily whilst staying resilient for the current and the future.
+The goals of the new application architecture are:
+
+- Looser coupling between modules through functional isolation.
+- Optional elastic scaling for modules over multiple cores, threads or machines.
+- Easier extensibility through the use of a plugin pattern and a supporting API.
+- Increased resilience to individual module processing failure.
 
 ## Copyright
 
