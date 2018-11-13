@@ -45,7 +45,7 @@ Taking note of the above points, aim for redesigning the architecture of the Lis
 4. Most of the components should **scale elastically** depending upon the available physical resources.
 5. Individual components should be flexible enough to be installed using the **plugin pattern**.
 6. Lay a foundation on which instances of the Lisk Core application can be scaled to run different components on **different physical machines** and still operate in a mutually exclusive manner.
-7. Provide an **elegant API which can be extended easily** when creating new components for Lisk Core software.
+7. Provide an **elegant API which can be extended easily** when creating new components for the Lisk Core application.
 8. The work performed as part of the redesign should provide a **foundation for the Lisk SDK and DApp creation**, and support us with insights into how to provide those products to users.
 
 These considerations have led us to the following architecture:
