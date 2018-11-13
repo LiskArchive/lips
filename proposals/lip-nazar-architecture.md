@@ -9,7 +9,7 @@ Module: All
 
 ## Abstract
 
-This LIP proposes a new application architecture for Lisk Core, that would be flexible and modular.
+This LIP proposes a new application architecture for Lisk Core, that is of a flexible and modular design.
 The goals of the new application architecture are:
 
 - Looser coupling between modules through functional isolation.
