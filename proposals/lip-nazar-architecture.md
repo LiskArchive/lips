@@ -81,7 +81,7 @@ Here you can find the specification for each component of the architecture in de
 
 ### Lisk
 
-Lisk Core in the above diagram denotes the complete ecosystem of the software as composed by various components. The components should be connected with each other to work and drive the blockchain.
+Lisk Core in the above diagram denotes the complete ecosystem of the application as composed by various components. The components should be connected with each other to work and drive the blockchain.
 
 ### Controller
 
