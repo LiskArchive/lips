@@ -44,7 +44,7 @@ Taking note of the above points, aim for redesigning the architecture of the Lis
 3. Design each component in a **resilient way to tackle brittleness** of the multi-processing. This means that a failure of one component will have minimal impact on other components and that components can recover individually.
 4. Most of the components should **scale elastically** depending upon the available physical resources.
 5. Individual components should be flexible enough to be installed using the **plugin pattern**.
-6. Foundation works to extend scalability of the node, to run different components on **different physical machines** and still operate in a mutually exclusive manner.
+6. Lay a foundation on which instances of the Lisk Core application can be scaled to run different components on **different physical machines** and still operate in a mutually exclusive manner.
 7. Provide an **elegant API which can be extended easily** when creating new components for Lisk Core software.
 8. The work performed as part of the redesign should provide a **foundation for the Lisk SDK and DApp creation**, and support us with insights into how to provide those products to users.
 
