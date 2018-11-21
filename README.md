@@ -1,6 +1,6 @@
 ![Lisk Improvement Proposals](banner.jpg "Lisk Improvement Proposals")
 
-Welcome to the LIPS repository where community members can propose changes to the Lisk protocol.
+Welcome to the LIPS repository where community members can propose changes to the Lisk protocol and its software implementation.
 
 ## Contributing
 
