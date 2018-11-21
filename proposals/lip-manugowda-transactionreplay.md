@@ -1,13 +1,14 @@
-<pre>
-  LIP: lip-manugowda-transactionreplay
-  Title: Mitigate transaction replay on different chains
-  Author: Manu Nelamane Siddalingegowda, manu@lightcurve.io
-          Iker Alustiza, iker@lightcurve.io
-  Type: Standards Track
-  Module: Block, Transactions
-  Created: - 
-  Updated: -
-</pre>
+```
+LIP: lip-manugowda-transactionreplay
+Title: Mitigate transaction replay on different chains
+Author: Manu Nelamane Siddalingegowda <manu@lightcurve.io>
+        Iker Alustiza <iker@lightcurve.io>
+Status: Draft
+Type: Standards Track
+Module: Block, Transactions
+Created: 2018-10-16
+Updated: 2018-11-21
+```
 
 ## Abstract
 
@@ -25,7 +26,6 @@ Currently, transactions included in a blockchain on the Lisk platform [can be re
 
 This LIP proposes to include a network identifier as a constitutive component of the signature of a transaction. This network identifier will be a hash of the concatenation of the blockchain’s nethash, a community identifier, as well as a version relating to that community identifier. The combination of these three components is intended to be unique and honest actors should conform to that requirement.
 
-
 This proposal avoids transaction replay attacks from any existing blockchain to Lisk Mainnet or Testnet (and between each other). Adding the network identifier in the signature function will make the signature only valid for the specific network.
 
 Moreover, in an ecosystem with sidechains implemented, each sidechain will have a unique network identifier to mitigate transaction replays across different chains. However, the situation will be more complex in this case since a malicious sidechain developer could copy the unique identifier from Mainnet or another sidechain and try to replay a transaction from its own sidechain on that original chain. The sidechain user, who calls the signature function, should check what will be exactly signed in the transaction object, including the network identifier. Note that the question of which fields are present on the object that is used as the input for this function is different to the question of what information is transmitted over a network or stored in a database, where this identifier may be omitted for reasons of efficiency/scalability.
@@ -35,57 +35,58 @@ With a general and well defined signature process for the whole Lisk ecosystem, 
 ## Specification
 
 As introduced in the previous section, the network identifier will be constructed as follows:
+
 ```
 network identifier = H(nethash + community identifier + version)
 ```
-where:
+
+Where:
+
 - `H()` - The cryptographic hash function **SHA3-256**. Refer to Appendix A for details about this hashing function and its implementation.
 
-- `nethash` - The output of a cryptographic hash function of the genesis block of the relevant blockchain. For Lisk Mainnet and Testnet, the `nethash` values are stored in the  [source code](https://github.com/LiskHQ/lisk-elements/blob/169d4386057ace03650d7fc93ddbaea71262d012/packages/lisk-constants/src/index.ts#L32). In the case of sidechains’ nethash, we assume that Lisk Elements will provide a standard nethash calculating function. This way, sidechain users can generate this value by themselves and verify that the sidechain network identifier is the right one.
-   
-- `community identifier` - Name of the relevant community. This identifier uniquely specifies the community supporting the relevant network. The **community identifier associated with the Lisk Foundation** and its supporters will be `Lisk`. If a subset of the community decided to split the network, they could, for example, choose `LiskCash` as their community identifier.
+- `nethash` - The output of a cryptographic hash function of the genesis block of the relevant blockchain. For Lisk Mainnet and Testnet, the `nethash` values are stored in the [source code](https://github.com/LiskHQ/lisk-elements/blob/169d4386057ace03650d7fc93ddbaea71262d012/packages/lisk-constants/src/index.ts#L32). In the case of sidechains’ nethash, we assume that Lisk Elements will provide a standard nethash calculating function. This way, sidechain users can generate this value by themselves and verify that the sidechain network identifier is the right one.
 
-- `version` - Unique version number per community identifier. This version identifier is increased when a software release introduces protocol-level changes that cause a hard fork in the network. Here, we are exclusively referring to main releases for the protocol which increase the protocol version from `x.y` to `(x+1).0` (an example would be `version` changing from `'1.0'` to `'2.0'`). It is worth noting that, in the case of a critical bug fix (patch release), which potentially causes a hard fork, this identifier will not change (the software release version remains unchanged).
+- `community identifier` - The name of the relevant community. This identifier uniquely specifies the community supporting the relevant network. The **community identifier associated with the Lisk Foundation** and its supporters will be `Lisk`. If a subset of the community decided to split the network, they could, for example, choose `LiskCash` as their community identifier.
 
-Note that the sum symbol “+” in the formula above stands for the string concatenation operator. In Appendix B below, one can find a simple example of the construction of a network identifier. 
+- `version` - The unique version number per community identifier. This version identifier is increased when a software release introduces protocol-level changes that cause a hard fork in the network. Here, we are exclusively referring to main releases for the protocol which increase the protocol version from `x.y` to `(x+1).0` (an example would be `version` changing from `'1.0'` to `'2.0'`). It is worth noting that, in the case of a critical bug fix (patch release), which potentially causes a hard fork, this identifier will not change (the software release version remains unchanged).
 
-It is important to point out that the version and community identifier fields should be well documented and defined in the Lisk ecosystem (for example as in [SLIP-0044](https://github.com/satoshilabs/slips/blob/master/slip-0044.md)). 
+Note that the sum symbol “+” in the formula above stands for the string concatenation operator. In Appendix B below, one can find a simple example of the construction of a network identifier.
+
+It is important to point out that the version and community identifier fields should be well documented and defined in the Lisk ecosystem (for example as in [SLIP-0044](https://github.com/satoshilabs/slips/blob/master/slip-0044.md)).
 
 In order to implement the proposed change in the Lisk ecosystem (Lisk Core, Lisk Elements), the logic in the following functions needs to be updated to include the network identifier:
 
-- Lisk Core [getBytes](https://github.com/LiskHQ/lisk/blob/5d5af525eec7f2ee687ca921a6a2d1457c471da9/logic/transaction.js#L154-L237) function. 
+- Lisk Core [getBytes](https://github.com/LiskHQ/lisk/blob/5d5af525eec7f2ee687ca921a6a2d1457c471da9/logic/transaction.js#L154-L237) function.
 
-- Lisk Elements [getTransactionBytes](https://github.com/LiskHQ/lisk-elements/blob/d5ab830ad65965764d364eb344ce4e3a13bf14c9/packages/lisk-transactions/src/utils/get_transaction_bytes.js#L147-L212) function. 
+- Lisk Elements [getTransactionBytes](https://github.com/LiskHQ/lisk-elements/blob/d5ab830ad65965764d364eb344ce4e3a13bf14c9/packages/lisk-transactions/src/utils/get_transaction_bytes.js#L147-L212) function.
 
 Below, there are two illustrative examples of Testnet and Mainnet depicting how the network identifier will be generated at the point of various hard forks in the network according to what was proposed before.
 
 ### Scenarios
 
 #### Testnet
- ```
+
+```
 TG0 = Testnet genesis nethash
- 
+
 NI1 = H(TG0 + ‘Lisk’ + ‘1.0’)
 NI2 = H(TG0 + ‘Lisk’ + ‘2.0’)
 NI3 = H(TG0 + ‘LiskCash’ + ‘1.0’)
 
 TG0-------|----T1--------------------Lisk------------> NI1
-           |       
-           |---------T2---------------Lisk------------> NI2                   
-           |                   
-           |--------------T3---------Liskcash---------> NI3
+          |       
+          |---------T2---------------Lisk------------> NI2                   
+          |                   
+          |--------------T3---------Liskcash---------> NI3
 ```  
 
 The above illustration shows a possible scenario of hard forks and how the proposal will mitigate transaction replay attacks. As one can observe, we start with a single network which eventually splits into three networks with three different network identifiers (`NI1`, `NI2`, `NI3`). Assume we have a hard fork due to the introduction of a new fee system to the network resulting in a new network identifier `NI2` and, at the same time, a second hard fork because a minority of the community decided to fork the network identified by `NI1` resulting in `NI3`. All the network identifiers of the example were generated using the same nethash (`TG0`). In the case of `NI2`, the version was bumped for a hard fork agreed upon by the original community (the community identifier remains the same across `NI1` and `NI2`). Furthermore, it is assumed here that the original network from before the fork is maintained as well (with network identifier `NI1`). Finally, when a minority of the community decided to split the network with a hard fork (i.e., `NI3`), they defined a new community identifier (e.g. `LiskCash`) for their fork, along with their desired version number. Since the new network shares history with the old network, the network identifier for the new network should be derived from the original nethash.  
-  
 
 Assume now we have a transaction `T1` from `NI1`. An attacker tries to replay the transaction `T1` from network `NI1` over network `NI2` or `NI3`. This transaction will be rejected as the signature of the transaction is unique to network `NI1`. More precisely, the increased version for `NI2` and the distinct community identifier for `NI3` yield distinct network identifiers, resulting in distinct data being signed as part of the transaction-signing process. The same would happen if the attacker tried to replay a transaction `T2` from network `NI2` over network `NI3` (or `NI1`) and a transaction `T3` from network `NI3` over network `NI1` (or `NI2`) as depicted in the example.
 
-
-
 #### Across Networks
 
-``` 
+```
 MG0 = Mainnet genesis nethash
 TG0 = Testnet genesis nethash
 
@@ -93,14 +94,13 @@ MNI = H(MG0 + 'Lisk' + '1.0')
 TNI = H(TG0 + 'Lisk' + '1.0')
 
 TG0-------------T1------------------------------> TNI            
- 
+
 MG0------------------------------T2-------------> MNI
 ```
-  
+
 The above illustration demonstrates how the proposal will avoid transaction replay attacks across networks with different genesis blocks (Testnet, Mainnet). As it can be observed, we have two networks, Testnet and Mainnet, with different nethashes (`TG0` and `MG0`) resulting in two different network identifiers (`TNI` and `MNI`).
 
 Assume we have a transaction `T1` from network `TNI` and a transaction `T2` from `MNI`. When an attacker tries to replay transaction `T1` from network `TNI` over network `MNI`, the transaction will be rejected as the signature of `T1` is unique to the network `TNI`. The same would happen if the user tried to replay transaction `T2` from network `MNI` over network `TNI`.
-
 
 ## Backwards Compatibility
 
@@ -112,29 +112,27 @@ Moreover, the history of versions must be stored in order for nodes to verify ol
 
 TBD
 
-## Appendix A: SHA3-256 
+## Appendix A: SHA3-256
 
-The hash function SHA3-256 is an instance of the [KECCAK](https://keccak.team/keccak.html) function. Its form is
+The hash function SHA3-256 is an instance of the [KECCAK](https://keccak.team/keccak.html) function. Its form is:
 
 ```
 SHA3-256(M) = KECCAK[512](M||01, 256)
 ```
-for a message M according to NIST [FIPS 202](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf).
+
+For a message M according to NIST [FIPS 202](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf).
 
 #### Implementation of SHA-3
 
-The open source library [js-sha3](https://github.com/emn178/js-sha3) can be forked and integrated into the Lisk source code in order to compute SHA-3 hashes. If this library is not desired, for any reason, [jsSHA](https://github.com/Caligatio/jsSHA) represents an alternative.
-Note that this is only a recommendation. Any correct implementation of SHA3-256 may be used.
-
+The open source library [js-sha3](https://github.com/emn178/js-sha3) can be forked and integrated into the Lisk source code in order to compute SHA-3 hashes. If this library is not desired, for any reason, [jsSHA](https://github.com/Caligatio/jsSHA) represents an alternative. Note that this is only a recommendation. Any correct implementation of SHA3-256 may be used.
 
 ## Appendix B: Example
 
 Example of the construction of a new network identifier in the original Lisk Mainnet, when protocol version 2.0 is released and supported by the Lisk Foundation:
- 
+
 - Nethash: `NH= 'ed14889723f24ecc54871d058d98ce91ff2f973192075c0155ba2b7b70ad2511'`
 - Community identifier = `'Lisk'`
 - Version = `'2.0'`
 - Hash function `H()` is SHA3-256
 
-With these parameters, the network identifier will be calculated as:
-`network_ID = SHA3-256(NH + ‘Lisk’ + ‘2.0’)= 'cd9a34062feec2b368656efb99d9f710534c4a6c5d8dd0e36e66fad0e5ea10d0'`
+With these parameters, the network identifier will be calculated as: `network_ID = SHA3-256(NH + ‘Lisk’ + ‘2.0’)= 'cd9a34062feec2b368656efb99d9f710534c4a6c5d8dd0e36e66fad0e5ea10d0'`
