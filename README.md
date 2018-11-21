@@ -10,9 +10,10 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 
 ## Proposals
 
-| Number                        | Title                                                 | Author                        | Type            | Module        | Status        |
-| ------------------------------|------------------------------------------------------ | ------------------------------| ----------------|---------------|---------------|
-| [0001](proposals/lip-0001.md) | LIP Purpose and Guidelines                            | Lisk Foundation               | Process         | -             | Active        |
-| [0002](proposals/lip-0002.md) | Change to byte based block size limit                 | Iker Alustiza, Nazar Hussain  | Standards Track | Blocks        | Draft         |
-| [0003](proposals/lip-0003.md) | Uniform ordering of delegates list                    | Iker Alustiza                 | Standards Track | Delegates     | Draft         |
-| [0004](proposals/lip-0004.md) | Introduce robust peer selection and banning mechanism | Jan Hackfeld                  | Standards Track | Peers         | Draft         |
+| Number                        | Title                                                                    | Author                        | Type            | Module        | Status        |
+| ------------------------------|------------------------------------------------------------------------- | ------------------------------| ----------------|---------------|---------------|
+| [0001](proposals/lip-0001.md) | LIP Purpose and Guidelines                                               | Lisk Foundation               | Process         | -             | Active        |
+| [0002](proposals/lip-0002.md) | Change to byte based block size limit                                    | Iker Alustiza, Nazar Hussain  | Standards Track | Blocks        | Draft         |
+| [0003](proposals/lip-0003.md) | Uniform ordering of delegates list                                       | Iker Alustiza                 | Standards Track | Delegates     | Draft         |
+| [0004](proposals/lip-0004.md) | Introduce robust peer selection and banning mechanism                    | Jan Hackfeld                  | Standards Track | Peers         | Draft         |
+| [0005](proposals/lip-0005.md) | Introduce new flexible, resilient and modular architecture for Lisk Core | Nazar Hussain                 | Informational   | All           | Draft         |
