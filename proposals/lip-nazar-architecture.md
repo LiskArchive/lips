@@ -9,8 +9,7 @@ Module: All
 
 ## Abstract
 
-This LIP proposes a new application architecture for Lisk Core, that is of a flexible and modular design.
-The goals of the new application architecture are:
+This LIP proposes a new application architecture for Lisk Core, that is of a flexible and modular design. The goals of the new application architecture are:
 
 - Looser coupling between modules through functional isolation.
 - Optional elastic scaling for modules over multiple cores, threads or machines.
@@ -23,20 +22,20 @@ This LIP is licensed under the [GNU General Public License, version 3](http://ww
 
 ## Motivation
 
-Lisk Core is a NodeJS application running on a single process. The limitation of single-process architectures and tightly coupled code logic can have different impacts on the system. For example, consider the following scenarios: 
+Lisk Core is a NodeJS application running on a single process. The limitation of single-process architectures and tightly coupled code logic can have different impacts on the system. For example, consider the following scenarios:
 
 * We cannot utilize all available hardware cores, as long as the application runs in a single process due to the nature of NodeJS.  
 * Due to tightly coupled code, we cannot easily refactor any particular module without an impact on the whole application.
 * We cannot ensure that each individual component of the application remains functional, whilst any other component (or more than one component) faces a problem.
 * If we face a heavy load on the HTTP API, which blocks the resources, this will impact the performance of block propagation and other components.  
 
-Such problems encouraged us to orchestrate new flexible, easy to manage, scalable and resilient architecture for Lisk Core. 
+Such problems encouraged us to orchestrate new flexible, easy to manage, scalable and resilient architecture for Lisk Core.
 
 ## Rationale
 
 When designing the architecture for a distributed and decentralised system, a few points need to be considered:
 
-* Different modules could be deployed to different machines in the future. Moreover, communication between modules cannot be assumed to be reliable. Therefore, the communication between modules should be fail-safe. In case of any network failure, a module should check and try to recover automatically. 
+* Different modules could be deployed to different machines in the future. Moreover, communication between modules cannot be assumed to be reliable. Therefore, the communication between modules should be fail-safe. In case of any network failure, a module should check and try to recover automatically.
 * There is always latency in the communication between modules, so the code should expect it and handle it properly.
 * We have no control or direct guidance over how most individuals install the software, so the distribution should be easy to install.
 * A corollary of the previous point is that we have no control over the physical machines that run Lisk Core, so we should aim to build software which can work well with a range of physical resources.
@@ -136,7 +135,7 @@ The implementation details of a module are ultimately up to the module developer
 export default {
   /**
    * A unique module name accessed throughout out the system.
-   * If some module has already been registered with the same alias, an error will be thrown
+   * If some module has already been registered with the same alias, an error will be thrown.
    */
   alias: "moduleName",
 
@@ -144,35 +143,31 @@ export default {
    * Package information containing the version of the software and other details.
    * The easiest way is to refer to the relevant package.json.
    */
-
   pkg: require("../package.json"),
 
   /**
-   * Supported configurations for the module with default values
+   * Supported configurations for the module with default values.
    */
-
   defaults: {},
 
   /**
-   * List of valid events to register with the Controller
-   * Once the application is running, each event name will be prefixed by the module’s alias, e.g. moduleName:event1
-   * Any module running on the instance will be able to subscribe or publish these events
+   * List of valid events to register with the Controller.
+   * Once the application is running, each event name will be prefixed by the module’s alias, e.g. `moduleName:event1`.
+   * Any module running on the instance will be able to subscribe or publish these events.
    */
-
   events: [],
 
   /**
-   * List of valid actions to register with the Controller
-   * Once the application is running, each action name will be prefixed by the module’s alias, e.g. moduleName:action1
-   * Action definition can be provided on module load with the help of the channels
-   * Source module can define the action while others can invoke that action
+   * List of valid actions to register with the Controller.
+   * Once the application is running, each action name will be prefixed by the module’s alias, e.g. `moduleName:action1`.
+   * Action definition can be provided on module load with the help of the channels.
+   * Source module can define the action while others can invoke that action.
    */
-
   actions: [],
 
   /**
-   * The method to be invoked by Controller to load the module
-   * Module developers should ensure that all loading logic is completed during the lifecycle of this method
+   * The method to be invoked by Controller to load the module.
+   * Module developers should ensure that all loading logic is completed during the lifecycle of this method.
    * The Controller will emit an event `lisk:ready` which a module developer can use to perform some activities
    * which should be performed when every other module is loaded. Some activities which you want to perform when
    * every other module is loaded.
@@ -211,8 +206,8 @@ The following events and actions should be implemented in the redesigned Lisk Co
 
 ##### Actions
 
-| Action                  | Description                                                                            |
-| ----------------------- | -------------------------------------------------------------------------------------- |
+| Action                  | Description                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------ |
 | lisk:getComponentConfig | A controller action to get the configuration of any component defined in controller space. |
 
 #### Life Cycle
@@ -291,7 +286,7 @@ This function accepts two arguments. The first one is the action name without pr
 
 Used to invoke an action for a module.
 
-```
+```js
 result = await channel.invoke('chain:verifyTransaction', transactionObject);
 ```
 
@@ -301,12 +296,12 @@ This function accepts two arguments. The first one is the event name prefixed wi
 
 Event objects should conform to a unified interface for all event communication between modules. Each event must implement a serialize and deserialize mechanism so that a unified data format can be transported over channels. It should be a simple JavaScript object with the following attributes.
 
-| Property | Type   | Description                                              |
-| -------- | ------ | -------------------------------------------------------- |
-| name     | string | The name of the event which is triggered.     |
+| Property | Type   | Description                                                  |
+| -------- | ------ | ------------------------------------------------------------ |
+| name     | string | The name of the event which is triggered.                    |
 | module   | string | The name of the target module for which event was triggered. |
-| source   | string | The name of source module which published that event.    |
-| data     | mixed  | The data which was sent while publishing the event.      |
+| source   | string | The name of source module which published that event.        |
+| data     | mixed  | The data which was sent while publishing the event.          |
 
 #### Action
 
@@ -314,8 +309,8 @@ Action object should be a unified interface for all action based communication b
 
 | Property | Type   | Description                                                       |
 | -------- | ------ | ----------------------------------------------------------------- |
-| name     | string | Name of the action which is invoked.                   |
-| module   | string | The name of the target module for which action was invoked.           |
+| name     | string | Name of the action which is invoked.                              |
+| module   | string | The name of the target module for which action was invoked.       |
 | source   | string | The name of source module which invoked that action.              |
 | params   | mixed  | The data which was associated with the invocation for the action. |
 
