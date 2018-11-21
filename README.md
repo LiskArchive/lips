@@ -1,6 +1,6 @@
 ![Lisk Improvement Proposals](banner.jpg "Lisk Improvement Proposals")
 
-Welcome to the LIPS repository where community members can propose changes to the Lisk protocol.
+Welcome to the LIPS repository where community members can propose changes to the Lisk protocol and its software implementation.
 
 ## Contributing
 
@@ -18,3 +18,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0004](proposals/lip-0004.md) | Introduce robust peer selection and banning mechanism                    | Jan Hackfeld                  | Standards Track | Peers         | Draft         |
 | [0005](proposals/lip-0005.md) | Introduce new flexible, resilient and modular architecture for Lisk Core | Nazar Hussain                 | Informational   | All           | Draft         |
 | [0006](proposals/lip-0006.md) | Improve transaction processing efficiency                                | Usman Khan                    | Informational   | Transactions  | Draft         |
+| [0007](proposals/lip-0007.md) | Use a consistent and informative versioning scheme                       | Maciej Baj                    | Informational   | -             | Draft         |
