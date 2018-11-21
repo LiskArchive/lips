@@ -1,11 +1,12 @@
 ```
 LIP: <LIP number>
 Title: Remove pre-hashing for block and transaction signatures
-Author: Andreas Kendziorra, andreas.kendziorra@lightcurve.io
+Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
 Type: Standards Track
-Module:  Blocks, Transactions
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Status: Draft
+Module: Blocks, Transactions
+Created: 2018-10-16
+Updated: 2018-11-21
 ```
 
 ## Abstract
@@ -18,7 +19,7 @@ This LIP is licensed under the [GNU General Public License, version 3](http://ww
 
 ## Motivation
 
-Currently, when signing transactions and blocks in Lisk, the hash-then-sign (also called hash-and-sign or pre-hashing) paradigm is applied. That means, the information to be signed is first hashed, and only the hash digest is signed afterwards. This paradigm may have advantages for some signature schemes (e.g. RSA), such as better performance or higher security. However, for the signature scheme used in Lisk, namely [Ed25519-SHA-512](https://link.springer.com/content/pdf/10.1007%2Fs13389-012-0027-1.pdf), these advantages do no apply or have negligible impact. In fact, the hash-then-paradigm applied to Ed25519-SHA-512 does even reduce security to a very small degree, and may also reduce the performance for certain inputs. Therefore, the paradigm shall not be applied anymore.
+Currently, when signing transactions and blocks in Lisk, the hash-then-sign (also called hash-and-sign or pre-hashing) paradigm is applied. That means, the information to be signed is first hashed, and only the hash digest is signed afterwards. This paradigm may have advantages for some signature schemes (e.g. RSA), such as better performance or higher security. However, for the signature scheme used in Lisk, namely [Ed25519-SHA-512](https://link.springer.com/content/pdf/10.1007%2Fs13389-012-0027-1.pdf), these advantages do not apply or have negligible impact. In fact, the hash-then-paradigm applied to Ed25519-SHA-512 does even reduce security to a very small degree, and may also reduce the performance for certain inputs. Therefore, the paradigm shall not be applied anymore.
 
 ## Specification
 
@@ -68,7 +69,7 @@ Again, the current protocol differs to the proposed one only by taking the SHA-2
 
 In the current protocol, second signatures get computed in the same way as first signatures, with the differences that the issuer's second private key is used and the data block taken as the input for SHA-256 contains the first signature. We denote the specification to generate this data block by **ST-SPEC**.
 
-Note that for Lisk elements 1.0.0, the data block generation for second signatures is also implemented in [getTransactionBytes](https://github.com/LiskHQ/lisk-elements/blob/065ac5aedad44db1c326247d258770b89da368cd/src/transactions/utils/get_transaction_bytes.js#L145), and for Lisk core 1.0.0 also in [Transaction.getBytes](https://github.com/LiskHQ/lisk/blob/de766a70d1c507c60c2893007263907fb428af45/logic/transaction.js#L155).
+Note that for Lisk Elements 1.0.0, the data block generation for second signatures is also implemented in [getTransactionBytes](https://github.com/LiskHQ/lisk-elements/blob/065ac5aedad44db1c326247d258770b89da368cd/src/transactions/utils/get_transaction_bytes.js#L145), and for Lisk Core 1.0.0 also in [Transaction.getBytes](https://github.com/LiskHQ/lisk/blob/de766a70d1c507c60c2893007263907fb428af45/logic/transaction.js#L155).
 
 ##### Proposed protocol
 
@@ -122,10 +123,7 @@ To verify the signature (**R**, **S**) for the message *m*, one has to do the fo
 
 The first observation is that there is no limit on the size of the input message. Hence, there is no need to split the input message in the case of no pre-hashing.
 
-Next, we look at the computational impact of the length of the input message *m*.
-For signing, the message *m* is used only in the steps 4 and 6 to compute the variables *r* and *S*. Although *R*, **R** and **S** depend on *m*, the effort to compute them is independent of the size of *m*.
-Therefore, the only computational impact of the size of *m* on the signing process is in adding some length to the input of *H* in step 4 and step 6.
-For verification, the computational impact of the size of *m* is in adding some length to the input of *H* in step 9.
+Next, we look at the computational impact of the length of the input message *m*. For signing, the message *m* is used only in the steps 4 and 6 to compute the variables *r* and *S*. Although *R*, **R** and **S** depend on *m*, the effort to compute them is independent of the size of *m*. Therefore, the only computational impact of the size of *m* on the signing process is in adding some length to the input of *H* in step 4 and step 6. For verification, the computational impact of the size of *m* is in adding some length to the input of *H* in step 9.
 
 In the case of pre-hashing, one has to compute one additional hash digest. This holds for signing and verifying. The messages to be signed within the Lisk protocol are rather small. For block signatures, the message contains ~180 bytes. For transactions, the message size varies between 53 bytes and 2198 bytes, whereas most of the transactions currently contained in the Lisk blockchain consist of 53 bytes. Therefore, it is not to be expected that pre-hashing reduces the workload for the steps 4 and 6 significantly. Hence, we believe that EdDSA without pre-hashing is slightly faster due to the missing hashing step. Overall, the performance impact is negligible since the scalar multiplications dominate the signature and verification times for the used message sizes. For example, signing a message or verifying a signature with Ed25519-SHA-512 can be a few hundred times slower than computing a SHA-256 hash digest for inputs of equal size (compare [signature benchmarks](https://bench.cr.yp.to/results-sign.html) with [hashing benchmarks](https://bench.cr.yp.to/results-hash.html)). Moreover, the number of verifications per second a standard computer can perform is in the 5 to 6-digit range. Therefore, signature verifications performed by nodes will not be a bottleneck in the future.
 
@@ -164,6 +162,3 @@ The currently used pre-hash function, SHA-256, has collision resistance of 128 b
 ## Backwards Compatibility
 
 The changes introduce a hard fork because block and transaction signatures derived from the current protocol (using hash-then-sign) are rejected in the proposed protocol, and vice versa.
-
-
-
