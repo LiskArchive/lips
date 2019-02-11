@@ -101,4 +101,6 @@ The change introduces a hard fork, because of the following: Blocks forged by no
 
 The proposed protocol will become effective from a certain block height on. Nodes that need to be able to sync blocks below this height need to be able to compute and verify the current and the proposed blockIDs.
 
+## Reference Implementation
 
+TBD
