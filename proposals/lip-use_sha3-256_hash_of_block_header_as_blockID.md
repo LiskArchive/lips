@@ -44,6 +44,7 @@ The hash function SHA3-256 is an instance of the [KECCAK](https://keccak.team/ke
 ```
 SHA3-256(M) = KECCAK[512](M||01, 256)
 ```
+
 for a message M according to NIST [FIPS 202](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf).
 
 #### BlockIDs in JSON objects
@@ -68,7 +69,7 @@ Moreover, finding a new block with the same blockID requires currently 2<sup>64<
 
 Although the success probability is very low, we want to increase the resistance against such an attack to provide sufficient security also for the future. The resistance against such an attack is determined by the bit length of the blockIDs. I.e., n-bit blockIDs yield n-bit resistance against such an attack.
 128 bit is the recommended security level by ECRYPT to provide sufficient security for at least the next [10 years
-](http://www.ecrypt.eu.org/csa/documents/D5.4-FinalAlgKeySizeProt.pdf#chapter.2). NIST is recommending 128 bit to be the minimum security level for applications intended to run [beyond 2030](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r4.pdf#%5B%7B%22num%22%3A196%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C81%2C721%2Cnull%5D). 
+](http://www.ecrypt.eu.org/csa/documents/D5.4-FinalAlgKeySizeProt.pdf#chapter.2). NIST is recommending 128 bit to be the minimum security level for applications intended to run [beyond 2030](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r4.pdf#%5B%7B%22num%22%3A196%2C%22gen%22%3A0%7D%2C%7B%22name%22%3A%22XYZ%22%7D%2C81%2C721%2Cnull%5D).
 With a blockID length of 256 bit, we choose a security level that is beyond the recommendations, and provides great trust that the mentioned attack is infeasible, even for a time span that significantly exceeds the next decade.
 Choosing this extra security comes at a low price. We use 128 bit extra compared to the minimum requirement. This sums up to ~50 Mb extra size in the blockchain per year (~100 Mb if blockIDs are stored in hexadecimal representation in character arrays); a small value compared to the overall size of the chain.
 Since blockIDs are rarely handled by users, i.e. writing, reading or spelling blockIDs is a rare use case, the extra length does also not yield any significant disadvantages for the user experience.
