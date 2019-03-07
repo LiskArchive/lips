@@ -2,10 +2,12 @@
 LIP: <LIP number>
 Title: Use SHA3-256 hash of block header as blockID
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
+Discussions-To: https://lists.lisk.io/pipermail/lips_lists.lisk.io/2019-January/000011.html
+Status: Draft
 Type: Standards Track
 Module: Blocks
 Created: 2018-10-26
-Updated: 2019-01-28
+Updated: 2019-03-07
 ```
 
 ## Abstract
