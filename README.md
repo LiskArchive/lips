@@ -21,3 +21,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0007](proposals/lip-0007.md) | Use a consistent and informative versioning scheme                       | Maciej Baj                                   | Informational   | -                    | Draft         |
 | [0008](proposals/lip-0008.md) | Remove pre-hashing for block and transaction signatures                  | Andreas Kendziorra                           | Standards Track | Blocks, Transactions | Draft         |
 | [0009](proposals/lip-0009.md) | Mitigate transaction replay on different chains                          | Manu Nelamane Siddalingegowda, Iker Alustiza | Standards Track | Blocks, Transactions | Draft         |
+| [0010](proposals/lip-0010.md) | Use SHA3-256 hash of block header as blockID                             | Andreas Kendziorra                           | Standards Track | Blocks               | Draft         |
