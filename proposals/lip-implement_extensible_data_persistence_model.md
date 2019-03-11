@@ -107,4 +107,4 @@ This implementation of this proposal is backwards compatible. The changes only i
 ## Reference Implementation
 
 A reference implementation can be found at:
-https://github.com/LiskHQ/lisk/compare/development...nh-dal
+ https://github.com/LiskHQ/lisk/tree/v1.5.0/storage
