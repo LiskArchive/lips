@@ -2,10 +2,12 @@
  LIP: <LIP number>
  Title: Implement extensible data persistence model
  Author: Nazar Hussain <nazar@lightcurve.io>
+ Discussions-To: https://research.lisk.io/t/implement-extensible-data-persistence-model/22
+ Status: Draft
  Type: Informational
- Module:  Database
+ Module: Database
  Created: 2018-11-01
- Updated: 2019-02-21
+ Updated: 2019-03-15
 ```
 
 ## Abstract
