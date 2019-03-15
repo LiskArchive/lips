@@ -14,7 +14,7 @@ This LIP proposes to use Extended Data Mapper pattern for the database component
 
 ## Copyright
 
-This LIP is licensed under the [GNU General Public License, version 3](http://www.gnu.org/licenses/gpl-3.0.html "GNU General Public License, version 3").
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
 
 ## Motivation
 
