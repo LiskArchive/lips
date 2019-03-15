@@ -48,13 +48,13 @@ To make the Lisk Core persistence layer code base organized, accessible and exte
 There are three design patterns used in the software industry worthwhile to consider while choosing the design pattern, which would satisfy the persistence layer needs of this LIP:
 
 **[Active Record](https://www.martinfowler.com/eaaCatalog/activeRecord.html)**
-It's good to use in small to medium scale projects, but in our use case where we have millions of data objects, initializing object per row costs a lot of memory and performance overhead. Also, the Active Record pattern does not satisfy the requirement of mapping entity attributes across multiple database tables, therefore cannot be used. 
+It's good to use in small to medium scale projects, but in our use case where we have millions of data objects, initializing object per row costs a lot of memory and performance overhead. Also, the Active Record pattern does not satisfy the requirement of mapping entity attributes across multiple database tables, therefore cannot be used.
 
 **[Data Mapper](https://martinfowler.com/eaaCatalog/dataMapper.html)**
 Relies on native JSON objects for better performance and it has bi-directional serialization support from JSON to a database. The Data Mapper pattern does support mapping entity attributes across multiple database tables but as the pattern restricts to have only CRUD interfaces on every entity, it doesn't leave a room for flexibility for the future SDK developers to extend their custom database entities with non-CRUD operations.
 
 **[Repository](https://martinfowler.com/eaaCatalog/repository.html)**
-This pattern is flexible to be implemented in different ways. Since it doesn't force any standard or guideline, cannot be used to introduce consistency across interfaces and behaviours. 
+This pattern is flexible to be implemented in different ways. Since it doesn't force any standard or guideline, cannot be used to introduce consistency across interfaces and behaviours.
 
 To support standard CRUD operations as well as flexible interfaces, the Data Mapper pattern needs to be mixed with the Repository pattern. This will provide a way of extending the database layer with any type of operation. We name it the "Extended Data Mapper" pattern.
 
@@ -64,7 +64,7 @@ The below diagram illustrates the architecture of the Extended Data Mapper patte
 
 ![Existing Data Model](lip-implement_extensible_data_persistence_model/new_data_model.png)
 
-The diagram recognizes the following persistable entities within Lisk Core: "Transaction", "Block", "Voters", "Account", "MultisignatureAccount", "DelegateAccount", "Peer", "Round". The proposed design pattern follows object-oriented design principles making it easy to extend or override functionalities. Modules can extend a base entity to create their own entities, which will follow the Extended Data Mapper pattern. All of the entities extend "BaseEntity", which implements standard CRUD operations, but the pattern provides the flexibility of having customized logic for any, not CRUD-only, data operation. We can distinguish two type of entities, persistable entities `<<ORM Persistable>>` which can read and write data, and read only entites `<<ORM User Types>>`. 
+The diagram recognizes the following persistable entities within Lisk Core: "Transaction", "Block", "Voters", "Account", "MultisignatureAccount", "DelegateAccount", "Peer", "Round". The proposed design pattern follows object-oriented design principles making it easy to extend or override functionalities. Modules can extend a base entity to create their own entities, which will follow the Extended Data Mapper pattern. All of the entities extend "BaseEntity", which implements standard CRUD operations, but the pattern provides the flexibility of having customized logic for any, not CRUD-only, data operation. We can distinguish two type of entities, persistable entities `<<ORM Persistable>>` which can read and write data, and read only entites `<<ORM User Types>>`.
 
 The persistence layer is initiated by modules giving access to all basic domain entities registered within Lisk Core, e.g. Block, Transaction, Account. Access to custom entities in any modules is isolated only to that particular module which protects from unauthorized modifications. Deriving from the Data Mapper pattern, the solution supports mapping entity attributes across multiple database tables.
 
@@ -91,7 +91,8 @@ If filters are provided as JSON objects, they will always be joined with an `AND
 
 You can register a `CUSTOM` filter, by defining your own key and a function which will return a custom condition.
 
-### Other CRUD Operations 
+### Other CRUD Operations
+
 We defined the rules only for the read operations above. The remaining of the CRUD operations have no specific rules to restrict. It's up to the implementation of an entity, to implement the logic to persist the objects.
 
 ### Future Possibilities
@@ -106,5 +107,4 @@ This implementation of this proposal is backwards compatible. The changes only i
 
 ## Reference Implementation
 
-A reference implementation can be found at:
- https://github.com/LiskHQ/lisk/tree/v1.5.0/storage
+A reference implementation can be found at: https://github.com/LiskHQ/lisk/tree/v1.5.0/storage
