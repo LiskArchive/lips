@@ -3,7 +3,6 @@ LIP: <LIP number>
 Title: <LIP title>
 Author: <List of authors' real names including email address>
 Type: <Standards Track | Informational | Process>
-Module: <Affected modules e.g. Accounts | Blocks | Transactions>
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
 ```
