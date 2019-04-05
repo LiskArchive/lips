@@ -1,0 +1,199 @@
+```
+LIP: <LIP number>
+Title: Remove redundant properties in transactions
+Author: Andrea Kendziorra <andreas.kendziorra@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/remove-redundant-properties-from-transaction-objects/
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+Requires: 0009
+```
+
+## Abstract
+
+The current protocol allows for and partially enforces the usage of property-value pairs in transaction objects that are neither required nor used. These property-value pairs are contained in the JSON objects used to transmit transactions and in the input messages for the transaction signature and the transactionID generation. This increases the size of transactions and the complexity of the protocol unnecessarily. Therefore, this LIP proposes to remove these redundant properties of transaction objects.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+Transaction objects in the current protocol contain some redundant properties. Some of these properties are redundant for most transaction types, and some of them for all transaction types. For example, the `amount` or the `recipientId` properties are only required for balance transfer transactions, but not for any other transaction type. The `requesterPublicKey` property, for instance, is a legacy property, which is no longer needed for any transaction type. 
+
+There are three occurrences in the protocol, where these properties increase the size of the transaction objects unnecessarily:
+
+1. The transaction JSON objects that are used to transmit transactions.
+2. The byte array that is used as the input message for SHA-256 whose digest in turn is used as the input message for the transaction signature.
+3. The byte array that is used as the input message for SHA-256 whose digest in turn is used to create the transactionID.
+
+Hence, the redundant property-value pairs increase the data transmitted between nodes and slow down the transaction processing (although the impact might be negligible). Moreover, they may lead to confusion when reading the protocol and the implementation of the protocol gets unnecessarily large. Therefore, we propose to remove all redundant property-value pairs.
+
+## Rationale
+
+Currently, the following properties are allowed for transaction JSON objects when being transmitted:
+
+*   `amount`
+*   `asset`
+*   `fee`
+*   `id `(optional)
+*   `recipientId`
+*   `recipientPublicKey `(optional)
+*   `requesterPublicKey `(optional)
+*   `senderId `(optional)
+*   `senderPublicKey`
+*   `signature`
+*   `signatures `(optional)
+*   `signSignature `(optional)
+*   `timestamp`
+*   `type.`
+
+The properties `amount`, `fee`, `id`, `recipientId`, `recipientPublicKey`, `requesterPublicKey` and `senderId` were identified to be redundant for some or even all transaction types. The remaining properties are needed and are not intended to be removed.
+
+The byte array used for the transactionID uses a subset of the properties listed above. Each property that is redundant for transmitting a transaction is also redundant for computing the transactionID and can be removed.
+
+For transaction signatures, the same properties as for the transactionID plus the network identifier are used to create the byte array. The network identifier is essential to avoid transaction replay attacks. It should be noted that the proposed changes do not pose a risk for transaction replay attacks even when network identifiers proposed by LIP [0009](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md) get introduced at the same time as this change (and not already before): Let `netid_new` be the network identifier that is used once this change is active. Consider a transaction `tx` according to the current or an earlier protocol. Let `B` the byte array that was used as the input for SHA-256 whose digest in turn was used as the input for EdDSA, and let `S` be the signature of `tx`. The probability that the first 256 bits of `B` are equal to `netid_new` is negligible. Hence, the signature `S` is not a valid signature in the proposed protocol and `tx` will be rejected. 
+
+All other properties that are redundant for transmitting transactions are also redundant for the signature and are proposed to be removed.
+
+Each of the properties identified for removal will be discussed in the following subsections.
+
+### Amount and recipientId
+
+Every transaction object is currently required to have the `amount` and the `recipientId` property. However, these two properties are only meaningful for balance transfer transactions. Therefore, we propose to remove these two properties from the transaction objects and to add them to the asset property of balance transfer transactions.
+
+Moreover, we propose to change the encoding of the amount property from little endian to big endian in the serialization process used for the signing process and transactionID computation. The motivation is to achieve a consistent encoding of all values at some point. There are still a few other values encoded in little endian<sup>1</sup>, but those are intended to be removed in separate LIPs (if some of these LIPs don't get implemented, one could propose a separate LIP for a consistent encoding).
+
+### Fee
+
+The fee of a transaction can always be concluded from the transaction type due to the fixed fee system. Therefore, we propose to remove it.
+
+### Id
+
+The id of a transaction can always be determined from its other properties. There is also no computational advantage in providing the id when sending a transaction because a node that receives a transaction needs to verify all properties, and verifying the id requires to compute the id. Hence, a node that receives a transaction has to compute the id, no matter if the `id` property was provided or not. Furthermore, nodes will only receive transactions from other nodes after request with the proposed [improvements of the P2P](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md) layer or by receiving blocks that contain transactions. Therefore, nodes will not need to be able to quickly decide if an incoming transaction is already known to them or not (for which a provided id would be helpful). For these reasons, we propose to not allow the `id` property in transaction JSON objects anymore.
+
+### RecipientPublicKey
+
+The recipient of a balance transfer should always be identified by its address. All other transaction types do not have a recipient. Therefore, the `recipientPublicKey` property is not needed for any kind of transaction and shall be removed.
+
+### RequesterPublicKey
+
+The `requesterPublicKey` property was initially intended to be used to request multisignature transactions by non-account holders. This functionality is, however, currently not enabled and therefore not required. Hence, we propose to remove it.
+
+### SenderId
+
+The `senderId` property is never needed since the `senderPublicKey` is a required property for every transaction object, and the address/id can always be computed from the public key.
+
+## Specification
+
+### Transmitting Transactions
+
+Transaction JSON objects for the transmission of transactions via websockets and API can have the following properties:
+
+*   `asset`
+*   `senderPublicKey`
+*   `signature`
+*   `signatures`
+*   `signSignature`
+*   `timestamp`
+*   `type.`
+
+Thus, the properties
+
+*   `amount`
+*   `fee`
+*   `id`
+*   `recipientId`
+*   `recipientPublicKey`
+*   `requesterPublicKey`
+*   `senderId,`
+
+which are allowed (and partially required) in the current protocol, get removed.
+
+For balance transfer transactions, the asset property (which is of type _object_) can have the following properties:
+
+*   `amount`
+*   `recipientId`
+*   `data.`
+
+For all other transaction types (not of type 0), the requirements for the `asset` property stay as in the current protocol.
+
+### Transaction schema validation
+
+Received transaction JSON objects have to be rejected if they do not fulfill the following rules:
+
+*   The properties `asset`, `senderPublicKey`, `signature`, `timestamp`, `type` are required for every transaction.
+*   The `signatures` property is required for transactions originating from multisignature accounts.
+*   The `signSignature` property is required for transactions originating from a second passphrase account.
+*   For balance transfer transactions, the asset property must have the `amount` and the `recipientId` property. The `data` property is optional.
+*   For all other transaction types (not of type 0), the requirements for the `asset` property stay as in the current protocol.
+
+### Signing Process
+
+The byte array that serves as the input message for SHA-256, whose output in turn is used as the input message for EdDSA, shall be composed by the values of the properties in the following order:
+
+1. `networkIdentifier`
+2. `type`
+3. `timestamp`
+4. `senderPublicKey`
+5. `asset`.
+
+For second signatures, this byte array gets extended by the first signature, i.e., the value of the property `signature`.
+
+For balance transfer transactions, the value of the `asset` property has to be composed as a byte array by the values of the properties in the following order:
+
+1. `amount`
+2. `recipientId`
+3. `data.`
+
+Moreover, the encoding of the amount property shall be changed from little endian to big endian.
+
+For all other transaction types (not of type 0), the value of the `asset` property is composed as in the current protocol.
+
+The used sizes for each value are the same as in the current protocol, except for the `asset` property of balance transfer transactions where the size is equal to the sum of sizes of the `amount`, `recipientID` and `data` value.
+
+### Generating TransactionID
+
+For transactions originating from an account without second passphrase, the byte array that serves as the input message for SHA-256, from which the reversed first 8 bytes are used as the transactionID, shall be composed by the values of the properties in the following order:
+
+1. `type`
+2. `timestamp`
+3. `senderPublicKey`
+4. `asset`
+5. `signature.`
+
+The value for the asset property has to be obtained according to the [signing process](#signing-process).
+
+For transactions originating from an account with second passphrase, the byte array gets extended by the second signature, i.e., the value of the property `signSignature`.
+
+## Backwards Compatibility
+
+This LIP introduces a hard fork. This is because:
+
+* The `amount` and the `recipientId` property are required in the current protocol but not contained the proposed one. Therefore, transaction JSON objects according to the proposed protocol will be rejected by the current protocol.
+* The signatures generated by the proposed protocol are invalid in the current protocol, and vice versa. For transactions that are not of type 0, this is because the byte array that serves as input message for the signature does not incorporate the values of the `amount` and the `recipientId` properties in the proposed protocol, but does in the current protocol.  
+ 
+  For balance transfer transactions, the order of the recipientID and the amount value are different in the composition of the byte arrays. In the current protocol, the byte array is composed in the order
+  ```
+  ... , senderPublicKey, recipientID, amount, asset.
+  ```
+  Considering that the asset property contains only the data property, the order equals
+  ```
+  ... , senderPublicKey, recipientID, amount, data.
+  ```
+  In the proposed protocol, the order is
+  ```
+  ... , senderPublicKey, asset.
+  ```
+  Considering that the value of the asset property gets composed in the order `amount, recipient, data,` the order of the whole byte array equals
+  ```
+  ... , senderPublicKey, amount, recipientID, data.
+  ```
+  Hence, the orders differ.
+*   Transaction JSON objects according to the current protocol could have the `fee`, `recipientPublicKey`, `requesterPublicKey` or `senderId` property while being valid. But every such transaction would be invalid according to the proposed protocol.
+
+## Notes
+
+[1]:
+     The values for the `timestamp` property, for the `lifetime` property of multisignature registrations and for the `type`, `category` and `tags` properties of dapp registrations are encoded in little endian.
+
