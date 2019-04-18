@@ -1,6 +1,6 @@
 ```
 LIP: <LIP number>
-Title: Remove redundant properties in transactions
+Title: Remove redundant properties from transaction objects
 Author: Andrea Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/remove-redundant-properties-from-transaction-objects/
 Type: Standards Track
