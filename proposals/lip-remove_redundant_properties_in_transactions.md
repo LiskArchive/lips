@@ -4,8 +4,8 @@ Title: Remove redundant properties in transactions
 Author: Andrea Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/remove-redundant-properties-from-transaction-objects/
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2018-12-18
+Updated: 2019-04-18
 Requires: 0009
 ```
 
