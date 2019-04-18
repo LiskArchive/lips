@@ -46,7 +46,7 @@ Currently, the following properties are allowed for transaction JSON objects whe
 * `signatures `(optional)
 * `signSignature `(optional)
 * `timestamp`
-* `type.`
+* `type`
 
 The properties `amount`, `fee`, `id`, `recipientId`, `recipientPublicKey`, `requesterPublicKey` and `senderId` were identified to be redundant for some or even all transaction types. The remaining properties are needed and are not intended to be removed.
 
@@ -96,7 +96,7 @@ Transaction JSON objects for the transmission of transactions via websockets and
 * `signatures`
 * `signSignature`
 * `timestamp`
-* `type.`
+* `type`
 
 Thus, the properties
 
@@ -106,7 +106,7 @@ Thus, the properties
 * `recipientId`
 * `recipientPublicKey`
 * `requesterPublicKey`
-* `senderId,`
+* `senderId`
 
 which are allowed (and partially required) in the current protocol, get removed.
 
@@ -114,7 +114,7 @@ For balance transfer transactions, the asset property (which is of type _object_
 
 * `amount`
 * `recipientId`
-* `data.`
+* `data`
 
 For all other transaction types (not of type 0), the requirements for the `asset` property stay as in the current protocol.
 
@@ -136,7 +136,7 @@ The byte array that serves as the input message for SHA-256, whose output in tur
 2. `type`
 3. `timestamp`
 4. `senderPublicKey`
-5. `asset`.
+5. `asset`
 
 For second signatures, this byte array gets extended by the first signature, i.e., the value of the property `signature`.
 
@@ -144,7 +144,7 @@ For balance transfer transactions, the value of the `asset` property has to be c
 
 1. `amount`
 2. `recipientId`
-3. `data.`
+3. `data`
 
 Moreover, the encoding of the amount property shall be changed from little endian to big endian.
 
@@ -160,7 +160,7 @@ For transactions originating from an account without second passphrase, the byte
 2. `timestamp`
 3. `senderPublicKey`
 4. `asset`
-5. `signature.`
+5. `signature`
 
 The value for the asset property has to be obtained according to the [signing process](#signing-process).
 
@@ -175,19 +175,19 @@ This LIP introduces a hard fork. This is because:
 
   For balance transfer transactions, the order of the recipientID and the amount value are different in the composition of the byte arrays. In the current protocol, the byte array is composed in the order
   ```
-  ... , senderPublicKey, recipientID, amount, asset.
+  ... , senderPublicKey, recipientID, amount, asset
   ```
   Considering that the asset property contains only the data property, the order equals
   ```
-  ... , senderPublicKey, recipientID, amount, data.
+  ... , senderPublicKey, recipientID, amount, data
   ```
   In the proposed protocol, the order is
   ```
-  ... , senderPublicKey, asset.
+  ... , senderPublicKey, asset
   ```
   Considering that the value of the asset property gets composed in the order `amount, recipient, data,` the order of the whole byte array equals
   ```
-  ... , senderPublicKey, amount, recipientID, data.
+  ... , senderPublicKey, amount, recipientID, data
   ```
   Hence, the orders differ.
 * Transaction JSON objects according to the current protocol could have the `fee`, `recipientPublicKey`, `requesterPublicKey` or `senderId` property while being valid. But every such transaction would be invalid according to the proposed protocol.
