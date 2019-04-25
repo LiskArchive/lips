@@ -68,7 +68,7 @@ With the assumption of having these “anti-spam” measures in the previously m
 
 - [Appendix A](#Appendix-A:-Minimum-fee-implications) has an overview of minimum transaction fees depending on different values of `minFeePerByte` and the estimated direct implications for the network.
 
-- [This spreadsheet](proposals/lip-replace_static_fee_system_by_dynamic_fee_system/Spam-Attack-Cost-Sheet.pdf) studies the cost of broadcasting a number of balance transactions depending on `minFeePerByte` and the price of LSK in USD.
+- [This spreadsheet](lip-replace_static_fee_system_by_dynamic_fee_system/Spam-Attack-Cost-Sheet.pdf) studies the cost of broadcasting a number of balance transactions depending on `minFeePerByte` and the price of LSK in USD.
 
 In view of the computations referenced before, and with the mentioned considerations, a minimum fee in the range of 5 * 10<sup>-6</sup> to 5 * 10<sup>-5</sup> LSK/byte is reasonable. Therefore, we propose to set **`minFeePerByte` = 1*10<sup>-5</sup> LSK/byte**. With this minimum fee per byte, keeping the nodes busy for a brief period of time and having full blocks for 2 minutes (around 1500 basic balance transactions with 15 KB blocks every 10 seconds) will cost at least 1.8 LSK.
 
@@ -352,7 +352,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 
 ### C: Impact of burning the minimum fee in the supply
 This appendix covers the impact of burning the minimum fee on the token supply depending on the `minFeePerByte` value. The study assumes the extreme case of having full blocks for a whole reward milestone (approx one year), so that the impact is maximized. It is assumed that only type 0 and type 3 transactions are getting included, since they make the overwhelming majority of the transaction activity, and that the maximum block size is 15 KB. The results are displayed for the current reward (3 LSK) and future rewards (2 LSK and 1 LSK). Note that, for the final reward milestone of 1 LSK, there is a _reasonable_ value for `minFeePerByte` for which the token supply could decrease and be **deflationary** if the network activity is high enough (`minFeePerByte` = 6.66*10<sup>-5</sup> LSK/byte). For the other two reward milestones, a value for `minFeeBerByte` such that the supply is deflationary would need to be higher than any value for `minFeeBerByte` considered in this proposal.
-![reward3](proposals/lip-replace_static_fee_system_by_dynamic_fee_system/reward3.png)
-![reward2](proposals/lip-replace_static_fee_system_by_dynamic_fee_system/reward2.png)
-![reward1](proposals/lip-replace_static_fee_system_by_dynamic_fee_system/reward1.png)
+![reward3](lip-replace_static_fee_system_by_dynamic_fee_system/reward3.png)
+![reward2](lip-replace_static_fee_system_by_dynamic_fee_system/reward2.png)
+![reward1](lip-replace_static_fee_system_by_dynamic_fee_system/reward1.png)
 
