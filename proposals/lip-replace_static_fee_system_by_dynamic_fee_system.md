@@ -7,6 +7,7 @@ Status: Draft
 Type: Standards Track
 Created: -
 Updated: -
+Requires: 0009
 ```
 
 ## Abstract
@@ -66,7 +67,7 @@ The right choice of the minimum fee per byte, `minFeePerByte`, will have a great
 
 With the assumption of having these “anti-spam” measures in the previously mentioned modules, it would be interesting to consider how these resources mentioned above are used by all the transaction types and the cost implied. Unfortunately, the calculation of the exact cost of these resources is very complex and depends on several unrelated points as, hardware specifications, connection bandwidth, software platform, cost of electricity, Lisk token volatility, etc. An accurate research about this would be extremely complex and it is out of the scope of this proposal. However, it is still important to study the price of the different transactions and the price of broadcasting several of them depending on the value of `minFeePerByte`:  
 
-- [Appendix A](#Appendix-A:-Minimum-fee-implications) has an overview of minimum transaction fees depending on different values of `minFeePerByte` and the estimated direct implications for the network.
+- [Appendix A](#a-minimum-fee-implications) has an overview of minimum transaction fees depending on different values of `minFeePerByte` and the estimated direct implications for the network.
 
 - [This spreadsheet](lip-replace_static_fee_system_by_dynamic_fee_system/Spam-Attack-Cost-Sheet.pdf) studies the cost of broadcasting a number of balance transactions depending on `minFeePerByte` and the price of LSK in USD.
 
@@ -74,7 +75,7 @@ In view of the computations referenced before, and with the mentioned considerat
 
 
 #### Namespace fee: `trs.nameFee`
-Regarding the namespace fee, `trs.nameFee`, for transaction types 2 and 5, there are different issues to consider: If the minimum fee for these transaction types were not sufficiently high, theoretically, someone could perform a _namespace_ attack and try to exhaust the namespace by registering huge number of names. Also, these transaction types give special attributes to the issuing account.  Thus, the value of the `trs.nameFee` has to be chosen with these criteria in mind. In [Appendix B](#Appendix-B:-Name-fee-implications),  one can find an overview of the minimum transaction fee for different values of this constant. 
+Regarding the namespace fee, `trs.nameFee`, for transaction types 2 and 5, there are different issues to consider: If the minimum fee for these transaction types were not sufficiently high, theoretically, someone could perform a _namespace_ attack and try to exhaust the namespace by registering huge number of names. Also, these transaction types give special attributes to the issuing account.  Thus, the value of the `trs.nameFee` has to be chosen with these criteria in mind. In [Appendix B](#b-namespace-fee-implications),  one can find an overview of the minimum transaction fee for different values of this constant. 
 
 In this regard, it is worth noting the important differences between transaction types 2 and 5 for the choice of the `trs.nameFee` value. First, type 2 and type 5 transactions have different namespace constraints (the longest possible name for a delegate is 20 characters while the longest name for a dapp is 32 characters), being both of them large enough to make the mentioned exhausting attack infeasible. Therefore, we consider other factors to play a more important role in the decision: For type 2 transactions, registering a delegate implies a commit to become an active delegate and to secure the network. Also, there are only 101 possible active delegates, which makes name squatting attacks (registering a significant amount of popular names) not attractive for amounts much greater than 101. For type 5 transactions, users can register as many dapps as they wish from their accounts. In this case, every dapp registered in the Lisk platform implies a potential development and release of a future sidechain with the consequent consumption of resources. In other words, a type 5 transaction has a potential future impact in the Lisk blockchain that should be reflected in the price of the registration transaction. Thus, it is reasonable to have different constants for the two considered transaction types:  `trs.nameFee = delegateFee` for transaction type 2, and  `trs.nameFee = dappFee` for transaction type 5. In particular, and considering the aforementioned differences, we propose:
 
@@ -122,7 +123,7 @@ The mentioned mechanism of **sharing fees** among all forging delegates after ev
 
 With the change in the fees sharing mechanism commented above comes an issue which is not to be ignored: If delegates get the fees of the corresponding blocks they generate, they can include their transactions for free. This is not a new problem, since it is present in other networks with free fee markets as Bitcoin or Ethereum (refer to [Other considerations](#Other-considerations:-Artificial-inflation-of-the-fees) subsection below). In fact, sometimes in Bitcoin, it is used as a feature for a service [2]. However, this issue is exacerbated for the Lisk protocol due to specific transaction types like dapp registration transaction. In Lisk, an active delegate could **register as many dapps as they wanted for free** by including the corresponding transactions in their forged block. This would not only go against the minimum fee rationale exposed before but would incentive behaviours as buying voting power in exchange of discounted dapp registrations.  
 
-To solve this situation, we propose to burn the minimum fee of each transaction, `trs.minFee`, included in the blockchain. This implies that these _collected_ fees per block mentioned above will not be the sum of all the fees of the transactions included. It will actually be the difference between this sum and the sum of the minimum fees of all the transactions included. Hence, the incentives for delegates to include transactions with higher fees per byte and for users to spend a higher fee for priority are maintained. Moreover, every transaction included in the blockchain will reduce the total supply of the token. This implies that a higher network usage will benefit every stakeholder including the delegates.  [Appendix C](#Appendix-C:-Impact-of-burning-the-minimum-fee-in-the-supply) presents a brief study about the impact, in terms of inflation decrease, in the token supply of burning the minimum fee.
+To solve this situation, we propose to burn the minimum fee of each transaction, `trs.minFee`, included in the blockchain. This implies that these _collected_ fees per block mentioned above will not be the sum of all the fees of the transactions included. It will actually be the difference between this sum and the sum of the minimum fees of all the transactions included. Hence, the incentives for delegates to include transactions with higher fees per byte and for users to spend a higher fee for priority are maintained. Moreover, every transaction included in the blockchain will reduce the total supply of the token. This implies that a higher network usage will benefit every stakeholder including the delegates.  [Appendix C](#c-impact-of-burning-the-minimum-fee-in-the-supply) presents a brief study about the impact, in terms of inflation decrease, in the token supply of burning the minimum fee.
 
 #### Transaction invalidation mechanism
 With the implementation of the free fee market, users may experience the undesired situation of having **stuck transactions** waiting in the transaction pool to be included in the blockchain: For example, if a transaction is sent with a fee too low to get into a block when the network is busy (full blocks), it will be stuck in the transaction pool until this situation changes. This would be especially problematic if the transaction had high priority for the sender. With this in mind, it is reasonable to have a method to invalidate or replace pending transactions. There are several ways to approach this issue. Examples of this are the use of an ordered nonce for the transaction (used in Ethereum and Stellar), a non-ordered nonce for the transaction or a time-out parameter in the transaction (used in NXT and NEM). In this proposal, we are not going to cover the specification of such a feature and it will be assumed that a proper _transaction invalidating_ feature is available in the protocol.
@@ -175,14 +176,16 @@ Regarding the protocol, the changes involved for the dynamic fee system are the 
 
     - The previous point implies to have a method to calculate the size of the specific transaction in bytes: `sizeof()`. In this proposal, we define the size of a transaction, `trs`, as the size in bytes of the byte array used to generate the transaction ID (as for example it is done [here](https://github.com/LiskHQ/lisk/blob/0c633a2f0d74bcb104ae4dafc20b55ca162a0f3e/logic/block.js#L112) in the current implementation).
 
--  **Include fee property in transaction JSON object**: With the implementation of [LIP-0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md), the `trs.fee` property is going to be removed from the transaction JSON object since it is not needed for the current static fee system. However, this `trs.fee`, of type _BigNum_, has to be included in the transaction object, otherwise the nodes would not be able to get and verify the transaction fee.
+-  **Include fee property in transaction JSON object**: With the implementation of [LIP-0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md), the `trs.fee` property is going to be removed from the transaction JSON object since it is not needed for the current static fee system. However, this `trs.fee` has to be included in the transaction object, otherwise the nodes would not be able to get and verify the transaction fee. It must be a string matching the [`amount`](https://github.com/LiskHQ/lisk-sdk/blob/c74fb5a96b04e3be83f9e308e47106604c21dbc0/framework/src/controller/helpers/validator/formats.js#L297) format
 
-- **Include fee property in transaction signature and transaction ID**: To prevent transaction fee forging and manipulation by malicious nodes/delegates, the transaction fee has to be part of the byte array used as input for the transaction signature and transaction ID generation (e.g. implemented by [`getBytes`](https://github.com/LiskHQ/lisk/blob/5d5af525eec7f2ee687ca921a6a2d1457c471da9/logic/transaction.js#L154) in Lisk core). The `trs.fee` property, with a size of 8 bytes and encoded in big-endian, has to follow the `trs.senderPublicKey` property during serialisation. Additionally, the [`getTransactionBytes`](https://github.com/LiskHQ/lisk-elements/blob/d5ab830ad65965764d364eb344ce4e3a13bf14c9/packages/lisk-transactions/src/utils/get_transaction_bytes.js#L147) function must be implemented in the same way in Lisk Elements.
+- **Include fee property in transaction signature and transaction ID**: To prevent transaction fee forging and manipulation by malicious nodes/delegates, the transaction fee has to be part of the byte array used as input for the transaction signature generation and transaction ID generation (e.g. implemented by [`getBytes`](https://github.com/LiskHQ/lisk/blob/5d5af525eec7f2ee687ca921a6a2d1457c471da9/logic/transaction.js#L154) in Lisk core). The `trs.fee` property, with a size of 8 bytes and encoded in big-endian, has to follow the `trs.senderPublicKey` property during serialisation. Additionally, the [`getTransactionBytes`](https://github.com/LiskHQ/lisk-elements/blob/d5ab830ad65965764d364eb344ce4e3a13bf14c9/packages/lisk-transactions/src/utils/get_transaction_bytes.js#L147) function must be implemented in the same way in Lisk Elements.<sup>[2]</sup>
 
 
 - **Assignment of transaction fees**: Every transaction included in a block `B` spends a fee equal to `trs.fee` which is subtracted from the sender account balance. From `trs.fee`, `trs.minFee` is _burnt_ whereas `trs.fee - trs.minFee` is assigned to the delegate forging `B`. In terms of `B`, the sum of the minimum fees of all the transactions included in it, i.e., `B.burntFee`, is added to the balance of an account with the address “_BurntFees_”, defined as the auxiliary account containing all the burnt fees in the blockchain. The remaining fees, i.e., `B.totalFee - B.burntFee`, are added to the account balance of the delegate forging `B`.        
 
-<sup>[1]</sup>It is important to point out that the values given in this document for the three constants `fees.minFeePerByte`, `fees.delegateFee` and `fees.dappFee` may vary in the future. It is possible that the rationale given in this proposal is not accurate at some point (e.g. due to a change of the block size) and a new LIP will propose to adjust these constants consequently. 
+<sup>[1]</sup>It is important to point out that the values given in this document for the three constants `fees.minFeePerByte`, `fees.delegateFee` and `fees.dappFee` may vary in the future. It is possible that the rationale given in this proposal is not accurate at some point (e.g. due to a change of the block size) and a new LIP will propose to adjust these constants consequently.
+
+<sup>[2]</sup>Note that, this proposal assumes that [LIP-0009](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md) is already implemented to avoid any kind of transaction replay attack from a previous protocol version.
 
 ### Wallets
 
@@ -296,7 +299,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
 --- | --- | --- | --- | --- | --- 
-**Delegate reg (145 bytes)** | 1.45*10<sup>-5</sup> LSK | 7.25*10<sup>-5</sup> LSK | 1.45*10<sup>-4</sup> LSK | 7.25*10<sup>-4</sup> LSK | 0.0013 LSK
+**Delegate reg (145 bytes)** | 1.45*10<sup>-5</sup> LSK | 7.25*10<sup>-5</sup> LSK | 1.45*10<sup>-4</sup> LSK | 7.25*10<sup>-4</sup> LSK | 0.0015 LSK
 **Dapp reg avg size (200 bytes)** | 2*10<sup>-5</sup> LSK | 1*10<sup>-4</sup> LSK| 2*10<sup>-4</sup> LSK | 0.001 LSK | 0.002 LSK
 **Dapp reg max size (4.3 KB)** | 4.3*10<sup>-4</sup> LSK | 0.0022 LSK | 0.0043 LSK| 0.0215 LSK | 0.043 LSK
 
@@ -305,7 +308,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
 --- | --- | --- | --- | --- | --- 
-**Delegate reg (145 bytes)** | 0.5 LSK | 0.5 LSK  | 0.5001 LSK | 0.5007 LSK | 0.5013 LSK
+**Delegate reg (145 bytes)** | 0.5 LSK | 0.5 LSK  | 0.5001 LSK | 0.5007 LSK | 0.5015 LSK
 **Dapp reg avg size (200 bytes)** | 0.5 LSK | 0.5001 LSK | 0.5002 LSK | 0.501 LSK | 0.502 LSK
 **Dapp reg max size (4.3 KB)** | 0.5004 LSK | 0.5022 LSK | 0.5043 LSK | 0.5215 LSK | 0.543 LSK
 
@@ -313,7 +316,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
 --- | --- | --- | --- | --- | --- 
-**Delegate reg (145 bytes)** | 1 LSK | 1 LSK  | 1.0001 LSK | 1.0007 LSK | 1.0013 LSK
+**Delegate reg (145 bytes)** | 1 LSK | 1 LSK  | 1.0001 LSK | 1.0007 LSK | 1.0015 LSK
 **Dapp reg avg size (200 bytes)** | 1 LSK | 1.0001 LSK | 1.0002 LSK | 1.001 LSK | 1.002 LSK
 **Dapp reg max size (4.3 KB)** | 1.0004 LSK | 1.0022 LSK | 1.0043 LSK | 1.0215 LSK | 1.043 LSK
 
@@ -321,7 +324,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
 --- | --- | --- | --- | --- | --- 
-**Delegate reg (145 bytes)** | 5 LSK | 5 LSK  | 5.0001 LSK | 5.0007 LSK | 5.0013 LSK
+**Delegate reg (145 bytes)** | 5 LSK | 5 LSK  | 5.0001 LSK | 5.0007 LSK | 5.0015 LSK
 **Dapp reg avg size (200 bytes)** | 5 LSK | 5.0001 LSK | 5.0002 LSK | 5.001 LSK | 5.002 LSK
 **Dapp reg max size (4.3 KB)** | 5.0004 LSK | 5.0022 LSK | 5.0043 LSK | 5.0215 LSK | 5.043 LSK
 
@@ -330,7 +333,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
 --- | --- | --- | --- | --- | --- 
-**Delegate reg (145 bytes)** | 10 LSK | 10 LSK  | 10.0001 LSK | 10.0007 LSK | 10.0013 LSK
+**Delegate reg (145 bytes)** | 10 LSK | 10 LSK  | 10.0001 LSK | 10.0007 LSK | 10.0015 LSK
 **Dapp reg avg size (200 bytes)** | 10 LSK | 10.0001 LSK | 10.0002 LSK | 10.001 LSK | 10.002 LSK
 **Dapp reg max size (4.3 KB)** | 10.0004 LSK | 10.0022 LSK | 10.0043 LSK | 10.0215 LSK | 10.043 LSK
 
@@ -338,7 +341,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
 --- | --- | --- | --- | --- | --- 
-**Delegate reg (145 bytes)** | 20 LSK | 20 LSK  | 20.0001 LSK | 20.0007 LSK | 20.0013 LSK
+**Delegate reg (145 bytes)** | 20 LSK | 20 LSK  | 20.0001 LSK | 20.0007 LSK | 20.0015 LSK
 **Dapp reg avg size (200 bytes)** | 20 LSK | 20.0001 LSK | 20.0002 LSK | 20.001 LSK | 20.002 LSK
 **Dapp reg max size (4.3 KB)** | 20.0004 LSK | 20.0022 LSK | 20.0043 LSK | 20.0215 LSK | 20.043 LSK
 
@@ -346,7 +349,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
 --- | --- | --- | --- | --- | --- 
-**Delegate reg (145 bytes)** | 25 LSK | 25 LSK  | 25.0001 LSK | 25.0007 LSK | 25.0013 LSK
+**Delegate reg (145 bytes)** | 25 LSK | 25 LSK  | 25.0001 LSK | 25.0007 LSK | 25.0015 LSK
 **Dapp reg avg size (200 bytes)** | 25 LSK | 25.0001 LSK | 25.0002 LSK | 25.001 LSK | 20.002 LSK
 **Dapp reg max size (4.3 KB)** | 25.0004 LSK | 25.0022 LSK | 25.0043 LSK | 25.0215 LSK | 25.043 LSK
 
