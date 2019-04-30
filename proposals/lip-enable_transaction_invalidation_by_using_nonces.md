@@ -1,0 +1,151 @@
+```
+LIP: <LIP number>
+Title: Enable transaction invalidation by using nonces instead of timestamps
+Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/enable-transaction-invalidation-by-using-nonces/
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+Requires: 0009
+```
+
+## Abstract
+
+This LIP proposes to replace timestamps by nonces in transaction objects. No constraints on the order of nonces shall be used. Moreover, the requirement that the transactionID has to be unique is replaced by the requirement that the combination of address, nonce and network identifier has to be unique. This will allow to invalidate pending transactions by reusing the nonce while still preventing transaction replay attacks.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+The current protocol requires that every transaction has a timestamp, and the timestamp is not allowed to be in the future during the transaction verification. There is, however, no proper reason why a timestamp has to be provided, and timestamps and their restrictions sometimes resulted in an unnecessarily bad user experience (rejected transactions) without providing any benefit (see the section [Restrictions on Timestamps](#Restrictions-on-timestamps) for more details). This motivates to remove timestamps from transactions. However, the reason to not completely remove the timestamp from transactions but to replace it by another property (nonces) is the requirement to have only distinct transactions in the blockchain to prevent transaction replay attacks (see the section [Why Timestamps Are Currently Needed](#Why-timestamps-are-currently-needed) for more details).
+
+Moreover, there is currently no way to invalidate pending transactions. Once dynamic fees are enabled, it could happen that a transaction with a low fee gets stuck in the transaction pool for a long time during busy moments of the network, and there is currently no possibility to replace this transaction by a transaction with a higher fee. This proposal enables a mechanism to invalidate transactions. The invalidation of transactions can be useful also in other situations. For example, when a user transmitted a transaction into the network without getting feedback, and the user is uncertain if this transaction gets eventually included in the blockchain or not. An invalidation mechanism ensures that such a transaction is not included at a later stage.
+
+## Rationale
+
+This section is divided into several subsections. First, we explain why timestamps are currently used in the Lisk protocol. Next, it is argued that restrictions on timestamps are not beneficial. In the subsequent subsection, the idea of removing restrictions on timestamps leads to the conclusion that one should rather consider arbitrary values without any meaning (nonces) instead of values that are considered to represent a certain time in order to achieve uniqueness. Then, it is explained how the nonces can be used for a transaction invalidation mechanism. The remaining subsections discuss some technical details of the proposal and some discarded alternatives.
+
+### Why Timestamps Are Currently Needed
+
+Timestamps of transactions allow to make each transaction distinct by giving it a unique timestamp. This is needed because identical transactions are not allowed to be included in a blockchain. Otherwise, transaction replay attacks could easily be performed. In order to enforce that each transaction in the blockchain is distinct, unique transactionIDs for transactions included in the blockchain are currently enforced. The timestamp allows, for example, to create two balance transfer transactions with identical sender, receiver and amount to be included in the blockchain since different timestamps yield different transactionIDs. 
+
+### Restrictions on Timestamps
+
+The current protocol requires that the timestamp of a valid transaction is not in the future during the transaction verification. This allows to create a transaction that will be valid from a specified time point on. There is, however, little benefit from this for both the sender and the receiver (if there is one). A sender could simply issue the transaction at the time when it is desired to be accepted. For a receiver of a balance transfer transaction, such a transaction does not provide any guarantee to receive this payment, as the sender could transfer all funds to another account before the timestamp of the transaction becomes valid.
+
+Moreover, the restriction sometimes resulted in unexpectedly rejected transactions because the [system time of the transaction issuer was in the future](https://github.com/LiskHQ/lisk-elements/issues/191). To create transactions that do not get rejected by nodes, an offset can be added to the system time. This is, however, rather a workaround instead of an elegant solution. For these reasons, an upper bound on the timestamp does not provide any proper benefit and rather leads to undesired problems.
+
+Requiring a lower bound on the timestamp of a transaction (not done in the current protocol) would be even more harmful: A transaction pending for a long time in the transaction pool due to a low fee could become invalid after a certain time. Hence, neither an upper nor a lower bound on the timestamp value is beneficial. 
+
+### Timestamps vs. Nonces
+
+As concluded in the previous subsection, restrictions on the value of the timestamp are not advantageous. Not having any restrictions on the timestamp allows, however, to choose arbitrary values. Consequently, the meaning of this value vanishes (the meaning of the timestamp value in the current protocol is already very little since arbitrarily small values are allowed). Therefore, associating any time related property to this value does not make sense. Instead, the value should be considered as a nonce. For this reason, we propose to replace the `timestamp` property of a transaction by a `nonce` property (we could also say that we rename the `timestamp` property to `nonce` property). The restrictions on the nonce property are discussed in separate subsections.
+
+### Enabling Invalidation of Transactions
+
+As mentioned in the motivation, there is currently no way to invalidate pending transactions. Therefore, we propose to not enforce the uniqueness of transactionIDs, but rather of nonces used for an account. More precisely, the combination of address, nonce and network identifier (see LIP [0009](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md)) has to be unique. This prevents transaction replay attacks in the same way as unique transactionIDs do. But it also allows to invalidate pending transactions by reusing the nonce. This can be used, for example, in the case of pending low-fee transactions as mentioned above: Issuing the original transaction again with the same input, including the same nonce, but with a higher fee can replace the first transaction.
+
+To invalidate a transaction without replacing it by a meaningful one, the sender could, for example, create a balance transfer transaction to his or herself  where the nonce of the transaction that is supposed to be invalidated, is used. Once this new transaction has been included, it is guaranteed that the first transaction would not be included anymore. Of course, the original transaction may be included before the second one. In this case, the user has certainty about the original transaction (included in the blockchain) and it is guaranteed that the second one does not get included.
+
+One may argue that enforcing uniqueness solely to the nonce value is sufficient too. That means, each nonce value would be allowed to be included in the blockchain only once. This is also prevents transaction replays and allows transaction invalidation, but increases the probability of rejected transactions due to already used nonces. This is especially the case when many users/clients tend to choose nonces not uniformly at random, for example, by choosing the operating system time as the nonce. Moreover, it allows users to invalidate pending transactions of other users.
+
+Alternatively, one could also enforce the uniqueness of the combination of address and nonce. But this does not allow to delete the used combinations every time the network identifier changes. When enforcing the uniqueness of the combination of address, nonce and network identifier, all used combinations can be deleted when the network identifier changes. This is because transactions using the old network identifier are invalid and there is no need to check if the combination of address, nonce and network identifier was already used. See also the section [Impact on Storage and Performance](#Impact-on-Storage-and-Performance) for more reasoning why this is advantageous. 
+
+### Ordered vs. Unordered Nonces
+
+Ordered nonces (i.e., to require that the nonce of a transaction has to be equal to the incremented nonce of the previously included transaction of the same sender) have one obvious advantage over unordered nonces: One has to store only a single nonce per account. This requires less storage, enables faster verification and keeps the protocol and implementation simple (see also the discussion [below](#Impact-on-Storage-and-Performance)). 
+
+There are however significant disadvantages for ordered nonces: Each transaction in the transaction pool depends on the previous transaction. If several transactions originating from the same account are pending, and one of these transactions is pending for a long time due to a low fee, all following transactions are pending too, even if they have a very high fee. Moreover, it might be possible that one of the transactions is invalid. Consequently, the nonce of the invalid transaction has to be used again for a new (and valid) transaction before all following transactions get accepted. Keeping track of the used nonces may become difficult too when some transactions are pending and especially when several devices are used for a single account (this issue has been partially discussed for [Ethereum](https://github.com/ethereum/go-ethereum/issues/2880) for quite some time already). The same holds for generating transactions while having no connection to the network (offline transactions).
+
+Due to the mentioned disadvantages for the user experience, we propose to use unordered nonces. That means, there are no restrictions on the order of nonces.
+
+### Format of Nonces
+
+We propose to use unsigned integers for nonces. Using 32 bits to represent a nonce could theoretically result in an exhausted set of nonces in reasonable time: An account issuing permanently 10 transactions per second (which is possible with the [intended changes for the block size](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0002.md)) has an exhausted set of nonces after 13.6 years. Therefore, we propose to use 64 bits to represent a nonce, which requires more than 10<sup>10</sup> years to exhaust the set of nonces with the mentioned frequency.
+
+### Choosing a Nonce
+
+As discussed before, an arbitrary 64-bit unsigned integer has to be used for the nonce, with the restriction that the combination of sender address, nonce and network identifier has to be unique. Two obvious ways exist to choose a nonce during transaction creation: using a pseudo random number generator or the system time. For the latter option, care has to be taken when creating multiple transactions at the same time. Of course, any other way to choose a 64-bit unsigned integer that fulfills the mentioned uniqueness requirement is valid too.
+
+### Impact on Storage and Performance
+
+To be able to quickly verify if a certain combination of sender address, nonce and network identifier was already used, it may be necessary to store these combinations in separate database tables for efficient querying. For example, there could be a table with two columns (one for the address and one for the nonce) for the current network identifier. Alternatively, one could use a table with a single column for the concatenation of address and nonce. This way, the single column coincides with the primary key which could speed up queries. Every time the network identifier changes, the table for the old network identifier can be deleted. One more alternative is to specify that the combination of address, nonce and network identifier is unique in the transaction table. That way, one does not need to create extra tables, but it also disallows to delete the combinations for network identifiers that are not valid anymore.
+
+The currently used address format uses 64 bits. However, the address system is [intended to be changed](https://lisk.io/roadmap) in the near future. For the following computations, we assume an address length of 192 bits. With this size, storing a combination of address and nonce requires 256 bits. Assuming the block size limit proposed in LIP [0002](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0002.md), approximately 120 transactions fit into one block. This can result in up to ~3.8*10<sup>8</sup> transactions per year. Hence, the required storage for the combinations of address and nonce could grow by up to ~12 GB per year.
+
+An average PC should be able to perform a few thousand queries per second for combinations of address and nonce in a table of the size of 12 GB. Once the size of the table results in too large query times, the table could be split.
+
+The impact on storage and performance will not be drastic in the near future because several hard forks are planned which every time results in a change of the network identifier. Hence, the previously used combinations can always be deleted. Once there is a long period without a hard fork, the impact on storage and performance could have a significant impact. In the [appendix](#Possibilities-to-Mitigate-the-Impact-on-Storage-and-Performance), some possibilities that could mitigate the impact are mentioned. This is, however, no complete research and no solution shall be specified in this LIP. If mitigation solutions are desired in the future, the solution shall be implemented in a separate step.
+
+### Discarded Alternatives
+
+#### Unspent Transaction Outputs
+
+Unspent transaction outputs (UTXOs) as used in Bitcoin make it very easy to invalidate transactions: If the transaction `tx` should be invalidated, one simply has to reuse one UTXO used in `tx` in a new transaction. At the same time, transaction replay attacks get prevented because a UTXO cannot be spent twice. Using UTXOs in Lisk would, however, require drastic changes of the protocol and implementation. Therefore, UTXOs were disregarded.
+
+#### Invalidation Transaction
+
+Another possibility to invalidate transactions is to create a new transaction type in which one can specify a transactionID that shall be considered as invalid. Once the invalidation transaction is included in the blockchain, a transaction with the specified Id that originates from the same account as the invalidation transaction is considered to be invalid. This solution is however less convenient. Invalidating a transaction is easy, but replacing a transaction (e.g. by another transaction that has the same input but a higher fee) requires to first invalidate the original transaction and to issue another updated transaction. Hence, two transactions are needed and for each some fees have to paid. For the proposed mechanism, invalidating and replacing can be done with only one transaction. Therefore, the proposed mechanism of using unordered nonces is preferred.
+
+#### Timeout
+
+Allowing to specify when a transaction becomes invalid provides little flexibility. Once a transaction was sent into the network, there is no way to update the provided timeout. Hence, quick invalidation is impossible. Therefore, this option was disregarded. 
+
+## Specification
+
+### Transaction Objects
+
+#### Timestamp
+
+The `timestamp` property gets removed from transaction objects. Any transaction object having this property is considered to be invalid.
+
+#### Nonce
+
+Every transaction object needs a `nonce` property. The value of this property has to be a 64-bit unsigned integer. During the verification of a transaction, it has to be ensured that the combination of 
+
+*   sender address
+*   nonce
+*   network identifier (see LIP [0009](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md))
+
+was not used for any other transaction included in the blockchain before. If this combination was already used, the transaction has to be rejected. Note that the network identifier is not part of the transaction JSON object. It is only part of the input message of the transaction signature, and a signature is rejected if the message did not contain the correct network identifier (see LIP [0009](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md) for more details).
+
+#### TransactionID
+
+The uniqueness of transactionIDs shall be dropped. That means, a transaction is not considered to be invalid just because there exists already another transaction in the blockchain with the same transactionID.
+
+### Serialization for Signature and TransactionID Generation
+
+In the serialization process for creating a byte array that serves as the input for SHA-256 whose output in turn is used as the input message for EdDSA, the `nonce` value follows the `type` value and gets followed by the `senderPublicKey` value. The nonce value uses 64 bits and shall be encoded big endian.
+
+The same holds for the serialization process for creating a byte array that serves as the input for SHA-256 from which the reversed first 8 bytes are used as the transactionID.
+
+## Backwards Compatibility
+
+This LIP introduces a hard fork. This is because:
+
+*   Transactions according to the current protocol get rejected by nodes following the proposed protocol because they do not have the `nonce` property.
+*   Transactions according to the proposed protocol get rejected by nodes following the current protocol because they do not have the `timestamp` property.
+
+### Consequences of Serialization Process Change
+
+Due to the [change in the serialization process](#Serialization-for-Signature-and-TransactionID-Generation) for the byte array that serves as the input for the transaction signature, there is the possibility that the byte array `BA` of a transaction `tx` already included in the blockchain could represent a valid transaction according to the proposed protocol. If this were the case, the signature of `tx` would also be valid for the new transaction. In this case, an adversary could send this new valid transaction into the network without knowing the private key belonging to the signature.
+
+This is however only possible if the network identifier does not change because the network identifier determines the first 256 bits of the byte array. Since the proposed change is causing a hard fork, the network identifier will change and it is guaranteed that `BA` does represent a valid transaction after the hard fork. Thus, the signature of `tx` cannot be valid for any transaction after the hard fork.
+
+## Appendix
+
+### Possibilities to Mitigate the Impact on Storage and Performance
+
+Two ideas to mitigate the impact on storage and performance shall be mentioned in this section. Note that this does not pose a complete study, and more research may be required to find a good solution.
+
+#### Incentivise Expiration Times
+
+An optional transaction property that specifies an expiration time of a transaction could be added to the protocol. If a transaction contains an expiration time, then the combination of address and nonce could be allowed to be reused after the expiration time, because replaying the transaction after the expiration time is impossible (assuming that the expiration time is included in the input message of the transaction signature). Therefore, the combination of address and nonce does not need to be stored after the expiration time.
+
+The usage of a low expiration time could be incentivized by enforcing a higher transaction fee for transaction without a low expiration time. This is very simple for static fees. In a dynamic fee system in which the fee is proportional to the transaction size (as, for instance, in [this proposal](https://research.lisk.io/t/replace-static-fee-system-by-dynamic-fee-system/31?u=andreas.kendziorra)), the size of a transaction could artificially be increased by adding some redundant data. For example, a hash value of some known data could be added to the transaction object. This way, the transaction object becomes larger without the need that nodes store this redundant data, because it is alway easily reproducible. If a transaction without a low expiration time does not contain the redundant data, it is rejected.
+
+#### Artificially Change the Network Identifier
+
+The network identifier could be changed, for example, by incrementing the [version](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md#specification). This allows to delete all previously stored combinations, but introduces a hard fork.
