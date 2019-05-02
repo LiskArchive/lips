@@ -1,0 +1,564 @@
+```
+LIP: lip-janhack-introduce_bft_consensus_protocol
+Title: Introduce BFT consensus protocol
+Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/introduce-bft-consensus-protocol
+Status: Draft
+Type: Standards Track
+Created: -
+Updated: -
+Requires: 0004
+```
+
+## Abstract
+
+This LIP proposes to change the consensus algorithm used in Lisk by introducing a mechanism allowing delegates to vote on the correct block at every height and implementing a new fork choice rule. The proposed consensus protocol thereby achieves Byzantine fault tolerance (BFT) and provides block finality guarantees, i.e., guarantees that a block is never reverted.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+The main purpose of the consensus algorithm is that for a given height eventually all Lisk nodes agree on the same block. This is in particular important in the case where there are different valid blocks for the same height, which can occur due to network delays or delegates forging multiple blocks in their designated time slot.
+
+In the current Lisk protocol, every received block is processed in the [onReceiveBlock](https://github.com/LiskHQ/lisk/blob/a4a843cf6ab6b5d58a3aa91ca8b293e05d0832df/modules/blocks/process.js#L637) function. Assume that `A` at height `A.height` is the block that is currently at the tip of the chain. If a new received block `B` is conflicting, i.e., it is not part of the current chain and cannot be added on top of the current chain, one of the following fork recovery mechanism for resolving the conflict can be triggered.
+
+*   **Fork Cause 1**
+
+    This fork recovery mechanism is triggered if `B.height=A.height+1`, but the blockID of the previous block contained in `B` is not the blockID of `A`. This means that `B` does not build on top of the block `A`, but a different block that is part of a different chain. In this case, the function [receiveForkOne](https://github.com/LiskHQ/lisk/blob/a4a843cf6ab6b5d58a3aa91ca8b293e05d0832df/modules/blocks/process.js#L117) is called. If the received block `B` has a larger timestamp than `A` or the same timestamp but larger blockID, then `B` is discarded. Otherwise, `A` and the parent block of `A` are deleted and the block synchronization mechanism is triggered.
+
+*   **Fork Cause 5**
+
+    This fork recovery mechanism is triggered if `B.height=A.height` and both `A` and `B` have the same previous block, but the blockIDs of `A` and `B` are different. In this case, the function [receiveForkFive](https://github.com/LiskHQ/lisk/blob/a4a843cf6ab6b5d58a3aa91ca8b293e05d0832df/modules/blocks/process.js#L181) is called. If `B` has a larger timestamp than `A` or a larger blockID, then `B` is discarded. Otherwise, `A` is deleted and replaced by `B` if `B` is a valid block.
+
+Note that two cases above do not cover all possible conflicts. In particular, if `A.height` and `B.height` differ by more than one, `B` is simply discarded. For this reason, there have been rare events in the past, where two chains were continuously progressing for an extended period of time, as the fork could not be resolved by the mechanism above directly at the height when it happened. In that case, users had to manually intervene and make their node synchronize with the chain of larger height. This behavior is highly undesirable, as we want the Lisk protocol to resolve conflicting blocks and reach consensus without intervention.
+
+Another closely related issue is that in the current Lisk network some delegates use a script to quickly change between multiple Lisk nodes they are running in order to forge a block on a different node if one node seems unable to forge. This, however, frequently leads to two distinct blocks being forged for the same time slot and is also one of the main reasons for the issue described above. It is important to remark that the main reason for running such a script for the delegate is to maintain a high productivity, which was otherwise difficult to achieve due to the lack of robustness of the P2P network. After further improving the block propagation and increasing the robustness of the P2P network (see [LIP 0004 "Introduce robust peer selection and banning mechanism"](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md) ), such a script should not be necessary anymore. Furthermore, we also have to take into account that in the future a malicious delegate could intentionally send multiple different blocks for the same slot to the network.
+
+Moreover, the current Lisk consensus algorithm does not provide any finality guarantees. A Lisk node does not revert more than 201 blocks of the current chain, but this only is a finality heuristic. As described in the first issue above, it can happen that two different chains progress by more than 201 blocks. So even 201 confirmations do not provide a finality guarantee in all possible circumstances. Block finality and a robust consensus, however, are key requirements before introducing sidechains and communication between different chains in Lisk.
+
+## Rationale
+
+We propose to introduce a new consensus algorithm in Lisk that is based on classic Byzantine fault tolerance (BFT) principles. The proposed Lisk-BFT consensus protocol is based on a formal specification and rigorous analysis  in the related paper [8]. It attains strong theoretical guarantees for deterministic consensus with only weak assumptions on the synchronicity of the underlying network (see the partially synchronous system model introduced in [6] for more details).  For an introduction of the terminology and basic notions of Byzantine agreement and the state machine replication problem, the reader can refer to [1]. Overall, this LIP should be, however, self-contained and understandable without a theoretic background in these fields if the referenced results are taken for granted.
+
+### Terminology
+
+We call two distinct blocks _conflicting_ if none is a descendant of the other. Moreover, we say that a delegate (or node) _decides for a block_ or _finalizes_ a block if it irrevocably deems it part of the Lisk blockchain. An _honest delegate_ is a delegate that participate in the consensus algorithm and obeys the protocol rules. In contrast to that, a _Byzantine delegate_ may behave arbitrarily and, in particular, violate any protocol rule. Further, if a delegate stops participating in the consensus algorithm, we say that the delegate _crashes _or is_ offline_ (also referred to as fail-stop failure).
+
+### Lisk-BFT Protocol
+
+The Lisk-BFT protocol is formally defined in [8, Definition 4.1.]. Here we only want to give a short high-level overview. The basic idea is that there are two types of votes that a delegate can cast for any block `B`. The first is called a `prevote` and the second called a `precommit`. After a delegate cast a `prevote` for a block `B` and overall there are at least 68 delegates that cast a prevote for  block `B`, a delegate is allowed to make a `precommit` for block `B`. If there are `precommits` by at least 68 delegates for a block `B`, a delegate or node finalizes `B` (and all ancestors of `B`). These votes are implied by the extra information that delegates provide in the block header when forging a block (specified in the Section "Additional Block Header Properties"). Moreover, a node always chooses the longest chain that contains the block of largest height with `prevotes` by at least 68 delegates (as specified in Section "Applying Blocks According to Fork Choice Rule"). Every block `B` contains the height of the block with at least 68 `prevotes` so that nodes can apply the fork choice rule by only considering the tips of the different chains.
+
+### Key Properties
+
+In this section, we summarize the key properties following from the analysis in [8, Theorem 4.3]. In short, for a static set of 101 delegates the consensus algorithm has the following properties and adds the desired block finality and robustness to the Lisk consensus algorithm:
+
+*   **Safety Property**. If at least 68 delegates (>⅔ of the delegates) honestly follow the protocol, two conflicting blocks are never finalized.
+*   **Liveness Property**. If at most 33 delegates (<⅓ of the delegates) crash, new blocks can always be finalized.
+*   **Accountability**. If a delegate violates the protocol, it can be detected and consequently be slashed, i.e., punished by losing a certain deposit. A slashing mechanism will be proposed in a separate LIP.
+
+Note that, in particular, forging multiple blocks for the same time slot is a protocol violation and can be punished. In a separate LIP, we propose a Proof-of-Misbehaviour transaction that includes the evidence of a protocol violation and leads to a punishment of the respective delegate.
+
+The Lisk-BFT specifications in this LIP include a fixed decision threshold of 68 delegates, i.e., after `precommits` by at least 68 delegates, a node finalizes a block and never switches to a chain that does not contain the finalized block. Participants in the network can additionally use subjective decision threshold to either have faster finality assuming a lower number of Byzantine delegates or even higher safety guarantees with the risk of never finalizing any block. For instance, a small value payment may be deemed irreversible by a recipient after the respective block including the transaction or a descendant block received `precommits` by 34 delegates. In this case, the Lisk-BFT protocol guarantees that this block is never reverted if no delegate is Byzantine and no change of active delegates occurs. On the other hand, for a high value payment a recipient may want to wait until the block including the transaction or a descendant received 101 `precommits` and hence the protocol guarantees that this block is finalized if at most 67 delegates violate the protocol. The dependence of the decision threshold and bound on the number of Byzantine delegates is described in more detail in [8].
+
+The Lisk-BFT protocol requires two additional integer values to be added to the block headers and delegates thereby vote on the correct block at every height. Thus, the only communication overhead is the additional space in the block header for these two properties, but there is no overhead of additional messages.  Assuming that no forks occur and all delegates follow the protocol, a new block is finalized after first 67 distinct delegates and then another 68 distinct delegates build on that block. It therefore depends on the order of the delegates how fast a block is finalized. In the best case, this is after 135 blocks are added on top of a block. In expectation, the first block of a round is finalized after 152 blocks assuming that no delegate misses its slot, all delegates honestly participate in the consensus algorithm and the order of delegates is chosen uniformly at random from all possible orderings (see Appendix).
+
+Note that the liveness property only holds for crash failures, i.e., delegates that are offline. A large group of Byzantine delegates
+(e.g., 30 delegates) could intentionally cause repeated forks in the network preventing any blocks to be finalized as long as the random ordering of delegates is favorable for the Byzantine delegates. This is only a liveness issue as the safety property still holds as long as at least 68 delegates honestly follow the protocol. We believe such a case does not pose a serious issue, as the Byzantine delegates may forfeit parts of their block rewards and have little to gain. Moreover, users could easily downvote the Byzantine delegates in such a case.
+
+### Changes of Delegates
+
+We propose that a change of delegates can happen without requiring the block containing the vote transactions that lead to the change of delegates to be finalized. The main reason is that we do not want a minority of at least 34 delegates to be able to prevent any finalization of blocks and thereby any change of delegates. As outlined in [8, Theorem 4.3], allowing changes of delegates without requiring finality reduces the safety guarantees depending on the number of delegates that change at one time without intermediate blocks being finalized. First of all, as long as there is an unchanged set of `68` honest delegates, the safety property still holds. Secondly, if we assume that at most `m` honest delegates change at one time without intermediate blocks being finalized by the current set of active delegates, then `68+2m` delegates are required to honestly follow the protocol for the safety property to hold. We believe that these guarantees are a reasonable balance between safety and liveness. Moreover, it is important to note that a violation of the safety property could only happen if there is a large number of Byzantine delegates, a big change in the set of active delegates and at the same time adversarial network conditions that lead to blocks being forged on different chains such that the safety property is violated.
+
+In order to further decrease the likelihood of having a fork where two different chains assume a different set of active delegates, we propose to let a change of delegates not take into effect immediately, but with a delay of two rounds, which is described in the specifications below. Note that it is additionally possible for participants that require a very high degree of security to implement a custom mechanism for automatically suspending the trust in the current chain in the unlikely event that there is a huge change of delegates. For instance, an exchange could suspend deposits and withdrawals in the unlikely case that more than 30 delegates change in a short time and in this case manually monitor the network to be absolutely sure that there is no conflicting chain.
+
+### Incentive Alignment
+
+Another important aspect is to align the incentives of the delegates with the new Lisk-BFT protocol. As described in detail in the specification section, we propose to dynamically reduce block rewards for delegates not constructively participating in the consensus protocol. In particular, this means that it is basically never beneficial for a delegate to attempt to forge on multiple chains at the same time in case of a fork. If a delegate does not disclose that it forged on a different chain in such a case, it risks that this violation of the protocol is detected and the delegate is punished (specified in a future LIP). Otherwise, if the delegate honestly discloses the blocks forged on the other chains, the block rewards are reduced to 25 % on all chains. If we assume there are never more than 4 chains that a delegate could forge on at the same time, then this implies that it is never beneficial to forge on all chains, as the delegate could instead only forge on the chain that the delegate believes to have the highest probability of consensus. In particular, the reduced block rewards thus solve the nothing-at-stake problem (see [4] for an introduction to this topic). Note that also honest delegates which happen to forge on another chain are punished with this mechanism because the next time they forge, they are required to disclose that they forged on a different chain and thus only receive 25 % of the rewards for the next block. So instead of only forfeiting one block reward due to missing one block slot, they additionally lose 75 % of the reward of the next block. In order to solve the nothing-at-stake problem and align incentives for the consensus algorithm it is unavoidable that also honest delegates are punished in this case.
+
+### Alternatives
+
+In the remaining part of this section, we discuss some alternative consensus algorithms with similar guarantees. We do not consider alternatives that would require huge changes in codebase and the implementation of new cryptographic primitives. The main reason why we favor the new Lisk-BFT consensus algorithm is that it is simple and it does not have the overhead of additional messages between delegates.
+
+#### Tendermint
+
+The Tendermint consensus algorithm [2] achieves consensus in three distinct phases. The basic idea is that after every block proposal, there are two voting phases with specific vote messages. For every voting phase to complete, a node needs to receive a certain minimum required number of vote messages. Only after both phases are completed successfully, a node can finalize a block and the next block can be proposed. In particular, forks, i.e., two different growing chains, cannot occur in Tendermint. A consensus algorithm with this property is also called _fork-free_. The disadvantage of Tendermint is that the block proposal is slowed down by the two additional phases and the blockchain does not advance unless consensus is reached on every block. For a more detailed analysis of fork-free versus forkful consensus algorithm see [5], for instance. Because of the performance and also easier adaption of the current consensus algorithm, we therefore prefer a forkful consensus algorithm.
+
+#### Casper the Friendly Finality Gadget
+
+Casper the Friendly Finality Gadget (Casper-FFG) is introduced in [3] and is a forkful consensus algorithm based on BFT principles and inspired by Tendermint. In Casper-FFG, block proposers can cast votes on blocks and thereby finalize blocks independent of the block proposal mechanism. Because of the overhead of the additional vote messages, block proposers do not vote on every block, but only on specific checkpoints, i.e., blocks at specific heights. In Lisk it would be natural to integrate the concept of checkpoints with the existing rounds, i.e., use the last block of every round in Lisk as checkpoint (the Casper-FFG paper also suggests a checkpoint at every height that is a multiple of 100). Then delegates could vote on checkpoints, either via separate messages or in the blocks they propose. However, this would lead to a long time until finality. For instance, for the first block of a round to be finalized, the next two checkpoints would need to receive sufficient votes (see the paper for details). This means that only after 201 additional blocks after the first block of a round (this is the height of the second checkpoint), delegates could start to vote on the second checkpoint via separate messages or in the next block they propose (the latter being even slower). Of course it would be possible to have checkpoints more frequently to have faster finality, but then it would also be necessary that delegates send separate vote messages so that blocks are finalized fast enough. Without a suitable aggregate signature scheme these separate vote messages would add a significant message overhead to the protocol.
+
+#### EOS DPOS 3.0 + BFT
+
+EOS also claims to have added Byzantine fault tolerance to its latest version of its consensus protocol [7]. In their solution, block proposers disclose the largest height of a block they previously forged in the block header. This is an elegant solution with little overhead, but a formal specification of their consensus protocol together with a rigorous analysis is missing. Moreover, as already pointed out in the GitHub issue [7], the initially proposed consensus algorithm is flawed. Our proposed solution is also based on the idea of delegates disclosing the largest height of a previously forged block, but is based on a formal specification and analysis.
+
+## Specification
+
+### Overview
+
+The Lisk-BFT protocol is formally defined and analyzed in [8]. It defines that blocks have two new properties, which we denote by `heightPrevious` and `heightPrevoted`, and describes how delegates determine these values when forging a block. Moreover, the protocol specifies that delegates choose the longest chain that contains the highest `heightPrevoted` value (fork choice rule). This section describes in detail the practical implementation of the consensus algorithm. The following diagram gives an overview of the general set of rules governing how new blocks are applied to the current chain of a node.
+
+![Specification Overview](lip-introduce_bft_consensus_protocol/specification_overview.png)
+
+The whole section is organized as follows:
+
+*   The section "Additional Block Header Properties" defines the new properties `heightPrevious` and `heightPrevoted` for the block headers and the section "Validating Additional Block Header Properties" describes how these are validated.
+*   The section "Detecting Conflicting Block Headers" describes the conditions for when block headers are conflicting and the corresponding delegate violated the protocol.
+*   The section "Computing Prevotes and Precommits" describes how the `prevotes` and `precommits` implied by a block header can be computed.
+*   The formal specification of the different cases in the diagram above is given in the section "Applying Blocks According to Fork Choice Rule".
+*   The section "Timing of Block Forging" describes how the timing of block forging needs to be adjusted to be in line with the fork choice rule.
+*   The section "Incentivizing Lisk-BFT Protocol Participation" describes under which conditions block rewards are reduced to incentivize constructive protocol participation.
+*   The section "Change of Delegates" describes that votes for delegates only take into effect with a delay of 2 rounds.
+*   The sections "Processing Blocks" and "Reverting Blocks" specify how blocks are processed and reverted.
+*   The "Moving to a Different Chain" section describes under which conditions a node changes from a chain with tip `A` to a chain with tip `B` as shown in the diagram above. There are two possible ways to move to a different chain which are described in the sections "Block Synchronization Mechanism" and "Fast Chain Switching Mechanism".
+
+### Additional Block Header Properties
+
+For the implementation of the new consensus algorithm, two additional properties need to be added to the block header:
+
+*   A 32 bit unsigned integer `heightPrevious`.
+*   A 32 bit unsigned integer `heightPrevoted`.
+
+We further propose to also reduce the size of the current `height` property to 32 bit.
+
+If a delegate forges a block `B` to be added to the current chain, then `B.heightPrevious` must be the largest height at which the delegate forging the block previously forged a block on any chain or 0 if the delegate did not forge a block before. To be able to provide this information correctly, even in the case of node crashes, it is important that the largest height of a block previously forged is persistently stored before any forged block is broadcast to the network. The property `B.heightPrevoted` must be the largest height of a block in the current chain up to height `B.height-1` that has at least 68 `prevotes` contained in the chain.
+
+Further, the already existing property `B.height` and both additional properties above need to be included in the byte array that is used
+for generating the signature and `blockID` of a block. This way these properties cannot be altered by a malicious node. For this, the [getBytes()](https://github.com/LiskHQ/lisk/blob/de766a70d1c507c60c2893007263907fb428af45/logic/block.js#L385) function needs to additionally include the bytes of these three properties with size 32 bit each in big-endian encoding. The properties `height`, `heightPrevious`, `heightPrevoted` should be included in the byte array in this order directly after the `previousBlock` property.
+
+### Validating Additional Block Header Properties
+
+A schema validation must ensure that the new properties `heightPrevious` and `heightPrevoted` have the correct type and range. The adapted signature validation ensures that these new properties and the `height` property have not been changed by an attacker.
+
+For a new child block `B`, which is supposed to be added to the current chain containing blocks up to height `B.height-1`, to be valid, the property `B.heightPrevoted` needs to be the largest height of a block in the current chain up to height `B.height-1` that has at least 68 `prevotes` contained in the chain. Note that for this the `prevotes` implied by block `B` are not taken into account. If this number is incorrect, the block header is deemed invalid and discarded.
+
+In a separate LIP, we further propose a Proof-of-Misbehaviour transaction that can contain such an invalid block header as evidence for a violation of the protocol rules. This would allow to punish a delegate for providing incorrect information.
+
+### Detecting Conflicting Block Headers
+
+In order to enforce the Lisk-BFT protocol rules, we also need to detect if a set of valid block headers by the same delegate violate the protocol rules. The properties that the valid block headers by one delegate need to satisfy are outlined in [8, Lemma 4.2]. We now present a function that checks these properties. We assume that every block header contains the following properties:
+
+*   `height`: the height associated with the block
+*   `heightPrevious`: largest height of any block previously forged, as described above
+*   `heightPrevoted`: largest height of an ancestor block with at least  68 `prevotes` as described above
+*   `blockID`: the hash of the block header
+*   `delegatePubKey`: public key of delegate forging the block
+
+The following code checks whether there is a conflict between two block headers, i.e.,
+a violation of the Lisk-BFT protocol, by using the properties shown in [8, Lemma 4.2]:
+
+```js
+checkHeadersConflicting(blockHeader1,blockHeader2) {
+   // Order the two block headers such that b1 must be forged first
+   let b1=blockHeader1;
+   let b2=blockHeader2;
+   if(b1.heightPrevious>b2.heightPrevious ||
+     (b1.heightPrevious==b2.heightPrevious && b1.heightPrevoted>b2.heightPrevoted) ||
+     (b1.heightPrevious==b2.heightPrevious && b1.heightPrevoted==b2.heightPrevoted && b1.height>b2.height)){
+      b1=blockHeader2;
+      b2=blockHeader1;
+   }
+
+   // The order of cases is essential here
+   if(b1.delegatePubKey!=b2.delegatePubKey) {
+      // Blocks by different delegates are never conflicting
+      return false;
+   } else if(b1.blockID==b2.blockID) {
+      // No conflict, as block headers are the same
+      return false;
+   } else if (b1.heightPrevoted==b2.heightPrevoted &&  b1.height>=b2.height) {
+      // Violation of the fork choice rule as delegate moved to different chain
+      // without strictly larger heightPrevoted or larger height as justification.
+      // This in particular happens, if a delegate is double forging.
+      return true;
+   } else if(b1.height>b2.heightPrevious) {
+      // Violates disjointness condition
+      return true;
+   } else if(b1.heightPrevoted>b2.heightPrevoted) {
+      // Violates that delegate chooses branch with largest heightPrevoted
+      return true;
+   } else {
+      // No conflicts between block headers
+      return false;
+   }
+}
+```
+
+Two conflicting block headers can be used as evidence for a violation of the protocol rules. As mentioned above, this proof can be used in a Proof-of-Misbehaviour transaction (proposed in a separate LIP), which includes this evidence in the blockchain and leads to a punishment of the misbehaving delegate.
+
+### Computing Prevotes and Precommits
+
+All blocks with `heightPrevious<height` imply `prevotes` and `precommits` as described in [8, Definition 4.1]. In this section, we outline how the total number of `prevotes` and `precommits` can be practically computed using the information contained in the block headers. In the function given below, we only store the current total number of `prevotes` and `precommits` for every block, instead of storing for every block which delegate made a `prevote` or `precommit` for that block. We further assume that the following data structures are available:
+
+*   `blockHeaders[i]`: stores the block header of the current chain at height `i`, the properties of every block header are the same as already described above
+*   `prevoteCounts[i]`: stores the current number of `prevotes` for the block in the chain at height `i`
+*   `precommitCounts[i]`: stores the current number of `precommits` for the block in the chain at height `i`
+*   `delegateMinHeightActive`: for a currently active delegate, this is the height of the first block of the round since when that delegate has been continuously active. We use this information to ensure that the delegate cannot cast  `prevotes` and `precommits` for heights when it was not active. Note that it is sufficient to consider the previous 3 rounds because if  `delegateMinHeightActive<newBlockheader.height-302`, then we can simply set `delegateMinHeightActive:=newBlockheader.height-302` as `prevotes` and `precommits` implied by `newBlockheader` are only cast for blocks of height at least `newBlockheader.height-302`.
+*   `largestHeightPrecommit`: this is the largest height of a block in the current chain for which a given delegate has already made a `precommit`.
+
+We first define a utility function that computes the largest height where a delegate has not cast a `prevote` for a block in the current chain. Using the notation from the transformation in [8, Definition 4.1] and assuming `newBlockheader` is the header of block `B_l`, the following function computes the value `max{j_2,newBlockheader.height-303}`.
+
+```js
+getHeightNotPrevoted(newBlockheader) {
+   let heightPreviousBlock = newBlockheader.heightPrevious;
+   let h=Math.max(newBlockheader.heightPrevious, newBlockheader.height-302);
+   while(h>=newBlockheader.height-302) {
+      if(h==heightPreviousBlock) {
+         if(blockheaders[h].delegatePubKey!=newBlockheader.delegatePubKey ||
+             blockheaders[h].heightPrevious>=h) {
+            // This means that either the block B at height h was not forged by
+            // the delegate (as the delegate forged a block at height h on a different chain)
+            // or the block at height h does not imply any prevote. In both
+            // cases, the delegate did not prevote for B.
+            break;
+         } else {
+            heightPreviousBlock=blockheaders[h].heightPrevious;
+         }
+      }
+      h--;
+   }
+   return h;
+}
+```
+
+Every time a new block is added to the current chain, we can update the implied `prevotes` and `precommits` as shown below using the data structures and utility function defined above.
+
+```js
+applyPrevotesPrecommits(newBlockheader) {
+   // A block header only implies votes if heightPrevious<height
+   if(newBlockheader.heightPrevious>= newBlockheader.height) {
+      return;
+   }
+   const currentDelegatePubKey = newBlockheader.delegatePubKey;
+   const delegateMinHeightActive  // Height of first block of round since when the
+                                  // delegate has been continuously active
+   const largestHeightPrecommit   // Largest height of precommit of delegate
+   const heightNotPrevoted = getHeightNotPrevoted(newBlockheader)
+
+   // Add implied precommits by newBlockheader
+   const minPrecommitHeight = Math.max(delegateMinHeightActive,
+                                       heightNotPrevoted+1,
+                                       largestHeightPrecommit+1)
+   const maxPrecommitHeight = newBlockheader.height-1;
+   for(let j=maxPrecommitHeight; j>=minPrecommitHeight;j--) {
+      // Add precommit if threshold is reached
+      if(prevoteCounts[j]>=68) {
+         precommitCounts[j]+=1;
+      }
+   }
+
+   // Add implied prevotes by newBlockheader
+   const minPrevoteHeight = Math.max(newBlockheader.heightPrevious+1,
+                                     delegateMinHeightActive,
+                                     newBlockheader.height-302);
+   const maxPrevoteHeight = newBlockheader.height;
+   for(let j=minPrevoteHeight; j<=maxPrevoteHeight; j++) {
+      prevoteCounts[j]+=1;
+   }
+}
+```
+
+The disadvantage of the approach above is that we have to compute the overall number of `prevote` and `precommit` messages from scratch every time we remove a block. This computation is very fast, however, if all information is in-memory.
+
+After updating the `prevoteCounts` and `precommitCounts` data structures as described above, we can easily compute the largest height with `precommits` by at least 68 delegates, denoted by `chainHeightFinalized`, and we consider all blocks at this height and before finalized. This value should be stored persistently and never decreased so that even in the case of node crashes, blocks that are once deemed final are never reverted. Moreover, we also compute the largest height of a block with `prevotes` messages by at least 68 delegates, denoted by `chainHeightPrevoted`, which is needed to verify the next block added to the chain. It is important to note that if `A` is the current block at the tip of the chain, then in general after computing the `prevotes` and `precommits` implied by `A`, the values `chainHeightPrevoted` and `A.heightPrevoted` are different, because `A.heightPrevoted` is computed not taking the `prevotes` implied by `A` into account.
+
+### Applying Blocks According to Fork Choice Rule
+
+In this section, we describe the actions taken upon receiving a new block. The new block can be send unsolicited by a peer or requested from a peer after that peer announced a new block (see [LIP 0004 "Introduce robust peer selection and banning mechanism"](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md) for details). We describe the conditions for applying a block to the current chain, deleting a block or changing to a different chain. Note that the rules described in this section make the `broadhash`
+used in the current protocol superfluous.
+
+The fork choice rule described in this section corresponds to the Longest-Chain fork choice rules defined in the paper (see Definition 3.3
+and Definition 4.1 in [8]). However, the tie-breaking is done slightly differently (see Case 4 below).
+Assume that block `A` is the block that is currently at the tip of the chain of the node and block `B` is newly received.
+Then a node changes to the chain with block `B` at the tip of the chain if and only if the following expression evaluates to `true`:
+
+```js
+(A.heightPrevoted<B.heightPrevoted) ||  (A.height<B.height && A.heightPrevoted==B.heightPrevoted)
+```
+The condition above completely describes the Longest-Chain fork choice rule except for the tie-breaking as shown in the paper
+(Lemma 4.2 (a) in [8]). The complete fork choice rule including tie-breaking is given below.
+
+For applying blocks according to this fork choice rule, we further assume that the following properties and functions are available
+
+*   `parentBlockID`: yields the blockID of the parent of a block
+*   `timeslot`: a function that returns the time at the beginning of the block slot of the given block
+*   `receivedInSlot`: a function that returns `true` if a block was received in the designated 10 second time window of the block slot, and `false` otherwise
+
+```js
+if (A.blockID == B.blockID) {
+   // Case 1
+} else if (A.height + 1 == B.height &&
+           B.parentBlockID == A.blockID) {
+   // Case 2
+} else if (A.height == B.height &&  
+           A.heightPrevoted == B.heightPrevoted &&
+           A.parentBlockID == B.parentBlockID) {
+   if (A.delegatePubKey == B.delegatePubKey) {
+      // Case 3
+   } else if (timeslot(A) < timeslot(B) &&
+              !receivedInSlot(A) &&  
+              receivedInSlot(B)) {
+      // Case 4
+   }
+} else if (A.heightPrevoted<B.heightPrevoted ||
+           (A.height < B.height && A.heightPrevoted == B.heightPrevoted)) {
+   // Case 5
+} else {
+   // Discard B
+}
+```
+
+**Case 1:**
+
+The case of receiving a block multiple times is the most frequent one if there are no forks in the network. The block `B` can simply be discarded in this case.
+
+**Case 2:**
+
+In this case, we try to add the block `B` to the current chain by performing the steps described in the section "Processing Blocks".
+
+**Case 3:**
+
+In this case, a delegate was double-forging, i.e., creating two distinct blocks for the same slot. We keep the block `A` received first and discard `B`. Once a Proof-of-Misbehaviour transaction is defined in a separate LIP, a node can use the block headers of `A` and `B` as evidence and submit a Proof-of-Misbehaviour transaction with this evidence.
+
+**Case 4:**
+
+This case means that there is a tie in the fork-choice rule and we have two competing blocks by different delegates at the same height. In the case here, `A` was not received in its designated timeslot, but `B` was, so that we give preference to `B`. We validate `B`  (Step 1 of the section "Processing Blocks"), then delete `A` (see Section "Reverting Blocks") and afterwards apply `B` (see section "Processing Blocks"). If applying `B` fails, we restore `A`.
+
+Note that the rule applied above can also be described as follows: If the two blocks are both received in the designated slot or both not received in the designated slot, we give preference to the block received first. Otherwise, we give preference to the block received in time in its the designated slot.
+
+**Case 5:**
+
+This case means that block `B` has priority over block `A` according to the condition for the fork choice rule given at the beginning of the section. We proceed as described in the section "Moving to a Different Chain".
+
+### Timing of Block Forging
+
+If a delegate received the block for the previous block slot on time, it forges the block directly at the beginning of the block slot. If a delegate has not received the block for the previous slot, it waits 2 seconds into its block slot before forging a block. This is to ensure that a delegate builds on the previous block if possible and otherwise its block likely has priority due to the tie-breaking in Case 4 above.
+
+### Incentivizing Lisk-BFT Protocol Participation
+
+We propose that the block rewards for a block `B` forged by a delegate `D` is only 25 % of the current block reward if one of the following conditions is met:
+
+*   The block header properties in `B` satisfy `B.heightPrevious`>=`B.height`. This means that the delegate does not constructively participate in the Lisk-BFT protocol as the block header does not imply any `prevote` or `precommit`.
+*   The block header properties in B satisfy `B.heightPrevious`<`B.height` and `B.height-B.heightPrevious<=303`, but the block at height `heightPrevious` in the current chain is not forged by `D`. This means that the delegate recently forged a block on a different branch before.
+
+We assume that the delegate forging a block adjusts the reward property in the block if one of the conditions above is met. Any block without reduced reward property, but which meets one of the conditions above, is deemed invalid. The condition `B.height-B.heightPrevious<=303` ensures that we only need to consider the recent 303 blocks for verifying this condition.
+
+### Change of Delegates
+
+We propose to let a change of delegates not take into effect immediately at the end of the round, but with a delay of 2 rounds. More specifically, we assume that at the beginning of a round `r`, we compute the top 101 delegates by delegate weight taking into account all vote transactions up to the end of the previous round. This information is then stored persistently for round `r`. For the set of active delegates of round `r`, we then take this information from round `r-2` to achieve the delay of 2 rounds.
+
+### Processing Blocks
+
+In this section, we describe the order of necessary validation and verification steps (steps from 1 to 7 below) when applying a block to the current state of the blockchain. Currently, these steps are carried out in the [processBlock](https://github.com/LiskHQ/lisk/blob/a637899dc0b00900383676ba64e27d5f2f6d6ecc/modules/blocks/verify.js#L797) function. We propose to keep the current validation and verification steps (Step 1, 3-5), but add two additional steps (Step 2, 6) for the Lisk-BFT consensus algorithm and modify the information sent to peers after applying a block (Step 7). Processing a block `B` that is supposed to be added to the current chain then works as follows:
+
+**1. Step: Perform validations and verifications that can be carried out in memory.**
+
+*   Check the schema of the block `B` and all included transactions.
+*   Check all hashes (blockID, payload hash, transactionID) and other properties of the blocks and included transactions that can be validated in memory (height, block reward, fee, …).
+*   Verify that the delegate is eligible for forging the block `B`.
+*   Validate the block signature and all transaction signatures.
+
+If any of the validations fail, we discard the block. We further ban the peer sending block `B` as it should not forward a block that fails these validations as described in [LIP 0004 "Introduce robust peer selection and banning mechanism"](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md).
+
+**2. Step Perform Lisk-BFT related validations and verifications**
+
+*   Check if the `B.heightPrevoted` value in the block header is correct. This is outlined in the section "Validating Additional Block Header Properties" above.
+*   Check if there is any conflict between the block header and any block by the same delegate in the current chain. For performance reasons, for a block `B` that is supposed to be added to the tip of the chain, we only check the blocks at heights `B.height-303` up to `B.height-1`. This verification step is formally defined in the section "Detecting Conflicting  Block Headers" above.
+*   Check whether the `reward` property of the block has the correct value as described in the section "Incentivizing Lisk-BFT Protocol Participation".
+
+If any of the validations fail, we discard the block. We further ban the peer sending the block as it should not forwarded a block that fails these validations.
+
+**3. Step: Broadcast block `B` to peers using the mechanism provided by the P2P module.**
+
+**4. Step: Perform all verifications that require accessing the database.**
+
+*   Check whether all transactions are valid with respect to the current state of the blockchain.
+*   Check whether transactions can be processed together.
+
+If any of the verifications fail, we discard the block. Note that we should not ban the peer forwarding the block as the broadcasting happens before these verifications.
+
+**5. Step: Apply block `B` to the current state of the blockchain.**
+
+**6. Step: Update Lisk-BFT Votes**
+
+Using the information in the block header of block `B`, the `prevote` and `precommit` counts for every block are updated. The exact procedure is outlined in the section `Computing Prevotes and Precommits`.
+
+**7. Step: Send `B.height`, `B.heightPrevoted` and `B.blockID` to all peers using the mechanism provided by the P2P module.**
+
+The `postBlockAnnouncement` event used to inform peers about a new applied block  (see [LIP 0004 "Introduce robust peer selection and banning mechanism"](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md) ) needs to get extended by the property `heightPrevoted`.
+
+### Reverting Blocks
+
+The basic logic of undoing transactions to restore the previous state of the blockchain can remain the same. Additionally, the following properties need to be ensured:
+
+*   Every time a node intends to delete a block `B`, it needs to ensure that `B.height>chainHeightFinalized` holds, i.e., that block `B` has not already been finalized.
+*   After reverting one or more blocks, a node needs to update the `prevote` and `precommit` of the blocks and, in particular, needs to have the correct value of `chainHeightPrevoted` to be able to verify new blocks. Assume one or more blocks have been deleted from the current chain and the current tip of the chain is now block `A` at height `A.height`. Then the `prevotes`, `precommits` and `chainHeightPrevoted` are obtained as follows:
+
+**1. Step: Recompute the number of `prevotes` and `precommits`.**
+
+First of all, we need to ensure that the block headers of the blocks at heights `A.height-302` up to height `A.height` are contained in memory. Then we update the number of `prevotes` and `precommits` for these blocks  as described in Section "Computing Prevotes and Precommits".
+
+**2. Update `chainHeightPrevoted`**
+
+Note that the block of largest height with at least 68 `prevotes` that is contained in the current chain with tip A, is either the block at height `A.heightPrevoted` or its height is at least `A.height-302`. The reason is that block `A` only implies `prevotes` for blocks of height at least `A.height-302` so either `chainHeightPrevotes=A.heightPrevoted` or the `prevotes` implied by `A` result in a new block of height at least `A.height-302` obtaining at least 68 `prevotes`.
+Thus the value `chainHeightPrevoted` can be updated as outlined in the following function.
+
+```js
+updateChainHeightPrevoted(){
+   chainHeighPrevoted=A.heightPrevoted;
+   for(let h=A.height;h>=A.height-302;h--) {
+      if(prevoteCounts[h]>=68) {
+         chainHeighPrevoted=h;
+         break;
+      }
+   }
+}
+```
+
+### Moving to a Different Chain
+
+We assume that Case 5 occured in section "Applying Blocks According to Fork Choice Rule". This means that block `A` is the tip of the current chain and the new received block `B` has priority over `A` according to the fork choice rule. Based on the following conditions, the mechanisms described in section "Fast Chain Switching Mechanism" or section "Block Synchronization Mechanism" are triggered, or the process of moving to a different chain is aborted.
+
+**1. Step: Validate new tip of chain**
+
+Validate `B`, i.e., perform all checks outlined in Step 1 of the section "Processing Blocks" except for checking `height`, `parentBlockID` and delegate slot (block `B` may be in the future and assume different delegates that are not active in the round of block `A`). If any check fails, the peer that sent block `B` is banned and the node aborts the process of moving to a different chain.
+
+**2. Step: Check whether current chain justifies triggering the block synchronization mechanism**
+
+Let block `C` be the block of largest height in the current chain that is finalized. Check whether `C` was forged more than 303 block slots ago, i.e., according to the local time of the node, there are at least 303 block slots after `C` was forged (with a forged or missed block). If this is the case, the mechanism described in Section "Block Synchronization Mechanism" is triggered and the following step is omitted.
+
+**3. Step: Check whether `B` justifies fast chain switching mechanism**
+
+  a) Check whether `|B.height-A.height|<=202`. If the checks fails, abort the process of moving to a different chain.
+
+  b) Check that the delegate forging `B` is an active delegate for the corresponding round of block `B` according to the information in the current chain.  If the check fails, the node aborts the process of moving to a different chain. Otherwise, the fast chain switching mechanism is triggered.
+
+  This way a malicious node that is not an active delegate cannot trigger the switch to a different chain in case the last finalized block is at most 303 time slots ago (see Step 2). Note that if the chain with tip `A` and the chain with tip `B` assume a different set of active delegates in the round of block `B` (in the case the last common block is too far back), then the chain is only switched if there is a block by a delegate that is active according to the information in the current chain with tip `A` or the finalized block in the current chain is too far in the past triggering the block synchronization mechanism (see Step 2).
+
+### Fast Chain Switching Mechanism
+
+In order to enable fast switching to a different branch and recomputation of `prevotes` and `precommits`, we propose to have an in-memory data structure `blockHeaders` that stores at least the last 505 block headers of the current chain. As at most 202 blocks are reverted in the fast chain switching mechanism, at least 303 blocks are then still contained in-memory. This allows to recompute `chainHeightPrevoted` using the blocks contained in-memory as outlined in the section "Reverting Blocks". It could be further considered to additionally cache the latest full received blocks (e.g. 500) in memory in order to speed up changing to a different chain as less blocks have to be requested from peers.
+
+Assume that block `A` is the block at the current tip of the chain of the node and assume the mechanism described in this section is triggered according to the conditions of Section "Moving to a Different Chain". This means that the node wants to change to a chain with block `B` at the tip of the chain (`B` can also be a descendant of `A`) and  `B` has priority over `A` according to the fork choice rule,  i.e., the following expression evaluates to `true`:
+
+```js
+(A.heightPrevoted<B.heightPrevoted) || (A.height<B.height && A.heightPrevoted==B.heightPrevoted)
+```
+
+A node proceeds along the following steps:
+
+**1. Step: Query blocks**
+
+Query the peer `P` that sent `B` for the last common block `C` of the chain with tip `A` and the chain with tip `B`. Afterwards the node requests the missing blocks up to block `B` from that peer. If `C.height<chainHeightFinalized` holds, the change to a different branch is aborted and `P` is banned, as a node never reverts a finalized block. If `A.height-C.height>202` or `B.height-C.height>202` holds (i.e., we need to delete or apply more than 202 blocks), the node aborts the process of moving to a different chain.
+
+**2. Step: Validating Blocks**
+
+We perform all validations on all blocks from block `C` up to block `B` (excluding `C`), that is, the checks outlined in Step 1 of the section "Processing Blocks" including checking the delegate slot. As at most 202 blocks are deleted or applied and delegates become active with a delay of 2 rounds, these checks can be performed using the sets of active delegates already computed. If the check fails, we ban the peer that sent `B` or any other block that failed the validation. We further abort the whole switching process.
+
+**3. Step: Switching Chain**
+
+We delete all blocks of the current chain until block `C` is the tip of the chain while temporarily storing the deleted blocks. Afterwards, we apply all blocks up to the block `B`. This means that we perform all steps of the section "Processing Blocks" except for Step 3 (we may also
+skip Step 1 as this step has already been performed on the blocks). If applying the blocks fails, we return to the chain with tip `A`. It is essential that even if a node crashes while performing this step, it is afterwards able to either restore the chain with tip `A` or the new chain with tip `B`.
+
+### Block Synchronization Mechanism
+
+Assume the mechanism described in this section is triggered according to the conditions of Section "Moving to a Different Chain". Again we assume that block `A` is the block at the current tip of the chain. It is important that the block synchronization mechanism is consistent with the fork choice rule (even if the synchronization fails or crashes). That is if `B` is the block at the tip of the chain after synchronization finishes, then the following holds:
+
+```js
+(A.blockID == B.blockID) ||
+(A.heightPrevoted<B.heightPrevoted) ||
+(A.height<B.height && A.heightPrevoted==B.heightPrevoted)
+```
+
+A node proceeds along the following steps:
+
+**1. Step: Select peers to synchronize from**
+
+Request a list of all connected peers from the P2P module including `T.height` and `T.heightPrevoted` of the block `T` at the tip of their chain. From this information, determine a set of `bestPeers` that are at the tip of the chain according to the fork choice rule as follows:
+
+   a) Among all peers, choose the subset of peers with largest `T.heightPrevoted`.
+
+   b) From the peers in a) choose those with largest `T.height`.
+
+   c) Form the peers in b) choose the largest set which has the same `blockID`. Ties are broken in favor of smaller `blockID`. This set is the set `bestPeers` and we define `B` to be the block at the tip of the chain of this set of peers.
+
+If the following expression evaluates to `false`, the block synchronization mechanism is aborted:
+
+```js
+(A.heightPrevoted<B.heightPrevoted) || (A.height<B.height && A.heightPrevoted==B.heightPrevoted)
+```
+
+**2. Step: Obtain tip of chain**
+
+The node chooses one peer `P` at random from the set `bestPeers` and request its current tip of the chain `B`. We then validate block `B` (Step 1 of "Processing Blocks" section except for checking the delegate slot). If these validations fail or the block `B` does not satisfy the condition at the beginning of this section or `P` does not provide any block (meaning the peer falsely claimed a block with higher priority according to the fork choice rule), peer `P` is banned and the node restarts from Step 1.
+
+**3. Step: Revert to last common block**
+
+  a)  The node requests the last common block `C` from `P`.
+
+  b)  If `C.height<chainHeightFinalized`, then `P` is banned and the block synchronization is restarted from Step 1.
+
+  c)  The node deletes all blocks of the current chain until block `C` is the tip of the chain. All these blocks are stored persistently so the previous chain can be restored in case synchronizing with `P` fails.
+
+**4. Step: Request and apply blocks of new chain**
+
+We request blocks from `P` and apply them according to the section "Processing Blocks" until we have block `B` at tip of the chain.
+
+  a)  If all blocks up to `B` are successfully applied, the block synchronization mechanism terminates.
+
+  b)  If the node is not able to obtain all blocks up to block `B` from `P`, but synchronization stops at a block `T` (i.e., `T` is the tip of the current chain), then the node checks whether `T` has priority over `A` in terms of the fork choice rule (condition at the beginning of the section):
+
+  ``(A.heightPrevoted<T.heightPrevoted) || A.height<T.height && A.heightPrevoted==T.heightPrevoted)``
+
+  If the check fails, `P` is banned, the chain with tip `A` is restored and block synchronization is restarted from Step 1. If the check passes, block synchronization is also restarted from Step 1.
+
+## Backwards Compatibility
+
+This LIP introduces a hardfork as there are two additional properties in the block header and the signing process of blocks changes as these properties together with the `height` are signed.
+Moreover, delegates need to provide correct values for these properties when forging a block.
+Additionally, this LIP introduces the following incompatibilities:
+
+*   Nodes additionally need to communicate the `B.heightPrevoted` for the current tip of the chain `B` to all peers.
+*   The fork choice rule changes.
+
+Assuming that the migration is scheduled for height `l`, we propose that `chainHeightFinalized` is initialized with the value `l-202`.
+This way, even if no block has been finalized yet, only blocks with height larger than `l-202` can be reverted.
+
+## Reference Implementation
+
+TBD
+
+## References
+
+[1] James Aspnes. In: Notes on Theory of Distributed Systems, 2014. [http://www.cs.yale.edu/homes/aspnes/classes/465/notes.pdf](http://www.cs.yale.edu/homes/aspnes/classes/465/notes.pdf)
+
+[2] Ethan Buchman, Jae Kwon, and Zarko Milosevic. The latest gossip on BFT consensus. In: arXiv e-prints (2018). [https://arxiv.org/abs/1807.04938](https://arxiv.org/abs/1807.04938)
+
+[3] Vitalik Buterin and Virgil Griffith. Casper the Friendly Finality Gadget. In: arXiv e-prints (2017). [https://arxiv.org/abs/1710.09437](https://arxiv.org/abs/1710.09437)
+
+[4] Vitalik Buterin. On Stake. Url: [https://blog.ethereum.org/2014/07/05/stake/](https://blog.ethereum.org/2014/07/05/stake/) (visited on 16/12/2018).
+
+[5] Vitalik Buterin. In favor of forkfulness. Url: [https://ethresear.ch/t/in-favor-of-forkfulness/1225](https://ethresear.ch/t/in-favor-of-forkfulness/1225) (visited on 16/12/2018).
+
+[6] Cynthia Dwork, Nancy Lynch, and Larry Stockmeyer. Consensus in the presence of partial synchrony. In: Journal of the ACM 35.2 (1988), pp. 288–323. [https://groups.csail.mit.edu/tds/papers/Lynch/MIT-LCS-TM-270.pdf](https://groups.csail.mit.edu/tds/papers/Lynch/MIT-LCS-TM-270.pdf)
+
+[7] Daniel Larimer. DPOS 3.0 + BFT. Url: [https://github.com/EOSIO/eos/issues/2718](https://github.com/EOSIO/eos/issues/2718)
+
+[8] Jan Hackfeld. A lightweight BFT consensus protocol for blockchains.  In: arXiv e-prints (2019). [https://arxiv.org/abs/1903.11434](https://arxiv.org/abs/1903.11434)
+
+## Appendix
+
+### Expected Time for Finality
+
+Consider a block `A` proposed by a delegate at the beginning of the round. We assume that all 101 delegates forge blocks on one chain and honestly participate in the consensus algorithm. The order of delegates in one round is further assumed to be chosen uniformly at random among all delegate orderings. We want to compute the expected number of blocks that need to be appended to the chain after `A` until `A` becomes finalized.
+
+Below you find an illustration of the setting. After 67 blocks are added on top of block `A`, there are 68 `prevotes` for `A`. From then on, every block by a new distinct delegate implies a `precommit` for `A`. By our assumption, all blocks in round `r` are proposed by distinct delegates. Hence, the last 33 blocks of the round imply 33 `precommits` for block `A`. Let `M` be the set of delegates that propose these 33 blocks. For `A` to be finalized, 35 delegates that are not in `M` need to add a block to the chain in round `r+1`. The sum in the expression below (after the term `100 + `) computes the expected number of blocks in round `r+1` that are necessary for these `35` delegates to precommit for `A`. The summands can be explained as follows:
+
+*   There are `k+35` blocks in round `r+1` if there are `k` blocks in the chain from delegates in `M` before `A` is finalized.
+*   There are `35` out of `68` delegates that are not in `M` and that must precommit for `A`.
+*   There are `k` out of `33` delegates in `M` that add blocks before `A` is finalized.
+*   Overall there are `35+k` out of `101` possible delegates in the first `35+k` block slots.
+*   In the numerator we consider all permutations ending with a delegate not in `M`.
+
+![Expected Time for Finality](lip-introduce_bft_consensus_protocol/expected_time_for_finality.png)
