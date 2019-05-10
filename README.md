@@ -26,3 +26,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0012](proposals/lip-0012.md) | Remove redundant properties from transaction objects                     | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0013](proposals/lip-0013.md) | Replace static fee system by dynamic fee system                          | Iker Alustiza                                | Standards Track | Draft         |
 | [0014](proposals/lip-0014.md) | Introduce BFT consensus protocol                                         | Jan Hackfeld                                 | Standards Track | Draft         |
+| [0015](proposals/lip-0015.md) | Enable transaction invalidation by using nonces instead of timestamps    | Andreas Kendziorra                           | Standards Track | Draft         |
