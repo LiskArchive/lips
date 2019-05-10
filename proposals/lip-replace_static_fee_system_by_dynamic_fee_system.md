@@ -65,7 +65,7 @@ The new fee system takes into account the usage of these resources to give a min
 
 The right choice of the minimum fee per byte, `minFeePerByte`, will have a great impact in the network. If the minimum required fee were too high, users would be discouraged from using the network. If the value were too low, attackers would be able to broadcast many valid transactions at a very low cost and congest the network. Regarding the last issue, in this proposal, it is assumed that adequate measures are in place to prevent this from occurring. These measures are mostly implemented in the peer-to-peer (P2P) layer and in the transaction pool. Later in this section, the impact on these modules will be commented more in detail.  
 
-With the assumption of having these “anti-spam” measures in the previously mentioned modules, it would be interesting to consider how these resources mentioned above are used by all the transaction types and the cost implied. Unfortunately, the calculation of the exact cost of these resources is very complex and depends on several unrelated points as, hardware specifications, connection bandwidth, software platform, cost of electricity, Lisk token volatility, etc. An accurate research about this would be extremely complex and it is out of the scope of this proposal. However, it is still important to study the price of the different transactions and the price of broadcasting several of them depending on the value of `minFeePerByte`:  
+With the assumption of having these “anti-spam” measures in the previously mentioned modules, it would be interesting to consider how these resources mentioned above are used by all the transaction types and the cost implied. Unfortunately, the calculation of the exact cost of these resources is very complex and depends on several unrelated points as, hardware specifications, connection bandwidth, software platform, cost of electricity, Lisk token price volatility, etc. An accurate research about this would be extremely complex and it is out of the scope of this proposal. However, it is still important to study the price of the different transactions and the price of broadcasting several of them depending on the value of `minFeePerByte`:  
 
 - [Appendix A](#a-minimum-fee-implications) has an overview of minimum transaction fees depending on different values of `minFeePerByte` and the estimated direct implications for the network.
 
@@ -114,7 +114,7 @@ The **P2P layer** plays a critical role in the security and stability of the Lis
 
 #### Assignment of transaction fees
 
-In the current protocol, the fees collected from all transactions confirmed in a round are added up together and then splitted equally among all the forging delegates (delegates that forged at least one block in the considered round) at the end of this round. We propose to change this mechanism as per the following rationales:
+In the current protocol, the fees collected from all transactions confirmed in a round are added up together and then split equally among all the forging delegates (delegates that forged at least one block in the considered round) at the end of this round. We propose to change this mechanism as per the following rationales:
 
 1. Assign transaction fees to block forger:
 
