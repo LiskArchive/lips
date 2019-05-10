@@ -29,7 +29,7 @@ This section is divided into several subsections. First, we explain why timestam
 
 ### Why Timestamps Are Currently Needed
 
-Timestamps of transactions allow to make each transaction distinct by giving it a unique timestamp. This is needed because identical transactions are not allowed to be included in a blockchain. Otherwise, transaction replay attacks could easily be performed. In order to enforce that each transaction in the blockchain is distinct, unique transactionIDs for transactions included in the blockchain are currently enforced. The timestamp allows, for example, to create two balance transfer transactions with identical sender, receiver and amount to be included in the blockchain since different timestamps yield different transactionIDs. 
+Timestamps of transactions allow to make each transaction distinct by giving it a unique timestamp. This is needed because identical transactions are not allowed to be included in a blockchain. Otherwise, transaction replay attacks could easily be performed. In order to enforce that each transaction in the blockchain is distinct, unique transactionIDs for transactions included in the blockchain are currently enforced. The timestamp allows, for example, to create two balance transfer transactions with identical sender, receiver and amount to be included in the blockchain since different timestamps yield different transactionIDs.
 
 ### Restrictions on Timestamps
 
@@ -37,7 +37,7 @@ The current protocol requires that the timestamp of a valid transaction is not i
 
 Moreover, the restriction sometimes resulted in unexpectedly rejected transactions because the [system time of the transaction issuer was in the future](https://github.com/LiskHQ/lisk-elements/issues/191). To create transactions that do not get rejected by nodes, an offset can be added to the system time. This is, however, rather a workaround instead of an elegant solution. For these reasons, an upper bound on the timestamp does not provide any proper benefit and rather leads to undesired problems.
 
-Requiring a lower bound on the timestamp of a transaction (not done in the current protocol) would be even more harmful: A transaction pending for a long time in the transaction pool due to a low fee could become invalid after a certain time. Hence, neither an upper nor a lower bound on the timestamp value is beneficial. 
+Requiring a lower bound on the timestamp of a transaction (not done in the current protocol) would be even more harmful: A transaction pending for a long time in the transaction pool due to a low fee could become invalid after a certain time. Hence, neither an upper nor a lower bound on the timestamp value is beneficial.
 
 ### Timestamps vs. Nonces
 
@@ -51,11 +51,11 @@ To invalidate a transaction without replacing it by a meaningful one, the sender
 
 One may argue that enforcing uniqueness solely to the nonce value is sufficient too. That means, each nonce value would be allowed to be included in the blockchain only once. This is also prevents transaction replays and allows transaction invalidation, but increases the probability of rejected transactions due to already used nonces. This is especially the case when many users/clients tend to choose nonces not uniformly at random, for example, by choosing the operating system time as the nonce. Moreover, it allows users to invalidate pending transactions of other users.
 
-Alternatively, one could also enforce the uniqueness of the combination of address and nonce. But this does not allow to delete the used combinations every time the network identifier changes. When enforcing the uniqueness of the combination of address, nonce and network identifier, all used combinations can be deleted when the network identifier changes. This is because transactions using the old network identifier are invalid and there is no need to check if the combination of address, nonce and network identifier was already used. See also the section [Impact on Storage and Performance](#Impact-on-Storage-and-Performance) for more reasoning why this is advantageous. 
+Alternatively, one could also enforce the uniqueness of the combination of address and nonce. But this does not allow to delete the used combinations every time the network identifier changes. When enforcing the uniqueness of the combination of address, nonce and network identifier, all used combinations can be deleted when the network identifier changes. This is because transactions using the old network identifier are invalid and there is no need to check if the combination of address, nonce and network identifier was already used. See also the section [Impact on Storage and Performance](#Impact-on-Storage-and-Performance) for more reasoning why this is advantageous.
 
 ### Ordered vs. Unordered Nonces
 
-Ordered nonces (i.e., to require that the nonce of a transaction has to be equal to the incremented nonce of the previously included transaction of the same sender) have one obvious advantage over unordered nonces: One has to store only a single nonce per account. This requires less storage, enables faster verification and keeps the protocol and implementation simple (see also the discussion [below](#Impact-on-Storage-and-Performance)). 
+Ordered nonces (i.e., to require that the nonce of a transaction has to be equal to the incremented nonce of the previously included transaction of the same sender) have one obvious advantage over unordered nonces: One has to store only a single nonce per account. This requires less storage, enables faster verification and keeps the protocol and implementation simple (see also the discussion [below](#Impact-on-Storage-and-Performance)).
 
 There are however significant disadvantages for ordered nonces: Each transaction in the transaction pool depends on the previous transaction. If several transactions originating from the same account are pending, and one of these transactions is pending for a long time due to a low fee, all following transactions are pending too, even if they have a very high fee. Moreover, it might be possible that one of the transactions is invalid. Consequently, the nonce of the invalid transaction has to be used again for a new (and valid) transaction before all following transactions get accepted. Keeping track of the used nonces may become difficult too when some transactions are pending and especially when several devices are used for a single account (this issue has been partially discussed for [Ethereum](https://github.com/ethereum/go-ethereum/issues/2880) for quite some time already). The same holds for generating transactions while having no connection to the network (offline transactions).
 
@@ -91,7 +91,7 @@ Another possibility to invalidate transactions is to create a new transaction ty
 
 #### Timeout
 
-Allowing to specify when a transaction becomes invalid provides little flexibility. Once a transaction was sent into the network, there is no way to update the provided timeout. Hence, quick invalidation is impossible. Therefore, this option was disregarded. 
+Allowing to specify when a transaction becomes invalid provides little flexibility. Once a transaction was sent into the network, there is no way to update the provided timeout. Hence, quick invalidation is impossible. Therefore, this option was disregarded.
 
 ## Specification
 
@@ -103,7 +103,7 @@ The `timestamp` property gets removed from transaction objects. Any transaction 
 
 #### Nonce
 
-Every transaction object needs a `nonce` property. The value of this property has to be a 64-bit unsigned integer. During the verification of a transaction, it has to be ensured that the combination of 
+Every transaction object needs a `nonce` property. The value of this property has to be a 64-bit unsigned integer. During the verification of a transaction, it has to be ensured that the combination of
 
 *   sender address
 *   nonce
