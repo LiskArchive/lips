@@ -25,3 +25,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0011](proposals/lip-0011.md) | Implement extensible data persistence model                              | Nazar Hussain                                | Informational   | Active        |
 | [0012](proposals/lip-0012.md) | Remove redundant properties from transaction objects                     | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0013](proposals/lip-0013.md) | Replace static fee system by dynamic fee system                          | Iker Alustiza                                | Standards Track | Draft         |
+| [0014](proposals/lip-0014.md) | Introduce BFT consensus protocol                                         | Jan Hackfeld                                 | Standards Track | Draft         |
