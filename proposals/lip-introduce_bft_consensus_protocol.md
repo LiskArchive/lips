@@ -5,8 +5,8 @@ Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/introduce-bft-consensus-protocol
 Status: Draft
 Type: Standards Track
-Created: -
-Updated: -
+Created: 2019-03-28
+Updated: 2019-05-10
 Requires: 0004
 ```
 
