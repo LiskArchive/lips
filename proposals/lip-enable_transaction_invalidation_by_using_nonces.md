@@ -4,8 +4,8 @@ Title: Enable transaction invalidation by using nonces instead of timestamps
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/enable-transaction-invalidation-by-using-nonces/
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2019-01-29
+Updated: 2019-05-10
 Requires: 0009
 ```
 
