@@ -73,16 +73,14 @@ With the assumption of having these “anti-spam” measures in the previously m
 
 In view of the computations referenced before, and with the mentioned considerations, a minimum fee in the range of 5 * 10<sup>-6</sup> to 5 * 10<sup>-5</sup> LSK/byte is reasonable. Therefore, we propose to set **`minFeePerByte` = 1*10<sup>-5</sup> LSK/byte**. With this minimum fee per byte, keeping the nodes busy for a brief period of time and having full blocks for 2 minutes (around 1500 basic balance transactions with 15 KB blocks every 10 seconds) will cost at least 1.8 LSK.
 
-
 #### Namespace fee: `trs.nameFee`
-Regarding the namespace fee, `trs.nameFee`, for transaction types 2 and 5, there are different issues to consider: If the minimum fee for these transaction types were not sufficiently high, theoretically, someone could perform a _namespace_ attack and try to exhaust the namespace by registering huge number of names. Also, these transaction types give special attributes to the issuing account.  Thus, the value of the `trs.nameFee` has to be chosen with these criteria in mind. In [Appendix B](#b-namespace-fee-implications),  one can find an overview of the minimum transaction fee for different values of this constant. 
+
+Regarding the namespace fee, `trs.nameFee`, for transaction types 2 and 5, there are different issues to consider: If the minimum fee for these transaction types were not sufficiently high, theoretically, someone could perform a _namespace_ attack and try to exhaust the namespace by registering huge number of names. Also, these transaction types give special attributes to the issuing account.  Thus, the value of the `trs.nameFee` has to be chosen with these criteria in mind. In [Appendix B](#b-namespace-fee-implications),  one can find an overview of the minimum transaction fee for different values of this constant.
 
 In this regard, it is worth noting the important differences between transaction types 2 and 5 for the choice of the `trs.nameFee` value. First, type 2 and type 5 transactions have different namespace constraints (the longest possible name for a delegate is 20 characters while the longest name for a dapp is 32 characters), being both of them large enough to make the mentioned exhausting attack infeasible. Therefore, we consider other factors to play a more important role in the decision: For type 2 transactions, registering a delegate implies a commit to become an active delegate and to secure the network. Also, there are only 101 possible active delegates, which makes name squatting attacks (registering a significant amount of popular names) not attractive for amounts much greater than 101. For type 5 transactions, users can register as many dapps as they wish from their accounts. In this case, every dapp registered in the Lisk platform implies a potential development and release of a future sidechain with the consequent consumption of resources. In other words, a type 5 transaction has a potential future impact in the Lisk blockchain that should be reflected in the price of the registration transaction. Thus, it is reasonable to have different constants for the two considered transaction types:  `trs.nameFee = delegateFee` for transaction type 2, and  `trs.nameFee = dappFee` for transaction type 5. In particular, and considering the aforementioned differences, we propose:
 
-- `delegateFee` = 10 LSK 
+- `delegateFee` = 10 LSK
 - `dappFee`= 25 LSK
-
-
 
 ### Other considered but discarded possibilities
 
@@ -99,25 +97,28 @@ In this regard, it is worth noting the important differences between transaction
 - Drawback: This depends on specific values of `minFeePerByte`. It will not follow the rule of _minimum fee depending on the resources_.
 
 4. **No minimum fee** given by the protocol: The protocol will not set any rules for a minimum fee for transactions. In principle, a transaction can be included in the blockchain with `trs.fee` = 0 as long as there is space in the next block.
-- Advantage: Code simplicity and easier parametrization.  Attractive feature from the user point of view. 
-- Drawback: This allows the _pollution_ of the blockchain with meaningless transactions. There would not be any cost in filling blocks continuously resulting in a bigger blockchain with transactions that provide little utility. 
+- Advantage: Code simplicity and easier parametrization.  Attractive feature from the user point of view.
+- Drawback: This allows the _pollution_ of the blockchain with meaningless transactions. There would not be any cost in filling blocks continuously resulting in a bigger blockchain with transactions that provide little utility.
 
 ### Broader impact of the fee system
 
 In order to implement a useful and _fair_ fee system based on free market of fees, the main protocol changes should be accompanied with other important changes and improvements:
 
 #### Transaction pool
+
 The **transaction pool** logic needs to be adapted to the new fee system: It needs to take into account the different fees of the incoming transactions. First, transactions with a fee lower than the minimum fee have to be automatically rejected as soon as they reach the pool. Secondly, a sorting algorithm is beneficial to prioritize transactions depending on the fees. Thirdly, a set of constraints regarding received transactions should be implemented in order to prevent (or mitigate) spam attacks in the network. In the next section, there is a general specification of the proposed changes  in the transaction pool. However, it is worth noting that the transaction pool is not a part of the Lisk protocol and node maintainers  are free to implement it as they prefer.
 
 #### P2P layer
+
 The **P2P layer** plays a critical role in the security and stability of the Lisk network, as in any decentralized network. With the new fee system, sending valid transactions will be, on average, much cheaper than now. Hence, a malicious user may have an incentive of creating and broadcasting thousands of low fee but valid transactions to the network for a long period of time, such that it would be overloaded and other users would experience artificially inflated fees and/or unwanted delays. In this proposal, we assume that the P2P layer enforces a limit on the number of transactions that a node accepts and broadcasts in a given time window. Nodes not following these limits are banned and therefore other nodes cannot be overloaded with too many transactions. However, covering the details of this mechanism is out of the scope of this proposal.
 
 #### Assignment of transaction fees
+
 In the current protocol, the fees collected from all transactions confirmed in a round are added up together and then splitted equally among all the forging delegates (delegates that forged at least one block in the considered round) at the end of this round. We propose to change this mechanism as per the following rationales:
 
 1. Assign transaction fees to block forger:
 
-The mentioned mechanism of **sharing fees** among all forging delegates after every round needs to be changed to avoid the incentive of side channel (or off-chain) payments to delegates. The authors of [1] prove for the auction model defined in the paper that the first-price auction is the unique mechanism which is _incentive-compatible_ for the auctioneer to follow the rules. In a free fee market, one can make the assumption for Lisk that the fees _collected_ in a block are given by the transactions chosen by the auctioneer (the delegates) following a certain auction scheme. In order to have a behaviour close to the first-price auction scheme as defined in the reference, these _collected_ fees will be assigned to the delegate who forged that block, in the same way block rewards are assigned currently. Otherwise, the most profitable strategy for delegates will not be to include transactions with the highest fees per byte, which is against the foundations of a dynamic fee system as a free fee market. 
+The mentioned mechanism of **sharing fees** among all forging delegates after every round needs to be changed to avoid the incentive of side channel (or off-chain) payments to delegates. The authors of [1] prove for the auction model defined in the paper that the first-price auction is the unique mechanism which is _incentive-compatible_ for the auctioneer to follow the rules. In a free fee market, one can make the assumption for Lisk that the fees _collected_ in a block are given by the transactions chosen by the auctioneer (the delegates) following a certain auction scheme. In order to have a behaviour close to the first-price auction scheme as defined in the reference, these _collected_ fees will be assigned to the delegate who forged that block, in the same way block rewards are assigned currently. Otherwise, the most profitable strategy for delegates will not be to include transactions with the highest fees per byte, which is against the foundations of a dynamic fee system as a free fee market.
 
 2. Burn the minimum fee per transaction:
 
@@ -126,12 +127,15 @@ With the change in the fees sharing mechanism commented above comes an issue whi
 To solve this situation, we propose to burn the minimum fee of each transaction, `trs.minFee`, included in the blockchain. This implies that these _collected_ fees per block mentioned above will not be the sum of all the fees of the transactions included. It will actually be the difference between this sum and the sum of the minimum fees of all the transactions included. Hence, the incentives for delegates to include transactions with higher fees per byte and for users to spend a higher fee for priority are maintained. Moreover, every transaction included in the blockchain will reduce the total supply of the token. This implies that a higher network usage will benefit every stakeholder including the delegates.  [Appendix C](#c-impact-of-burning-the-minimum-fee-in-the-supply) presents a brief study about the impact, in terms of inflation decrease, in the token supply of burning the minimum fee.
 
 #### Transaction invalidation mechanism
+
 With the implementation of the free fee market, users may experience the undesired situation of having **stuck transactions** waiting in the transaction pool to be included in the blockchain: For example, if a transaction is sent with a fee too low to get into a block when the network is busy (full blocks), it will be stuck in the transaction pool until this situation changes. This would be especially problematic if the transaction had high priority for the sender. With this in mind, it is reasonable to have a method to invalidate or replace pending transactions. There are several ways to approach this issue. Examples of this are the use of an ordered nonce for the transaction (used in Ethereum and Stellar), a non-ordered nonce for the transaction or a time-out parameter in the transaction (used in NXT and NEM). In this proposal, we are not going to cover the specification of such a feature and it will be assumed that a proper _transaction invalidating_ feature is available in the protocol.
 
 #### Fee estimation algorithm
+
 The user needs to be aware of the current suitable fee for transactions, which is related to the immediate past situation of the network. Hence, it is reasonable to develop a **fee estimation algorithm** to recommend the fee that the users should include in their transaction for it to be included in a block after a certain period of time.
 
-#### Wallets 
+#### Wallets
+
 Wallets, including **Lisk Hub** and **Lisk Mobile**, need to include the functionality for the user to choose the transaction fee. The wallet should not allow a fee below the minimum fee when creating a transaction, and it should suggest the different estimations for the fee depending on the priority of the transaction to the user (using the output of the mentioned fee estimation algorithm). It has to be clear to the users that the estimated fee is just a suggestion or a guidance and they can spend any fee they want (as long as it is equal or above the minimum fee).
 
 Moreover, in order to avoid costly mistakes for the user when setting the fee, the wallets should return a warning if the fee chosen for a certain transaction is extremely high. For example, a balance transaction spending a fee over 4 LSK is most likely a mistake by the issuer.
@@ -147,9 +151,9 @@ One of the most discussed issues for blockchains with a free fee market, as Bitc
 
 Regarding the protocol, the changes involved for the dynamic fee system are the following:
 
- - **Three constants** will define the minimum required fee as explained in the previous section<sup>[1]</sup>:
+- **Three constants** will define the minimum required fee as explained in the previous section<sup>[1]</sup>:
 
-    ```js
+   ```js
    fees: {
         minFeePerByte: 1000,
         delegateFee: 1000000000,
@@ -159,27 +163,26 @@ Regarding the protocol, the changes involved for the dynamic fee system are the 
 
 - **Transactions verification**: The fixed fee logic has to be replaced in the transaction verification process to accept a dynamic fee structure:
 
-    - A transaction, `trs`, is valid if it spends a fee equal or higher than `trs.minFee`. Depending on the transaction type, `trs.minFee` is calculated as:
+  - A transaction, `trs`, is valid if it spends a fee equal or higher than `trs.minFee`. Depending on the transaction type, `trs.minFee` is calculated as:
 
-      1. For transaction types 0, 1, 3 and 4:
-      ```
-      trs.minFee = fees.minFeePerByte * sizeof(trs)
-      ```
-      2. For transaction type 2:
-      ```
-      trs.minFee = fees.delegateFee + fees.minFeePerByte * sizeof(trs)
-      ```
-      3. For transaction type 5:
-      ```
-      trs.minFee = fees.dappFee + fees.minFeePerByte * sizeof(trs)
-      ```
+    1. For transaction types 0, 1, 3 and 4:
+    ```
+    trs.minFee = fees.minFeePerByte * sizeof(trs)
+    ```
+    2. For transaction type 2:
+    ```
+    trs.minFee = fees.delegateFee + fees.minFeePerByte * sizeof(trs)
+    ```
+    3. For transaction type 5:
+    ```
+    trs.minFee = fees.dappFee + fees.minFeePerByte * sizeof(trs)
+    ```
 
-    - The previous point implies to have a method to calculate the size of the specific transaction in bytes: `sizeof()`. In this proposal, we define the size of a transaction, `trs`, as the size in bytes of the byte array used to generate the transaction ID (as for example it is done [here](https://github.com/LiskHQ/lisk/blob/0c633a2f0d74bcb104ae4dafc20b55ca162a0f3e/logic/block.js#L112) in the current implementation).
+  - The previous point implies to have a method to calculate the size of the specific transaction in bytes: `sizeof()`. In this proposal, we define the size of a transaction, `trs`, as the size in bytes of the byte array used to generate the transaction ID (as for example it is done [here](https://github.com/LiskHQ/lisk/blob/0c633a2f0d74bcb104ae4dafc20b55ca162a0f3e/logic/block.js#L112) in the current implementation).
 
--  **Include fee property in transaction JSON object**: With the implementation of [LIP-0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md), the `trs.fee` property is going to be removed from the transaction JSON object since it is not needed for the current static fee system. However, this `trs.fee` has to be included in the transaction object, otherwise the nodes would not be able to get and verify the transaction fee. It must be a string matching the [`amount`](https://github.com/LiskHQ/lisk-sdk/blob/c74fb5a96b04e3be83f9e308e47106604c21dbc0/framework/src/controller/helpers/validator/formats.js#L297) format.
+-  **Include fee property in transaction JSON object**: With the implementation of [LIP-0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md), the `trs.fee` property can be removed from the transaction JSON object since it is not needed for the current static fee system. However, this `trs.fee` has to be included in the transaction object, otherwise the nodes would not be able to get and verify the transaction fee. It must be a string matching the [`amount`](https://github.com/LiskHQ/lisk-sdk/blob/c74fb5a96b04e3be83f9e308e47106604c21dbc0/framework/src/controller/helpers/validator/formats.js#L297) format.
 
 - **Include fee property in transaction signature and transaction ID**: To prevent transaction fee forging and manipulation by malicious nodes/delegates, the transaction fee has to be part of the byte array used as input for the transaction signature generation and transaction ID generation (e.g. implemented by [`getBytes`](https://github.com/LiskHQ/lisk/blob/5d5af525eec7f2ee687ca921a6a2d1457c471da9/logic/transaction.js#L154) in Lisk core). The `trs.fee` property, with a size of 8 bytes and encoded in big-endian, has to follow the `trs.senderPublicKey` property during serialisation. Additionally, the [`getTransactionBytes`](https://github.com/LiskHQ/lisk-elements/blob/d5ab830ad65965764d364eb344ce4e3a13bf14c9/packages/lisk-transactions/src/utils/get_transaction_bytes.js#L147) function must be implemented in the same way in Lisk Elements.<sup>[2]</sup>
-
 
 - **Assignment of transaction fees**: Every transaction included in a block `B` spends a fee equal to `trs.fee` which is subtracted from the sender account balance. From `trs.fee`, `trs.minFee` is _burnt_ whereas `trs.fee - trs.minFee` is assigned to the delegate forging `B`. In terms of `B`, the sum of the minimum fees of all the transactions included in it, i.e., `B.burntFee`, is added to the balance of an account with the address “_BurntFees_”, defined as the auxiliary account containing all the burnt fees in the blockchain. The remaining fees, i.e., `B.totalFee - B.burntFee`, are added to the account balance of the delegate forging `B`.        
 
@@ -217,22 +220,22 @@ The transaction pool is not per se part of the Lisk protocol, however, it is ess
     IF (newBlock.payloadLength + sizeofType0 >= maxBlockByteSize)
          BREAK
   ```
-  where `newBlock.payloadLength` is the size of the unconfirmed (not yet part of the blockchain) payload of the new block and `sizeofType0` is a constant representing the size of a basic type 0 transaction, both in bytes. Then, `maxBlockByteSize` is the maximum allowed size of the block in bytes (a constant given by the protocol) and `nextTrs` is the top transaction in the priority queue to be included in the block. Once the next block has been either created or received at the node, the included transactions are removed from the transaction pool.
+
+  Where `newBlock.payloadLength` is the size of the unconfirmed (not yet part of the blockchain) payload of the new block and `sizeofType0` is a constant representing the size of a basic type 0 transaction, both in bytes. Then, `maxBlockByteSize` is the maximum allowed size of the block in bytes (a constant given by the protocol) and `nextTrs` is the top transaction in the priority queue to be included in the block. Once the next block has been either created or received at the node, the included transactions are removed from the transaction pool.
 
 - For the sake of simplicity, in this proposal, we assume that the previous process is performed only by the next forging delegate and considering enough transactions in the `ready` queue (when available) to efficiently fill the next block.   
 
 - If the pool has reached its maximum size, a transaction arriving at the node will be compared against the lowest `feePriority`. It will be discarded if it has a fee below that lowest value. It will be applied to the queue otherwise, and hence, the transaction with the lowest priority in the queue will be discarded.
 
-- The maximum size of the transaction pool must be large enough to avoid discarding incoming transactions as much as possible (see previous point). Each node operator should choose this parameter (for example, in a JSON config file) depending on their memory limitations and network situation. By default, we propose to set the maximum number of entries in the transaction pool to 4000 transactions. This will imply an approximate average size of 900 KB when the pool is full (assuming 95% of simple balance transactions) and a maximum size of 9.2 MB (assuming only full vote transactions).  Note that this default value is a recommendation and it should be adapted during implementation. 
-
+- The maximum size of the transaction pool must be large enough to avoid discarding incoming transactions as much as possible (see previous point). Each node operator should choose this parameter (for example, in a JSON config file) depending on their memory limitations and network situation. By default, we propose to set the maximum number of entries in the transaction pool to 4000 transactions. This will imply an approximate average size of 900 KB when the pool is full (assuming 95% of simple balance transactions) and a maximum size of 9.2 MB (assuming only full vote transactions).  Note that this default value is a recommendation and it should be adapted during implementation.
 
 - We propose to implement a fee threshold, in terms of `feePriority`, for incoming transactions. Transactions with a `feePriority` lower than this threshold are immediately removed from the pool and only new transactions with a `feePriority` high enough are accepted. The value of this threshold will be a parameter to set by the node operator in a JSON config file. By default, this fee threshold is set to 0. This way delegates and node operators can set their required transaction fee if preferred and alleviate the workload in their transaction pool.
 
-- Transactions from multisignature accounts: The size considered for the LSK/byte calculation needs to consider the final multisignature transaction object with all the included signatures (i.e. once the transaction is ready to be included in the blockchain). Hence, the issuer of the transaction should take this into account in order to choose the appropriate fee. 
+- Transactions from multisignature accounts: The size considered for the LSK/byte calculation needs to consider the final multisignature transaction object with all the included signatures (i.e. once the transaction is ready to be included in the blockchain). Hence, the issuer of the transaction should take this into account in order to choose the appropriate fee.
 
 ### Fee estimation algorithm
 
-Given the mathematical complexity and nature of this topic, the specification of the fee estimation algorithm proposal is included in another LIP directly dependent on this one. 
+Given the mathematical complexity and nature of this topic, the specification of the fee estimation algorithm proposal is included in another LIP directly dependent on this one.
 
 ## Backwards Compatibility
 
@@ -253,41 +256,41 @@ TBD
 - [3] J. Young,  "[Suspicious Bitcoin Mempool Activity, Transaction Fees Spike to $16](https://cointelegraph.com/news/analyst-suspicious-bitcoin-mempool-activity-transaction-fees-spike-to-16)", Cointelegraph, 2017.
 - [4] T. Prentiss, "[Ethereum Network Congested, Spam Attack Suspected](https://www.ethnews.com/ethereum-network-congested-spam-attack-suspected)", EthNews, 2018.
 - [5] V. Buterin, "[On Inflation, Transaction Fees and Cryptocurrency Monetary Policy](https://blog.ethereum.org/2016/07/27/inflation-transaction-fees-cryptocurrency-monetary-policy/)", Ethereum blog, 2016.
-- [6]  [Johoe's Bitcoin Mempool Statistics](https://jochen-hoenicke.de/queue/#1,1y)
+- [6] [Johoe's Bitcoin Mempool Statistics](https://jochen-hoenicke.de/queue/#1,1y)
 
-## Appendix 
+## Appendix
 
 ### A: Minimum fee implications
 
 Different values for the minimum fee per byte, `minFeePerByte`, and the direct implications for the current protocol reference implementation:
 
 1.  **Minimum possible fee per byte** (given by the protocol specification): **1 Beddow per byte (10<sup>-8</sup> LSK/byte)**:
-    - Balance transaction: 125 bytes* 10<sup>-8</sup> LSK/byte = 1.25 *10<sup>-6</sup> LSK (1.82 *10<sup>-6</sup> LSK with 2nd passphrase)
-    -  Voting transaction (with 2nd passphrase): 2334 bytes* 10<sup>-8</sup> LSK/byte = 2.33 *10<sup>-5</sup> LSK
-    - Minimum fee of a full block<sup>[1]</sup>: 15 KB* 10<sup>-8</sup> LSK/byte = 1.5 * 10<sup>-4</sup> LSK     
+  - Balance transaction: 125 bytes* 10<sup>-8</sup> LSK/byte = 1.25 *10<sup>-6</sup> LSK (1.82 *10<sup>-6</sup> LSK with 2nd passphrase)
+  -  Voting transaction (with 2nd passphrase): 2334 bytes* 10<sup>-8</sup> LSK/byte = 2.33 *10<sup>-5</sup> LSK
+  - Minimum fee of a full block<sup>[1]</sup>: 15 KB* 10<sup>-8</sup> LSK/byte = 1.5 * 10<sup>-4</sup> LSK     
 
-    With this minimum fee, and with a quiet network, a malicious user can issue **1 million transactions** spending just a bit more than 1 LSK. These transactions will cause around of **150 MB of spam** in the network. Assuming 1 LSK < 40$, the minimum fee for a full vote transaction will be below 0.001$ cost, encouraging this way a dynamic and vivid voting system.
+  With this minimum fee, and with a quiet network, a malicious user can issue **1 million transactions** spending just a bit more than 1 LSK. These transactions will cause around of **150 MB of spam** in the network. Assuming 1 LSK < 40$, the minimum fee for a full vote transaction will be below 0.001$ cost, encouraging this way a dynamic and vivid voting system.
 
 2.  **One order of magnitude greater (10<sup>-7</sup> LSK/byte)**:
-    - Balance transaction: 125 bytes* 10<sup>-7</sup> LSK/byte = 1.25 *10<sup>-5</sup> LSK (1.82 *10<sup>-5</sup> LSK with 2nd passphrase)
-    - Voting transaction (with 2nd passphrase): 2334 bytes* 10<sup>-7</sup> LSK/byte = 0.0002334 LSK
-    - Minimum fee of a full block<sup>[1]</sup>: 15 KB* 10<sup>-7</sup> LSK/byte = 0.0015 LSK
+  - Balance transaction: 125 bytes* 10<sup>-7</sup> LSK/byte = 1.25 *10<sup>-5</sup> LSK (1.82 *10<sup>-5</sup> LSK with 2nd passphrase)
+  - Voting transaction (with 2nd passphrase): 2334 bytes* 10<sup>-7</sup> LSK/byte = 0.0002334 LSK
+  - Minimum fee of a full block<sup>[1]</sup>: 15 KB* 10<sup>-7</sup> LSK/byte = 0.0015 LSK
 
-    With this minimum fee, and with a quiet network, a malicious user can issue **100000 transactions** spending just a bit more than 1 LSK. These transactions will cause around of **15 MB of spam** in the network. Assuming 1 LSK < 40$, the minimum fee for a full vote transaction will be below 0.01$ cost, which is cheap enough to encourage a dynamic and vivid voting system.
+  With this minimum fee, and with a quiet network, a malicious user can issue **100000 transactions** spending just a bit more than 1 LSK. These transactions will cause around of **15 MB of spam** in the network. Assuming 1 LSK < 40$, the minimum fee for a full vote transaction will be below 0.01$ cost, which is cheap enough to encourage a dynamic and vivid voting system.
 
 3.  **Two orders of magnitude greater (10<sup>-6</sup> LSK/byte)**:
-    - Balance transaction: 125 bytes* 10<sup>-6</sup> LSK/byte = 1.25 *10<sup>-4</sup> LSK (1.82 * 10<sup>-4</sup> LSK with 2nd passphrase)
-    - Voting transaction (with 2nd passphrase): 2334 bytes* 10<sup>-6</sup> LSK/byte = 0.002334 LSK
-    - Minimum fee of a full block<sup>[1]</sup>: 15 KB* 10<sup>-6</sup> LSK/byte = 0.015 LSK
+  - Balance transaction: 125 bytes* 10<sup>-6</sup> LSK/byte = 1.25 *10<sup>-4</sup> LSK (1.82 * 10<sup>-4</sup> LSK with 2nd passphrase)
+  - Voting transaction (with 2nd passphrase): 2334 bytes* 10<sup>-6</sup> LSK/byte = 0.002334 LSK
+  - Minimum fee of a full block<sup>[1]</sup>: 15 KB* 10<sup>-6</sup> LSK/byte = 0.015 LSK
 
-    With this minimum fee, and with a quiet network, a malicious user can issue **10000 transactions** spending just a bit more than 1 LSK. These transactions will cause around of **1.5 MB of spam** in the network. Assuming 1 LSK < 40$, the minimum fee for a full vote transaction will be below 0.1$ cost, which is cheap enough to encourage a dynamic and vivid voting system.
+  With this minimum fee, and with a quiet network, a malicious user can issue **10000 transactions** spending just a bit more than 1 LSK. These transactions will cause around of **1.5 MB of spam** in the network. Assuming 1 LSK < 40$, the minimum fee for a full vote transaction will be below 0.1$ cost, which is cheap enough to encourage a dynamic and vivid voting system.
 
 4.  **Three Orders of magnitude greater (10<sup>-5</sup> LSK/byte)**:
-    - Balance transaction: 125 bytes* 10<sup>-5</sup> LSK/byte = 0.00125 LSK (0.00182 LSK with 2nd passphrase)
-    - Voting transaction (with 2nd passphrase): 2334 bytes* 10<sup>-5</sup> LSK/byte = 0.02334 LSK
-    - Minimum fee of a full block<sup>[1]</sup>: 15 KB* 10<sup>-5</sup> LSK/byte= 0.15 LSK
+  - Balance transaction: 125 bytes* 10<sup>-5</sup> LSK/byte = 0.00125 LSK (0.00182 LSK with 2nd passphrase)
+  - Voting transaction (with 2nd passphrase): 2334 bytes* 10<sup>-5</sup> LSK/byte = 0.02334 LSK
+  - Minimum fee of a full block<sup>[1]</sup>: 15 KB* 10<sup>-5</sup> LSK/byte= 0.15 LSK
 
-    With this minimum fee, and with a quiet network, a malicious user can issue **1000 transactions** spending just a bit more than 1 LSK. These transactions will cause around of **150 KB of spam** in the network.  Assuming 1 LSK < 40$, the minimum fee for a full vote transaction will be below 1$, which will encourage a dynamic voting situation in most of the cases.
+  With this minimum fee, and with a quiet network, a malicious user can issue **1000 transactions** spending just a bit more than 1 LSK. These transactions will cause around of **150 KB of spam** in the network.  Assuming 1 LSK < 40$, the minimum fee for a full vote transaction will be below 1$, which will encourage a dynamic voting situation in most of the cases.
 
 <sup>[1]</sup>We are assuming that a full block has a size of 15 KB (15000 bytes).  Also, we are assuming that they do not include any transaction of types 2 or 5. In those cases, the fee per block will be higher due to the `trs.nameFee` constant included in the fee of these transactions.
 
@@ -298,16 +301,15 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 1. **`trs.nameFee` = 0:**
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
---- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | ---
 **Delegate reg (145 bytes)** | 1.45*10<sup>-5</sup> LSK | 7.25*10<sup>-5</sup> LSK | 1.45*10<sup>-4</sup> LSK | 7.25*10<sup>-4</sup> LSK | 0.0015 LSK
 **Dapp reg avg size (200 bytes)** | 2*10<sup>-5</sup> LSK | 1*10<sup>-4</sup> LSK| 2*10<sup>-4</sup> LSK | 0.001 LSK | 0.002 LSK
 **Dapp reg max size (4.3 KB)** | 4.3*10<sup>-4</sup> LSK | 0.0022 LSK | 0.0043 LSK| 0.0215 LSK | 0.043 LSK
 
-
 2. **`trs.nameFee` = 0.5:**
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
---- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | ---
 **Delegate reg (145 bytes)** | 0.5 LSK | 0.5 LSK  | 0.5001 LSK | 0.5007 LSK | 0.5015 LSK
 **Dapp reg avg size (200 bytes)** | 0.5 LSK | 0.5001 LSK | 0.5002 LSK | 0.501 LSK | 0.502 LSK
 **Dapp reg max size (4.3 KB)** | 0.5004 LSK | 0.5022 LSK | 0.5043 LSK | 0.5215 LSK | 0.543 LSK
@@ -315,7 +317,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 3. **`trs.nameFee` = 1:**
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
---- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | ---
 **Delegate reg (145 bytes)** | 1 LSK | 1 LSK  | 1.0001 LSK | 1.0007 LSK | 1.0015 LSK
 **Dapp reg avg size (200 bytes)** | 1 LSK | 1.0001 LSK | 1.0002 LSK | 1.001 LSK | 1.002 LSK
 **Dapp reg max size (4.3 KB)** | 1.0004 LSK | 1.0022 LSK | 1.0043 LSK | 1.0215 LSK | 1.043 LSK
@@ -323,16 +325,15 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 4. **`trs.nameFee` = 5:**
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
---- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | ---
 **Delegate reg (145 bytes)** | 5 LSK | 5 LSK  | 5.0001 LSK | 5.0007 LSK | 5.0015 LSK
 **Dapp reg avg size (200 bytes)** | 5 LSK | 5.0001 LSK | 5.0002 LSK | 5.001 LSK | 5.002 LSK
 **Dapp reg max size (4.3 KB)** | 5.0004 LSK | 5.0022 LSK | 5.0043 LSK | 5.0215 LSK | 5.043 LSK
 
-
 5. **`trs.nameFee` = 10:**
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
---- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | ---
 **Delegate reg (145 bytes)** | 10 LSK | 10 LSK  | 10.0001 LSK | 10.0007 LSK | 10.0015 LSK
 **Dapp reg avg size (200 bytes)** | 10 LSK | 10.0001 LSK | 10.0002 LSK | 10.001 LSK | 10.002 LSK
 **Dapp reg max size (4.3 KB)** | 10.0004 LSK | 10.0022 LSK | 10.0043 LSK | 10.0215 LSK | 10.043 LSK
@@ -340,7 +341,7 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 6. **`trs.nameFee` = 20:**
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
---- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | ---
 **Delegate reg (145 bytes)** | 20 LSK | 20 LSK  | 20.0001 LSK | 20.0007 LSK | 20.0015 LSK
 **Dapp reg avg size (200 bytes)** | 20 LSK | 20.0001 LSK | 20.0002 LSK | 20.001 LSK | 20.002 LSK
 **Dapp reg max size (4.3 KB)** | 20.0004 LSK | 20.0022 LSK | 20.0043 LSK | 20.0215 LSK | 20.043 LSK
@@ -348,14 +349,17 @@ Minimum fee, `trs.minFee`, for transaction types 2 and 5 for different values of
 7. **`trs.nameFee` = 25:**
 
 **Tx type/ Min fee** | **1*10<sup>-7</sup> LSK/byte** | **5*10<sup>-7</sup> LSK/byte** | **1*10<sup>-6</sup> LSK/byte** | **5*10<sup>-6</sup> LSK/byte** | **1*10<sup>-5</sup> LSK/byte**
---- | --- | --- | --- | --- | --- 
+--- | --- | --- | --- | --- | ---
 **Delegate reg (145 bytes)** | 25 LSK | 25 LSK  | 25.0001 LSK | 25.0007 LSK | 25.0015 LSK
 **Dapp reg avg size (200 bytes)** | 25 LSK | 25.0001 LSK | 25.0002 LSK | 25.001 LSK | 20.002 LSK
 **Dapp reg max size (4.3 KB)** | 25.0004 LSK | 25.0022 LSK | 25.0043 LSK | 25.0215 LSK | 25.043 LSK
 
 ### C: Impact of burning the minimum fee in the supply
-This appendix covers the impact of burning the minimum fee on the token supply depending on the `minFeePerByte` value. The study assumes the extreme case of having full blocks for a whole reward milestone (approx one year), so that the impact is maximized. It is assumed that only type 0 and type 3 transactions are getting included, since they make the overwhelming majority of the transaction activity, and that the maximum block size is 15 KB. The results are displayed for the current reward (3 LSK) and future rewards (2 LSK and 1 LSK). Note that, for the final reward milestone of 1 LSK, there is a _reasonable_ value for `minFeePerByte` for which the token supply could decrease and be **deflationary** if the network activity is high enough (`minFeePerByte` = 6.66*10<sup>-5</sup> LSK/byte). For the other two reward milestones, a value for `minFeeBerByte` such that the supply is deflationary would need to be higher than any value for `minFeeBerByte` considered in this proposal.
-![reward3](lip-replace_static_fee_system_by_dynamic_fee_system/reward3.png)
-![reward2](lip-replace_static_fee_system_by_dynamic_fee_system/reward2.png)
-![reward1](lip-replace_static_fee_system_by_dynamic_fee_system/reward1.png)
 
+This appendix covers the impact of burning the minimum fee on the token supply depending on the `minFeePerByte` value. The study assumes the extreme case of having full blocks for a whole reward milestone (approx one year), so that the impact is maximized. It is assumed that only type 0 and type 3 transactions are getting included, since they make the overwhelming majority of the transaction activity, and that the maximum block size is 15 KB. The results are displayed for the current reward (3 LSK) and future rewards (2 LSK and 1 LSK). Note that, for the final reward milestone of 1 LSK, there is a _reasonable_ value for `minFeePerByte` for which the token supply could decrease and be **deflationary** if the network activity is high enough (`minFeePerByte` = 6.66*10<sup>-5</sup> LSK/byte). For the other two reward milestones, a value for `minFeeBerByte` such that the supply is deflationary would need to be higher than any value for `minFeeBerByte` considered in this proposal.
+
+![reward3](lip-replace_static_fee_system_by_dynamic_fee_system/reward3.png)
+
+![reward2](lip-replace_static_fee_system_by_dynamic_fee_system/reward2.png)
+
+![reward1](lip-replace_static_fee_system_by_dynamic_fee_system/reward1.png)
