@@ -24,3 +24,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0010](proposals/lip-0010.md) | Use SHA3-256 hash of block header as blockID                             | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0011](proposals/lip-0011.md) | Implement extensible data persistence model                              | Nazar Hussain                                | Informational   | Draft         |
 | [0012](proposals/lip-0012.md) | Remove redundant properties from transaction objects                     | Andreas Kendziorra                           | Standards Track | Draft         |
+| [0013](proposals/lip-0013.md) | Replace static fee system by dynamic fee system                          | Iker Alustiza                                | Standards Track | Draft         |
