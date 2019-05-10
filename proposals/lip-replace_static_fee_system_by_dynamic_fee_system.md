@@ -30,7 +30,7 @@ fees: {
   delegate: 2500000000,
   multisignature: 500000000,
   dapp: 2500000000
-}
+},
 ```
 
 With the huge increase in price of the Lisk token (LSK) in 2017, these fixed fees have become too expensive to allow a healthy usage of the network (as of August 2018, a vote transaction has been averaging at around 8$, 2nd passphrase transactions around 40$ each and registering an account as a delegate at around 200$).
@@ -153,13 +153,13 @@ Regarding the protocol, the changes involved for the dynamic fee system are the 
 
 - **Three constants** will define the minimum required fee as explained in the previous section<sup>[1]</sup>:
 
-   ```js
-   fees: {
-        minFeePerByte: 1000,
-        delegateFee: 1000000000,
-        dappFee: 2500000000,
-       },
-       ```
+  ```js
+  fees: {
+    minFeePerByte: 1000,
+    delegateFee: 1000000000,
+    dappFee: 2500000000,
+  },
+  ```
 
 - **Transactions verification**: The fixed fee logic has to be replaced in the transaction verification process to accept a dynamic fee structure:
 
@@ -201,7 +201,7 @@ The transaction pool is not per se part of the Lisk protocol, however, it is ess
 - An initial check for the minimum fee of the transactions arriving at the node should be implemented, i.e.:
 
   ```
-  IF trs.fee < trs.minFee
+  if (trs.fee < trs.minFee)
     discard trs
   ```
 
@@ -214,11 +214,11 @@ The transaction pool is not per se part of the Lisk protocol, however, it is ess
 - Once the transactions are ready to be included in the next block (i.e., transactions in `ready` queue as per the current implementation), those with higher priority (i.e. with the highest  `feePriority`) are included until the block's available space is not enough for another transaction. To do this, we propose a greedy strategy: The transactions are fetched together to be added to the block starting with the transactions offering the highest fee per byte. Any transaction that does not fit into the current block due to its size is skipped. We continue considering transactions with smaller fees, as these may have smaller size and still fit into the block. More specifically, this can be described as follows:  
 
   ```
-  FOR each trs in queue:
-    IF (maxBlockByteSize - newBlock.payloadLength >= sizeof(trs))
-         add trs to newBlock.payload
-    IF (newBlock.payloadLength + sizeofType0 >= maxBlockByteSize)
-         BREAK
+  for each trs in queue:
+    if (maxBlockByteSize - newBlock.payloadLength >= sizeof(trs))
+      add trs to newBlock.payload
+    if (newBlock.payloadLength + sizeofType0 >= maxBlockByteSize)
+      break
   ```
 
   Where `newBlock.payloadLength` is the size of the unconfirmed (not yet part of the blockchain) payload of the new block and `sizeofType0` is a constant representing the size of a basic type 0 transaction, both in bytes. Then, `maxBlockByteSize` is the maximum allowed size of the block in bytes (a constant given by the protocol) and `nextTrs` is the top transaction in the priority queue to be included in the block. Once the next block has been either created or received at the node, the included transactions are removed from the transaction pool.
