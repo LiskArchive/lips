@@ -5,8 +5,8 @@ Author: Iker Alustiza, iker@lightcurve.io
 Discussions-To: https://research.lisk.io/t/replace-static-fee-system-by-dynamic-fee-system/
 Status: Draft
 Type: Standards Track
-Created: -
-Updated: -
+Created: 2019-02-13
+Updated: 2019-05-10
 Requires: 0009
 ```
 
