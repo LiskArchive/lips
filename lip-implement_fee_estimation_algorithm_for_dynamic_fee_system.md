@@ -1,0 +1,299 @@
+```
+LIP: LIP-implement_fee_estimation_algorithm_for_dynamic_fee_system
+Title: Implement fee estimation algorithm for dynamic fee system
+Author: Iker Alustiza <iker@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/implement-fee-estimation-algorithm-for-dynamic-fee-system/
+Type: Standards Track
+Created: -
+Updated: -
+Requires: 0013
+```
+
+## Abstract
+
+This LIP proposes a fee estimation algorithm that suggests a fee depending on the priority of the transaction for the user and the blockchain’s recent history. The algorithm is based on an Exponential Moving Average (EMA). It is implemented in a node of the Lisk network and the wallet queries its output to get the transaction fee estimation for the user.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+With the proposed dynamic fee system for Lisk (refer to the [LIP-0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md) for the complete proposal), there will be a minimum fee required by the protocol, and the users will be able to spend any fee between this minimum fee and the top limit permitted by their account balance. This has two implications for the users:
+
+ 1. The users have to know the exact minimum fee for their transactions (depending on the type and size) so that they can assign a valid fee for their transactions.
+
+ 2. The users need certain guidance about what fee to spend in their transactions depending on their priority. This way the users minimize their transactions’ processing cost. This entails benefits for the Lisk network in terms of usability. Arguably, one can say that a good guidance for the user in this respect allows to fully attain the advantages of a dynamic fee system.
+
+In this proposal we assume that 1. is already given and accessible for the user (in any Lisk wallet or other third party wallets). In fact, it is straightforward to implement given the minimum required fee per byte and the type and size of the transaction. However,  2. implies a deeper technical study, mathematical modeling and definition of this guidance for the user.
+
+## Rationale
+
+We propose a fee estimation algorithm to leverage the features of the dynamic fee system and attain its advantages for the Lisk network. This fee estimation algorithm provides an estimation of what transaction fee should be used depending on the priority of the transaction for the user and the blockchain’s recent history (i.e., the guidance for the user). To achieve this objective, the fee estimation algorithm proposed in this document has the following properties:
+
+- The output is correlated to the information in the blockchain, i.e., the fee spent by the confirmed transactions.
+- The algorithm considers as much data in the past as possible for better accuracy.
+- The newer this data is, the greater its importance is in the estimation.
+- If the last blocks have space for additional transactions, the minimum required fee is recommended.
+- It provides different estimates depending on the priority the users give to their transactions.
+- The output cannot be higher than the static fees in the current protocol.
+
+On top of all these properties, the user should understand that the output of the algorithm (the fee estimation) is **only a recommendation** or a suggestion. It is just a guidance to help the user, not a rule given by the protocol.
+
+Taking the properties above into account, the proposed fee estimation algorithm is based on an Exponential Moving Average (EMA),  also referred to as exponential smoothing in the literature. With the EMA, the data considered can theoretically expand infinitely in the past while its weight decreases exponentially with time. In signal processing literature  (where the technique is addressed as exponential smoothing), several studies are available about how to tune the weight of the data depending on its age.
+
+For the mentioned idea of transaction priority, we assume that the economic interest of the delegates is to choose the transactions with highest fees per byte to be included first into blocks. This way, the higher the fees per byte of a transaction are, the higher its priority is (faster inclusion in the blockchain)<sup>[1]</sup>. For this proposal, we consider three different transaction priorities with respect to the fee. The notion behind these three transaction priorities is:
+
+- **Low priority transaction fee**: Fee estimation considering the transactions with the lowest fees per byte in the past blocks.
+- **Medium priority transaction fee**: Fee estimation considering the transactions with approximately average fees per byte in the last blocks.
+- **High priority transaction fee**: Fee estimation considering the transactions with highest fees per byte in the past blocks.
+
+With the previous rationale in mind, it is important to note that the algorithm is conceptually simple and does not attempt to predict future conditions, but assumes that these conditions are correlated to the recent past. Mathematically, it considers some recent history of transactions in the blockchain and outputs a certain fee per byte such that in this recent history a considerable amount of transactions with that fee (or higher) were confirmed in the blockchain.
+
+This proposal takes inspiration from [estimateSmartFee](https://bitcoin-rpc.github.io/en/doc/0.17.0/rpc/util/estimatesmartfee/) function in Bitcoin Core in terms of philosophy and objectives. However the proposed approach defines a different mathematical model and fee estimation methodology.
+
+<sup>[1]</sup> Note that when we say here “higher fees per byte”, we are referring to the fees paid on top of the minimum fee of a transaction, namely  _feePriority_ in the [LIP-0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md).
+
+### Mathematical description
+
+As mentioned above, the algorithm internally is modelled as an EMA, which in general can be described as the following recursive formula:
+
+_feeEst<sub>0</sub>_ = _offset_,
+
+_feeEst<sub>h</sub>_ = α _fee<sub>h</sub>_ + (1- α) _feeEst<sub>h-1</sub>_, &nbsp; for _h_ > 0,
+
+where:
+
+- α is the smoothing factor or exponential decay. This parameter, between 0 and 1, defines how fast the weight of past information decays in the EMA. For example, if α ≈ 1, then _fee<sub>h</sub>_ is given a large weight, while all other weights are almost zero. On the contrary, if α is close to 0 then older estimates are given a significant weight for the current estimation. Given a number _d_ between  0 and 1, and a positive integer _B_, such that the weight of the information _B_ blocks in the past has a decay of _d_, then α is determined by:
+
+   (1-α)<sup>_B_</sup> = 1 - _d_
+
+- _offset_ is the parameter to signify the past fees prior the initial estimate.
+
+- _feeEst<sub>h</sub>_  is the estimation of the fee computed at height _h_.
+
+- _fee<sub>h</sub>_  is the fee per byte derived from the block at height _h_. It is given in terms of the fee per byte paid on top of the minimum fee for a transaction. In particular, it is based on the _feePriority_ concept defined in the [LIP-0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md) as:
+
+  _feePriority(trs) = (trs.fee - trs.minFee) / sizeof(trs)_
+
+  where _sizeof(trs)_ is the size in bytes of the transaction _trs_,  _trs.minFee_ is the minimum fee required for _trs_ and _trs.fee_ is the fee of _trs_. Refer to the [LIP-0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md) for the definition of _trs.minFee_.
+
+Note that, in this proposal, _offset_, _feeEst<sub>h</sub>_ and _fee<sub>h</sub>_ are given in Beddows per byte. In the Lisk protocol, every amount of LSK is given in terms of Beddows (10<sup>-8</sup> LSK).
+
+## Specification
+
+The fee estimation algorithm is implemented in a node of the Lisk network, where the values of the estimation for every new block are calculated and kept. Locally, a wallet (i.e., Lisk Hub or Lisk Mobile) can then query a node for a fee estimation and output the suggested transaction fee to the user. Other alternative implementation considered initially can be found in [Appendix A](#a-alternative-way-of-implementing-the-algorithm). In the following, we present the specification details:
+
+### At the node
+
+At the node, two functions implement the fee estimation, i.e. `getEstimateFeeByte` and `EMAcalc`. The first function returns the fee estimation every time it is called via the API. It is defined as follows:
+
+```
+FeeEstPerByte = getEstimateFeeByte(EMAoutput)
+```
+
+where `FeeEstPerByte` and `EMAoutput` are objects containing the following variables:
+
+```
+FeeEstPerByte:{
+  Low,
+  Med,
+  High,
+}
+```
+
+```
+EMAoutput:{
+  FeeEstLow,
+  FeeEstMed,
+  FeeEstHigh,
+}
+```
+
+Note that three variables are defined for each object, which corresponds to the three fee transaction priorities (low, medium and high) defined in the previous section.
+
+`getEstimateFeeByte` implements a check for filled block space. If past blocks are not filled up to a certain threshold, then the minimum fee of the transaction should be recommended:
+
+```
+if(wavg(sizes of 20 last blocks)) > 12.5 KB || sizeof(last block) > 14.8 KB)
+      FeeEstPerByte.Low = EMAoutput.FeeEstLow
+      FeeEstPerByte.Med = EMAoutput.FeeEstMed
+      FeeEstPerByte.High = EMAoutput.FeeEstHigh
+else
+      FeeEstPerByte.Low = 0
+      FeeEstPerByte.Med = 0
+      FeeEstPerByte.High = 0
+```
+
+where `wavg()` stands for the [weighted average](https://en.wikipedia.org/wiki/Weighted_arithmetic_mean). In this case, the last block has a weight equal to 1 and the weights decrease by 10% when iterating towards the genesis block.
+
+As shown in the pseudo-code above, two thresholds affect the output of the function:
+
+1. The weighted average size of the last 20 blocks is larger than 12.5 KB, which is roughly the maximum size of block (15 KB) minus a [full vote transaction](https://lisk.io/documentation/lisk-protocol/transactions).
+
+2. The size of the last block received is larger than 14.8 KB, which implies that, with high probability, there are unconfirmed transactions waiting in the transaction pool.
+
+The object `EMAoutput` is the output of the mentioned `EMAcalc` function that computes the EMA estimation. This function calculates a new fee estimation every time a new block is received (or generated by the node) and stores it. Based on the model shown in the [Mathematical description](#mathematical-description) section, it takes as an input this last block and the set of estimates previously stored. The used parameters are described in the following subsection.
+
+### Parametrization of the EMA estimation function
+
+- _offset_ :
+ The node has to keep in its database its last set of estimates, `EMAoutput`. If the node crashes or is restarted, it uses this set of estimates as _offset_ and proceeds to compute the estimates until the last block during the synchronization process.
+
+- α:
+ We set α = 0.03406, which implies a half-life decay (_d_ = 0.5) in the estimation after 20 blocks (_B_ = 20).
+
+- _fee<sub>h</sub>_:
+ Considering that the last block was received at height _h_, _fee<sub>h</sub>_ is computed differently to calculate the three estimates contained in `EMAoutput`:
+   - For  `FeeEstLow`, _fee<sub>h</sub>_ is equal to 0 if the size of the last block is less than 12.5 KB. Otherwise, it is equal to the minimum _feePriority_ of all the transactions in this block.
+   - For `FeeEstMed`, _fee<sub>h</sub>_ is the average of the  _feePriority_ per byte of all the bytes<sup>[2]</sup> in the last block over the 25th percentile and below or equal the 75th percentile of the maximum block payload (15 KB).
+   - For `FeeEstHigh`, _fee<sub>h</sub>_ is the maximum of two values:
+     - The average of the _feePriority_ per byte of all the bytes<sup>[2]</sup> in the last block above the 80th percentile of the maximum block payload (15 KB)
+     - (1.3* `FeeEstMed` + 1) Beddows per byte.
+
+Note that this implies to have three parallel and independent EMA computations to get the three priority estimates.
+
+Refer to the [Appendix B](#b-numerical-example-of-the-ema-algorithm) for a numerical example of the calculation of `EMAoutput` with the mentioned parameters.
+
+<sup>[2]</sup> Assuming that the transactions in the block are descendingly ordered by _feePriority_, each byte in the maximum block payload will have an associated _feePriority_. We assume _feePriority_ = 0 for the cases of unused bytes or bytes used by transactions paying exactly the minimum fee.
+
+### Locally: User's wallet
+
+As said before, the wallet queries the fee estimation information from the connected node (the `FeeEstPerByte` object described before) to output the estimated transaction fee.  
+
+A function computes the estimated transaction fee taking three input arguments:
+
+1. The `FeeEstPerByte` object received from a connected node.
+2. A parameter, `priority`, to specify the fee priority requested by the user.
+3. The transaction object, `trs`, to be transmitted.
+
+The `priority` parameter can take three values, one for each of the fee priorities. Then, the function outputs the estimated transaction fee as:
+
+```
+if(priority = Low priority)
+       output = trs.minFee + FeeEstPerByte.Low * sizeof(trs)
+else if(priority  = Med priority)
+       output = trs.minFee + FeeEstPerByte.Med * sizeof(trs) + minFeePerByte * IsNonZero(FeeEstPerByte.Med) * rand()
+else if(priority  = High priority)
+       output = trs.minFee + FeeEstPerByte.High * sizeof(trs) + minFeePerByte * IsNonZero(FeeEstPerByte.High) * rand()
+
+output = ceil(output)
+```
+
+where `minFeePerByte` is the minimum fee per byte required by the protocol and `rand()` is a pseudo-random number in the range [0,1]. This function can be implemented with the [`Math.random()`](https://www.w3schools.com/jsref/jsref_random.asp) method. The third summand in the medium and high priority cases is used to introduce a tie-break when the estimation of the fee is flat (only applies when `IsNonZero() = true`).
+
+Moreover, the output of the function is capped by the currently defined static fees (except for the `dapp` transaction type), namely:
+
+```js
+fees: {
+  send: 10000000,
+  vote: 100000000,
+  secondsignature: 500000000,
+  delegate: 2500000000,
+  multisignature: 500000000,
+  dapp: 5000000000
+}
+```
+
+## Backwards Compatibility
+
+This change is backwards compatible both for the nodes and the wallet. However, nodes should be encouraged to update to the algorithm implementation version for usability reasons.
+
+If a client queries a node without the algorithm implemented, the node will send back an “invalid request” response. In this case, users will have to connect to a different node, or in the worst case, they will need to guess the fee to spend without any guidance.
+
+## Reference Implementation
+
+TBD
+
+## Acknowledgements
+
+I would like to thank Jan Hackfeld for the valuable feedback regarding the definition of the parameter _fee<sub>h</sub>_.
+
+## Appendix 
+
+### A: Alternative way of implementing the algorithm
+
+Another considered possibility is to implement the whole algorithm locally as a function that pulls all the required data from the blockchain every time a fee needs to be estimated.
+
+In this case the mathematical model is:
+
+_feeEst<sub>h</sub>_ = α [_fee<sub>h</sub>_ + (1- α) _fee<sub>h-1</sub>_ + (1- α)<sup>2</sup> _fee<sub>h-2</sub>_  ... + (1- α)<sup>k-1</sup> _fee<sub>h-k-1</sub>_] + (1- α)<sup>k</sup>offset
+
+where each of the _fee<sub>i</sub>_ parameters in the equation signifies the fees at the block at height _i_, as defined for the different priorities in the [Parametrization of the EMA estimation function](#parametrization-of-the-EMA-estimation-function) subsection.
+
+In this case, the function requests the fees of the previous _k_ blocks. Every new call to the function is a new estimation of the fee.
+
+#### Advantages:
+
+- No need to rely on nodes to get the estimation.
+- Easier to update and improve: No need to update the Lisk node.
+
+#### Drawbacks:
+
+- Accuracy: EMA has limited data, until _k_ blocks in the past.
+- Accuracy: _offset_ may have a significant impact.
+- Efficiency: It queries full blocks information from nodes every time someone wants to get an estimation. This may overload the queried node. 
+
+### B: Numerical Example of the EMA Algorithm
+
+Assume a node implementing the changes of this proposal which has been running (receiving and/or generating blocks) for a considerable amount of time. In its database, the output of the last EMA estimation function, `EMAoutput_db`, is stored as (in Beddows):
+
+```
+EMAoutput_db:{
+  FeeEstLow = 0
+  FeeEstMed = 1000
+  FeeEstHigh = 2000
+}
+```
+
+Assume the considered node receives a new valid block at height = _h_, with a total of 71 transactions ( `trs`<sub>1</sub>, `trs`<sub>2</sub>, `trs`<sub>3</sub>, ..., `trs`<sub>71</sub>) and a size of approximately 13.5 KB. For each of these transactions we have its corresponding size and _feePriority_ value:
+
+- Transactions from `trs`<sub>1</sub> to `trs`<sub>60</sub> are of type 0, 125 bytes of size, and  _feePriority_ = 0 Beddows/byte.
+- Transactions from `trs`<sub>61</sub> to `trs`<sub>63</sub> are of type 0, 125 bytes of size, and  _feePriority_ = 1000 Beddows/byte.
+- Transaction `trs`<sub>64</sub> is of type 3, 2334 bytes of size, and _feePriority_ = 1000 Beddows/byte.
+- Transaction `trs`<sub>65</sub> is of type 0, 189 bytes of size, and _feePriority_ = 1200 Beddows/byte.
+- Transaction `trs`<sub>66</sub> is of type 1, 153 bytes of size, and _feePriority_ = 1200 Beddows/byte.
+- Transaction `trs`<sub>67</sub> is of type 1, 125 bytes of size, and _feePriority_ = 1500 Beddows/byte.
+- Transaction `trs`<sub>68</sub> is of type 3, 2270 bytes of size, and _feePriority_ = 1800 Beddows/byte.
+- Transaction `trs`<sub>69</sub> is of type 0, 125 bytes of size, and _feePriority_ = 2000 Beddows/byte.
+- Transaction `trs`<sub>70</sub> is of type 0, 253 bytes of size, and _feePriority_ = 4000 Beddows/byte.
+- Transaction `trs`<sub>71</sub> is of type 0, 189 bytes of size, and _feePriority_ = 8000 Beddows/byte.
+
+As the node just received a new block, the EMA estimation function is called to calculate the new set of fee estimates. In particular, each of the estimates for the new `EMAoutput` are calculated as:
+
+- For `FeeEstLow`, _fee<sub>h</sub>_ = 0, which is the minimum _feePriority_ in the block. Then:
+
+```
+FeeEstLow = 0 Beddows/byte
+```
+
+- For `FeeEstMed`, we have to calculate _fee<sub>h</sub>_, which is the average of the  _feePriority_ per byte of all the bytes above the 11250th byte (25th percentile) and below or equal the 3750th byte (75th percentile) of the maximum block payload. Note that the transactions are descendingly ordered by _feePriority_. These bytes correspond to the transactions from `trs`<sub>20</sub> to `trs`<sub>64</sub>. Hence:
+
+_fee<sub>h</sub>_ =
+(1889 * 1000 + 3 * 125 * 1000 + 41 * 125 * 0) / 7500 = 301.9 Beddows/byte
+
+Note that only 1889 bytes of `trs`<sub>64</sub> fall below or equal the 75th percentile. Now we can compute `FeeEstMed`:
+
+```
+FeeEstMed = 0.03406 * 301.9 + (1 - 0.03406) * 1000 = 976.2 Beddows/byte
+```
+
+- For `FeeEstHigh`, we have to calculate the average of the  _feePriority_ per byte of all the bytes above 3000th byte (80th percentile). These bytes correspond to the transactions from `trs`<sub>66</sub> to `trs`<sub>71</sub>. The average of their _feePriority_ is:
+
+_fee<sub>h</sub>_ = (189 * 8000 + 253 * 4000  + 125 * 2000 + 2270 * 1800 + 125 * 1500 + 38 * 1200) / 3000 = 2364.4 Beddows/byte
+
+Note that only 38 bytes of `trs`<sub>66</sub> fall above the 80th percentile. Now we can compute `FeeEstHigh`:
+
+```
+FeeEstHigh = 0.03406 * 2364.4 + (1 - 0.03406) * 2000 = 2012.4 Beddows/byte
+```
+
+Hence, the new `EMAoutput` output is:
+
+```
+EMAoutput:{
+  FeeEstLow = 0
+  FeeEstMed = 976.2
+  FeeEstHigh = 2012.4
+}
+```
