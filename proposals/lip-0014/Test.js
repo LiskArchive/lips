@@ -5,7 +5,7 @@ const LiskBFT = require('./LiskBFT.js')
 
 function runAllTests() {
   const t1 = test1_basic();
-  const t2 = test2_headersConflicting();
+  const t2 = test2_headersContradicting();
   const t3 = test3_exampleEos();
   const t4 = test4_addBlockheader();
   const t5 = test5_removeBlockheader();
@@ -150,7 +150,7 @@ function test1_basic() {
   return test1Passed;
 }
 
-function test2_headersConflicting() {
+function test2_headersContradicting() {
   let test2Passed = true;
   let b1 = new BlockHeader(1, 1, 0, 3, 0, 1);
   let b2 = new BlockHeader(1, 1, 0, 3, 0, 1);
@@ -158,8 +158,8 @@ function test2_headersConflicting() {
   b1.blockID = 42;
   b2.blockID = 42;
   if (
-    bft.checkHeadersConflicting(b1, b2) ||
-    bft.checkHeadersConflicting(b2, b1)
+    bft.checkHeadersContradicting(b1, b2) ||
+    bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log("Test 2.1 failed: same blockheaders so are not confliciting");
     test2Passed = false;
@@ -169,11 +169,11 @@ function test2_headersConflicting() {
   b2.delegatePubKey = 2;
   b2.blockID = 2;
   if (
-    bft.checkHeadersConflicting(b1, b2) ||
-    bft.checkHeadersConflicting(b2, b1)
+    bft.checkHeadersContradicting(b1, b2) ||
+    bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log(
-      "Test 2.2 failed: blocks by different delegats are never conflicting"
+      "Test 2.2 failed: blocks by different delegats are never contradicting"
     );
     test2Passed = false;
   }
@@ -188,11 +188,11 @@ function test2_headersConflicting() {
   b2.heightPrevoted = 0;
   b2.heightPrevious = 0;
   if (
-    !bft.checkHeadersConflicting(b1, b2) ||
-    !bft.checkHeadersConflicting(b2, b1)
+    !bft.checkHeadersContradicting(b1, b2) ||
+    !bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log(
-      "Test 2.3 failed: two different blocks by the same delegate at the same height and heightPrevoted are conflicting"
+      "Test 2.3 failed: two different blocks by the same delegate at the same height and heightPrevoted are contradicting"
     );
     test2Passed = false;
   }
@@ -207,11 +207,11 @@ function test2_headersConflicting() {
   b2.heightPrevoted = 0;
   b2.heightPrevious = 0;
   if (
-    !bft.checkHeadersConflicting(b1, b2) ||
-    !bft.checkHeadersConflicting(b2, b1)
+    !bft.checkHeadersContradicting(b1, b2) ||
+    !bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log(
-      "Test 2.4 failed: blocks are conflicting due to wrong heightPrevious"
+      "Test 2.4 failed: blocks are contradicting due to wrong heightPrevious"
     );
     test2Passed = false;
   }
@@ -226,11 +226,11 @@ function test2_headersConflicting() {
   b2.heightPrevoted = 1;
   b2.heightPrevious = 5;
   if (
-    bft.checkHeadersConflicting(b1, b2) ||
-    bft.checkHeadersConflicting(b2, b1)
+    bft.checkHeadersContradicting(b1, b2) ||
+    bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log(
-      "Test 2.5 failed: blocks not conflicting as heightPrevoted increased"
+      "Test 2.5 failed: blocks not contradicting as heightPrevoted increased"
     );
     test2Passed = false;
   }
@@ -245,8 +245,8 @@ function test2_headersConflicting() {
   b2.heightPrevoted = 0;
   b2.heightPrevious = 50;
   if (
-    !bft.checkHeadersConflicting(b1, b2) ||
-    !bft.checkHeadersConflicting(b2, b1)
+    !bft.checkHeadersContradicting(b1, b2) ||
+    !bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log("Test 2.6 failed: block contains wrong heightPrevious");
     test2Passed = false;
@@ -262,8 +262,8 @@ function test2_headersConflicting() {
   b2.heightPrevoted = 33;
   b2.heightPrevious = 75;
   if (
-    !bft.checkHeadersConflicting(b1, b2) ||
-    !bft.checkHeadersConflicting(b2, b1)
+    !bft.checkHeadersContradicting(b1, b2) ||
+    !bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log("Test 2.7 failed: blocks show violation of fork choice rule");
     test2Passed = false;
@@ -279,8 +279,8 @@ function test2_headersConflicting() {
   b2.heightPrevoted = 34;
   b2.heightPrevious = 75;
   if (
-    bft.checkHeadersConflicting(b1, b2) ||
-    bft.checkHeadersConflicting(b2, b1)
+    bft.checkHeadersContradicting(b1, b2) ||
+    bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log("Test 2.8 failed: no conflict between blockheaders");
     test2Passed = false;
@@ -296,8 +296,8 @@ function test2_headersConflicting() {
   b2.heightPrevoted = 34;
   b2.heightPrevious = 75;
   if (
-    bft.checkHeadersConflicting(b1, b2) ||
-    bft.checkHeadersConflicting(b2, b1)
+    bft.checkHeadersContradicting(b1, b2) ||
+    bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log("Test 2.9: no conflict between blockheaders");
     test2Passed = false;
@@ -313,8 +313,8 @@ function test2_headersConflicting() {
   b2.heightPrevoted = 34;
   b2.heightPrevious = 80;
   if (
-    bft.checkHeadersConflicting(b1, b2) ||
-    bft.checkHeadersConflicting(b2, b1)
+    bft.checkHeadersContradicting(b1, b2) ||
+    bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log("Test 2.10: no conflict between blockheaders");
     test2Passed = false;

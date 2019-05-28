@@ -6,7 +6,7 @@ const BlockHeader = require("./BlockHeader.js");
  * - Update the Prevote and Precommit counts for these blocks according to the Lisk-BFT consensus
  * - Update up to which height all blocks are finalized
  * - Update the current value of heightPrevoted in order to check this value for new blocks
- * - Check if a blockheader is conflicting with one of the last blockheaders
+ * - Check if a blockheader is contradicting one of the last blockheaders
  */
 class LiskBFT {
   constructor() {
@@ -177,14 +177,14 @@ class LiskBFT {
   }
 
   /**
-   * Check whether blockheader b is conflicting with any block at height [maxHeightStored-heightOffset, maxHeightStored].
+   * Check whether blockheader b is contradicting any block at height [maxHeightStored-heightOffset, maxHeightStored].
    * If maxHeightStored-heightOffset<minHeightStored, only the blocks at heights [minHeightStored,maxHeightStored] are checked.
    *
    * @param  b  instance of BlockHeader
    * @param  heightOffset (optional) gives the height up to which to check the headers, default value HEIGHT_OFFSET_PREVOTES_PRECOMMITS
-   * @return true if and only if b is conflicting with any header at the specified heights
+   * @return true if and only if b is contradicting any header at the specified heights
    */
-  checkHeaderConflictingChain(
+  checkHeaderContradictingChain(
     b,
     heightOffset = this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS
   ) {
@@ -193,24 +193,26 @@ class LiskBFT {
       this.maxHeightStored - heightOffset
     );
     const maxHeightCheck = this.maxHeightStored;
-    for (let i = minHeightCheck; i <= maxHeightCheck; i++) {
+    for (let i = maxHeightCheck; i >= minHeightCheck; i--) {
       if (this.blockheaders.get(i).delegatePubKey == b.delegatePubKey) {
-        if (this.checkHeadersConflicting(this.blockheaders.get(i), b)) {
+        if (this.checkHeadersContradicting(this.blockheaders.get(i), b)) {
           return true;
-        }
+        } else {
+					return false;
+				}
       }
     }
     return false;
   }
 
   /**
-   * Check whether blockheader1 and blockheader2 are conflicting according to the Lisk-BFT consensus rules.
+   * Check whether blockheader1 and blockheader2 are contradicting according to the Lisk-BFT consensus rules.
    *
    * @param  blockheader1  instance of BlockHeader
    * @param  blockheader2  instance of BlockHeader
-   * @return true if and only if blockheader1 and blockheader2 are conflicting
+   * @return true if and only if blockheader1 and blockheader2 are contradicting
    */
-  checkHeadersConflicting(blockheader1, blockheader2) {
+  checkHeadersContradicting(blockheader1, blockheader2) {
     // Order the two blockheaders such that b1 must be forged first
     let b1 = blockheader1;
     let b2 = blockheader2;
@@ -227,10 +229,10 @@ class LiskBFT {
     }
     // Order of cases is essential here
     if (b1.delegatePubKey != b2.delegatePubKey) {
-      // Blocks by different delegates are never conflicting
+      // Blocks by different delegates are never contradicting
       return false;
     } else if (b1.blockID == b2.blockID) {
-      // No conflict, as blockheaders are the same
+      // No contradiction, as blockheaders are the same
       return false;
     } else if (
       b1.heightPrevoted == b2.heightPrevoted &&
@@ -247,7 +249,7 @@ class LiskBFT {
       // Violates that delegate chooses branch with largest heightPrevoted
       return true;
     } else {
-      // No conflicts between blockheaders
+      // No contradiction between blockheaders
       return false;
     }
   }
@@ -330,12 +332,12 @@ class LiskBFT {
         // Only if we have this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS headers stored, we can guarantee that heightPrevoted is computed correctly
         throw new Error("Error: Wrong heightPrevoted in blockheader.");
       } else if (
-        this.checkHeaderConflictingChain(
+        this.checkHeaderContradictingChain(
           newBlockheader,
           this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS
         )
       ) {
-        throw new Error("Error: Conflicting heightPrevious in blockheader.");
+        throw new Error("Error: Contradicting heightPrevious in blockheader.");
       }
       this.maxHeightStored += 1;
 
