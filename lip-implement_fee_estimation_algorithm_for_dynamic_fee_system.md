@@ -4,8 +4,8 @@ Title: Implement fee estimation algorithm for dynamic fee system
 Author: Iker Alustiza <iker@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/implement-fee-estimation-algorithm-for-dynamic-fee-system/
 Type: Standards Track
-Created: -
-Updated: -
+Created: 2019-04-11
+Updated: 2019-06-13
 Requires: 0013
 ```
 
