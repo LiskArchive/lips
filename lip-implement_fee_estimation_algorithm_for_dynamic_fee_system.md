@@ -40,7 +40,7 @@ We propose a fee estimation algorithm to leverage the features of the dynamic fe
 
 On top of all these properties, the user should understand that the output of the algorithm (the fee estimation) is **only a recommendation** or a suggestion. It is just a guidance to help the user, not a rule given by the protocol.
 
-Taking the properties above into account, the proposed fee estimation algorithm is based on an Exponential Moving Average (EMA),  also referred to as exponential smoothing in the literature. With the EMA, the data considered can theoretically expand infinitely in the past while its weight decreases exponentially with time. In signal processing literature  (where the technique is addressed as exponential smoothing), several studies are available about how to tune the weight of the data depending on its age.
+Taking the properties above into account, the proposed fee estimation algorithm is based on an Exponential Moving Average (EMA), also referred to as exponential smoothing in the literature. With the EMA, the data considered can theoretically expand infinitely in the past while its weight decreases exponentially with time. In signal processing literature (where the technique is addressed as exponential smoothing), several studies are available about how to tune the weight of the data depending on its age.
 
 For the mentioned idea of transaction priority, we assume that the economic interest of the delegates is to choose the transactions with highest fees per byte to be included first into blocks. This way, the higher the fees per byte of a transaction are, the higher its priority is (faster inclusion in the blockchain)<sup>[1]</sup>. For this proposal, we consider three different transaction priorities with respect to the fee. The notion behind these three transaction priorities is:
 
@@ -116,13 +116,13 @@ Note that three properties are defined for each object, which corresponds to the
 
 ```
 if(wavg(sizes of 20 last blocks)) > 12.5 KB || sizeof(last block) > 14.8 KB)
-      FeeEstPerByte.Low = EMAoutput.FeeEstLow
-      FeeEstPerByte.Med = EMAoutput.FeeEstMed
-      FeeEstPerByte.High = EMAoutput.FeeEstHigh
+  FeeEstPerByte.Low = EMAoutput.FeeEstLow
+  FeeEstPerByte.Med = EMAoutput.FeeEstMed
+  FeeEstPerByte.High = EMAoutput.FeeEstHigh
 else
-      FeeEstPerByte.Low = 0
-      FeeEstPerByte.Med = 0
-      FeeEstPerByte.High = 0
+  FeeEstPerByte.Low = 0
+  FeeEstPerByte.Med = 0
+  FeeEstPerByte.High = 0
 ```
 
 where `wavg()` stands for the [weighted average](https://en.wikipedia.org/wiki/Weighted_arithmetic_mean). In this case, the last block has a weight equal to 1 and the weights decrease by 10% when iterating towards the genesis block.
@@ -171,11 +171,11 @@ The `priority` parameter can take three values, one for each of the fee prioriti
 
 ```
 if(priority = Low priority)
-       output = trs.minFee + FeeEstPerByte.Low * sizeof(trs)
+  output = trs.minFee + FeeEstPerByte.Low * sizeof(trs)
 else if(priority  = Med priority)
-       output = trs.minFee + FeeEstPerByte.Med * sizeof(trs) + minFeePerByte * IsNonZero(FeeEstPerByte.Med) * rand()
+  output = trs.minFee + FeeEstPerByte.Med * sizeof(trs) + minFeePerByte * IsNonZero(FeeEstPerByte.Med) * rand()
 else if(priority  = High priority)
-       output = trs.minFee + FeeEstPerByte.High * sizeof(trs) + minFeePerByte * IsNonZero(FeeEstPerByte.High) * rand()
+  output = trs.minFee + FeeEstPerByte.High * sizeof(trs) + minFeePerByte * IsNonZero(FeeEstPerByte.High) * rand()
 
 output = ceil(output)
 ```
@@ -209,7 +209,7 @@ TBD
 
 I would like to thank Jan Hackfeld for the valuable feedback regarding the definition of the parameter _fee<sub>h</sub>_.
 
-## Appendix 
+## Appendix
 
 ### A: Alternative way of implementing the algorithm
 
@@ -232,7 +232,7 @@ In this case, the function requests the fees of the previous _k_ blocks. Every n
 
 - Accuracy: EMA has limited data, until _k_ blocks in the past.
 - Accuracy: _offset_ may have a significant impact.
-- Efficiency: It queries full blocks information from nodes every time someone wants to get an estimation. This may overload the queried node. 
+- Efficiency: It queries full blocks information from nodes every time someone wants to get an estimation. This may overload the queried node.
 
 ### B: Numerical Example of the EMA Algorithm
 
