@@ -178,6 +178,8 @@ class LiskBFT {
 
   /**
    * Check whether blockheader b is contradicting any block at height [maxHeightStored-heightOffset, maxHeightStored].
+	 * Note that only the last block by the same delegate has to be checked to ensure this property and therefore the
+	 * for-loop is exited after the first block by the same delegate.
    * If maxHeightStored-heightOffset<minHeightStored, only the blocks at heights [minHeightStored,maxHeightStored] are checked.
    *
    * @param  b  instance of BlockHeader
