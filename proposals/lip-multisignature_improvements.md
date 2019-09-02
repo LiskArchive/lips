@@ -1,6 +1,6 @@
 ```
 LIP: <LIP number>
-Title: Make multisignature accounts more flexible and prevent spamming and signature mutability
+Title: Make multisignature accounts more flexible, prevent spamming, and prevent signature mutability
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/make-multisignature-accounts-more-flexible-prevent-spamming-and-make-signature-sets-immutable/186
 Type: Standards Track
