@@ -4,8 +4,8 @@ Title: Make multisignature accounts more flexible, prevent spamming, and prevent
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/make-multisignature-accounts-more-flexible-prevent-spamming-and-make-signature-sets-immutable/186
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2019-08-09
+Updated: 2019-09-09
 Requires: 0015
 ```
 
