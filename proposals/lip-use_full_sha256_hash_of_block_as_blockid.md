@@ -1,0 +1,56 @@
+```
+LIP: <LIP number>
+Title: Use full SHA-256 hash of block header as blockID
+Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/use-full-sha-256-hash-of-block-header-as-blockid/188
+Status: Draft
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+```
+
+## Abstract
+
+This LIP proposes to take the full SHA-256 hash of the block header as the blockID of a block. This implies an increase of the blockID length. The motivation of the proposal is to increase the security of the Lisk blockchain.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+In the current Lisk protocol, a blockID consists of 8 bytes of the SHA-256 digest of the block header. This small length comes with some advantages, such as less stored data or better visualisation on small displays. However, it comes at the price of providing low resistance to collisions and pre-images. More precisely, the low resistance could be exploited in the following scenario: An attacker could try to find another block with the same blockID for a given block in the blockchain. In the successful case, other community members may be convinced by this altered history, as the altered chain might appear valid. We will see that this kind of attack is limited to delegates and currently economically unattractive. However, the length of the blockID shall be increased to prevent this kind of attack also in the future.
+
+## Specification
+
+Let `blockBytesForId` denote the function that maps every block to the byte array that is used as the input for computing the blockID. In Lisk SDK 2.0.0, for instance, this function is implemented in [Block.getBytes](https://github.com/LiskHQ/lisk-sdk/blob/a8ad19b67677aa4abcfdcd28638319d7ca838644/framework/src/modules/chain/logic/block.js#L393). In the proposed protocol, the blockID of a transaction `B` is computed as follows:
+
+```
+blockID = SHA-256(blockBytesForId(B)).
+```
+
+Moreover, let `blockBytesForSignature` denote the function that maps every block to the byte array that is used as the input for the block signature (also implemented in [Block.getBytes](https://github.com/LiskHQ/lisk-sdk/blob/a8ad19b67677aa4abcfdcd28638319d7ca838644/framework/src/modules/chain/logic/block.js#L393) in Lisk SDK 2.0.0). Then, the new definition of blockID implies a change for the specification of `blockBytesForId` and `blockBytesForSignature `: The encoding of the property `previousBlock` requires 32 bytes instead of 8 bytes. Big endian encoding has to be used. As in the current protocol, the bytes for the `previousBlock` property have to follow the bytes of the `timestamp` property in the byte array of the whole block.
+
+### BlockIDs in JSON Objects
+
+In a JSON object representing a block, all properties that contain a blockID have to be represented as a hexadecimal string. The properties of a block that contain a blockID are the `previousBlock` and the `id` property.
+
+### BlockID Verification
+
+During the verification of a block, the blockID must be verified as correct. If the blockID verification fails, the block has to be rejected. If `H` is the height from which on the proposed protocol is used, then a block `B` with `B.height < H` must have a valid blockID according to the current format (such a verification may happen, for example, during synchronisation).
+
+## Rationale
+
+### Why 256-bit Length?
+
+As mentioned before, an attacker could try to find another block with the same blockID for a given block in the past. If the attacker succeeds, other community members may be convinced by this altered history, as the altered chain might appear valid. Such an attack would, however, only be possible if the attacker possesses the private key of the delegate associated with the time slot of the block. Otherwise, the signature or the time slot would be recognised as invalid during the block validation. Therefore, such an attack would be limited to delegates that have been in the top 101 at some point. Moreover, finding a new block with the same blockID requires currently 2<sup>64</sup> tries on average. In each try, the attacker creates a block which includes creating the payload, signing the block header and computing the blockID. The signing step is the computationally most expensive step. According to the designers of the signature scheme used in Lisk (Ed25519), a quad-core 2.4 GHz Westmere is able to sign [109,000 messages per second](https://link.springer.com/content/pdf/10.1007%2Fs13389-012-0027-1.pdf). Therefore, one would require 5.4 million years on average to find a new block with this hardware. This makes the attack economically very unattractive, even with more advanced hardware. Furthermore, the attack requires that users synchronise their chain with the faked chain where they copy at least the new block. If the attacker wants to double spend money by deleting a transaction from a block and spending the funds again, then even many delegates have to synchronise their chain with the faked chain in order to get the new transfer verified.
+
+Although the success probability is very low, we want to increase the resistance against such an attack to provide sufficient security also for the future. The resistance against such an attack is determined by the bit length of the blockIDs. I.e., _n_-bit blockIDs yield _n_-bit resistance against such an attack. With a blockID length of 256 bit, we choose a security level that makes the mentioned attack infeasible for probably several decades.
+
+## Backwards Compatibility
+
+The change introduces a hard fork, because of the following: Blocks forged by nodes following the proposed protocol get rejected by nodes following the current protocol and vice versa since the format of the `id` and the `previousBlock` property change.
+
+## Reference Implementation
+
+TBD
