@@ -29,7 +29,7 @@ Let `blockBytesForId` denote the function that maps every block to the byte arra
 blockID = SHA-256(blockBytesForId(B)).
 ```
 
-Moreover, let `blockBytesForSignature` denote the function that maps every block to the byte array that is used as the input for the block signature (also implemented in [Block.getBytes](https://github.com/LiskHQ/lisk-sdk/blob/a8ad19b67677aa4abcfdcd28638319d7ca838644/framework/src/modules/chain/logic/block.js#L393) in Lisk SDK 2.0.0). Then, the new definition of blockID implies a change for the specification of `blockBytesForId` and `blockBytesForSignature `: The encoding of the property `previousBlock` requires 32 bytes instead of 8 bytes. Big endian encoding has to be used. As in the current protocol, the bytes for the `previousBlock` property have to follow the bytes of the `timestamp` property in the byte array of the whole block.
+Moreover, let `blockBytesForSignature` denote the function that maps every block to the byte array that is used as the input for the block signature (also implemented in [Block.getBytes](https://github.com/LiskHQ/lisk-sdk/blob/a8ad19b67677aa4abcfdcd28638319d7ca838644/framework/src/modules/chain/logic/block.js#L393) in Lisk SDK 2.0.0). Then, the new definition of blockID implies a change for the specification of `blockBytesForId` and `blockBytesForSignature`: The encoding of the property `previousBlock` requires 32 bytes instead of 8 bytes. Big endian encoding has to be used. As in the current protocol, the bytes for the `previousBlock` property have to follow the bytes of the `timestamp` property in the byte array of the whole block.
 
 ### BlockIDs in JSON Objects
 
