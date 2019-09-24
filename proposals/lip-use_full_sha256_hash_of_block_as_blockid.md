@@ -31,6 +31,8 @@ blockID = SHA-256(blockBytesForId(B)).
 
 Moreover, let `blockBytesForSignature` denote the function that maps every block to the byte array that is used as the input for the block signature (also implemented in [Block.getBytes](https://github.com/LiskHQ/lisk-sdk/blob/a8ad19b67677aa4abcfdcd28638319d7ca838644/framework/src/modules/chain/logic/block.js#L393) in Lisk SDK 2.0.0). Then, the new definition of blockID implies a change for the specification of `blockBytesForId` and `blockBytesForSignature`: The encoding of the property `previousBlock` requires 32 bytes instead of 8 bytes. Big endian encoding has to be used. As in the current protocol, the bytes for the `previousBlock` property have to follow the bytes of the `timestamp` property in the byte array of the whole block.
 
+If `H` is the height from which on the proposed protocol is used, then the blockID of the block forged at height `H`-1 is a 64-bit integer, `n`. Nevertheless, 32 bytes are used to encode the `previousBlock` property of the block at height `H`, i.e., `n` is encoded as a 256-bit integer in big endian format.
+
 ### BlockIDs in JSON Objects
 
 In a JSON object representing a block, all properties that contain a blockID have to be represented as a hexadecimal string. The properties of a block that contain a blockID are the `previousBlock` and the `id` property.
