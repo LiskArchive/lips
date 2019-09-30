@@ -7,14 +7,14 @@ Status: Withdrawn
 Type: Standards Track
 Module: DPoS
 Created: 2018-10-30
-Updated: 2018-12-21
+Updated: 2019-09-30
 ```
 
 ## Abstract
 This LIP proposes a change of the voting system for the election of delegates in Lisk. We suggest to only allow one vote per account with a vote weight given by the balance of that account. The goal is to increase the decentralization of the network by disincentivizing coalitions between active delegates and creating a healthy competition for active delegate slots. Moreover, the proposed voting system is very simple and encourages a high participation of stakeholders.
 
 ## Copyright
-This LIP is licensed under the  [GNU General Public License, version 3](http://www.gnu.org/licenses/gpl-3.0.html "GNU General Public License, version 3").
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
 
 ## Motivation
 In the current voting system in Lisk, every account holder can vote for up to 101 delegates and the vote weight of the account is the balance of the account, also referred to as the stake of the account holder. The current voting system is based on [approval voting](https://en.wikipedia.org/wiki/Approval_voting) and the idea is that the delegates approved by the highest proportion of stake are the most suitable to secure the Lisk network. In practice, this system suffers from several shortcomings, which also have been addressed by members of the Lisk community. First of all, there is a high incentive for delegates to form a coalition or pool by voting for each other as the vote weight is independent of the number of votes cast. The active delegates further typically share a certain fraction of their earnings via the block rewards with their voters. As many coalitions demand that stakeholders vote for all their members to receive any payouts from the block rewards, the coalitions can easily manifest their position in the top ranks. Secondly, there is a very high barrier for anybody to become an active delegate because many accounts that together represent a very large amount of stake (approximately 31,000,000 LSK as of 26/11/2018) need to change their votes. In particular, this means that a new delegate that manages to get support by a substantial part of total stake, such as 1%, has no chance to become an active delegate. The third problem, which is more of theoretical nature, is that it is possible to change all active delegates by owning 41 % of the total supply of Lisk tokens. This would allow to stop the chain, censor transactions or execute double spending attacks, for instance.
