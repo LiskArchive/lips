@@ -5,7 +5,6 @@ Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/change-to-one-vote-per-account/18
 Status: Withdrawn
 Type: Standards Track
-Module: DPoS
 Created: 2018-10-30
 Updated: 2019-09-30
 ```
