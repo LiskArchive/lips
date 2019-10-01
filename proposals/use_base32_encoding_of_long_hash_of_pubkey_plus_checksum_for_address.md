@@ -1,11 +1,11 @@
 ```
 LIP: <LIP number>
-Title: Use base32 encoding of long hash of pubkey plus checksum for address
+Title: Use base32 encoding of long hash of public key plus checksum for address
 Author: Andrea Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/use-base32-encoding-of-long-hash-of-public-key-plus-checksum-for-address/
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2019-03-08
+Updated: 2019-10-01
 ```
 
 ## Abstract
