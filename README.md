@@ -32,3 +32,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0018](proposals/lip-0018.md) | Use base32 encoding of long hash of public key plus checksum for address                       | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0019](proposals/lip-0019.md) | Use full SHA-256 hash of transaction header as transactionID                                   | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0020](proposals/lip-0020.md) | Use full SHA-256 hash of block header as blockID                                               | Andreas Kendziorra                           | Standards Track | Draft         |
+| [0021](proposals/lip-0021.md) | Change to one vote per account                                                                 | Jan Hackfeld                                 | Standards Track | Withdrawn     |
