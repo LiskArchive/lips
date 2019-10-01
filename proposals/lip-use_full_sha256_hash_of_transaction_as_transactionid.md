@@ -26,7 +26,7 @@ The length of the currently used transactionIDs is rather short considering the 
 
 The currently used transactionIDs have a length of 64 bits. The expected value for the number of transactions after which there is a collision of transactionIDs is ~2<sup>32</sup>. The [proposed changes regarding the block size](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0002.md) will allow up to 128 transactions per block (assuming the current size of transaction objects). If every block contains 128 transactions, a collision is expected after approximately 11 years.
 
-We propose to use a length of 256 bits. This reduces the probability for a transactionID collision sufficiently. Assuming that each block contains 128 transactions, the probability of having a collision within the next 50 years is below 10<sup>-56</sup> (the probability of a collision after _n_ transactions can be approximated by 1-exp(-_n_<sup>2</sup>/(2*2<sup>256</sup>))). 
+We propose to use a length of 256 bits. This reduces the probability for a transactionID collision sufficiently. Assuming that each block contains 128 transactions, the probability of having a collision within the next 50 years is below 10<sup>-56</sup> (the probability of a collision after _n_ transactions can be approximated by 1-exp(-_n_<sup>2</sup>/(2*2<sup>256</sup>))).
 
 ### Usage
 
@@ -37,27 +37,28 @@ On the protocol level, the new transactionID format shall be used for every tran
 Let `transactionBytes` denote the function that maps every transaction to the byte array, that is currently used as the input for SHA-256, from which the reversed first 8 bytes are used as the transactionID (we do not want to elaborate on how this byte array is generated, since the specification may change over time, e.g. when transaction properties are added or removed).
 
 In the proposed protocol, the transactionID of a transaction `tx` is generated as follows:
+
 ```
-transactionID = SHA-256(transactionBytes(tx)).
+transactionID = SHA-256(transactionBytes(tx))
 ```
 
 ### Usage of the New Format
 
 The new format has to be applied to every transaction, including the transactions included in the blockchain in the past, and has to be used in every aspect of the protocol, i.e., for validating the transactionID uniqueness.
 
-When transactionIDs are used in RPCs, then they must be represented as hexadecimal strings without the prefix "0x". For non protocol related usages, hexadecimal strings are recommended as well (in some cases, the usage of the prefix "0x" may be advantageous, e.g., in user interfaces). 
+When transactionIDs are used in RPCs, then they must be represented as hexadecimal strings without the prefix "0x". For non protocol related usages, hexadecimal strings are recommended as well (in some cases, the usage of the prefix "0x" may be advantageous, e.g., in user interfaces).
 
 ## Backwards Compatibility
 
 This proposal introduces a hard fork, whereby the causes depend on the implementation of LIP [0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md):
-- If LIP [0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md) is not implemented, then transaction JSON objects using the proposed transactionID format get rejected by nodes following the current protocol due to invalid transactionIDs. 
 
+- If LIP [0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md) is not implemented, then transaction JSON objects using the proposed transactionID format get rejected by nodes following the current protocol due to invalid transactionIDs.
 - If LIP [0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md) is implemented, then from two transactions that have the same transactionID in the current format but different transactionIDs in the proposed format one is rejected by nodes following the current protocol whereas both are accepted by nodes following the proposed protocol.
 
 Independent of LIP [0012](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0012.md), this change introduces the following incompatibilities:
 
-*   RPCs that use transactionIDs lead to miscommunication between nodes. For example, the planned message `postTransactionsAnnouncement` in LIP [0004](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md), in which a list of transactionIDs is announced to other nodes, is only of value for nodes using the same transactionID format. Nodes using a different format will ignore the provided transactionIDs as they appear invalid.
-*   Functions of the Lisk Core API that use transactionIDs, like `getTransactions`, will not work as expected. For example, if a node using the current transactionID format is requested to provide a transaction for a given transactionID in the proposed format, it will not return the transaction even if the corresponding transaction is known to the node.
+* RPCs that use transactionIDs lead to miscommunication between nodes. For example, the planned message `postTransactionsAnnouncement` in LIP [0004](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md), in which a list of transactionIDs is announced to other nodes, is only of value for nodes using the same transactionID format. Nodes using a different format will ignore the provided transactionIDs as they appear invalid.
+* Functions of the Lisk Core API that use transactionIDs, like `getTransactions`, will not work as expected. For example, if a node using the current transactionID format is requested to provide a transaction for a given transactionID in the proposed format, it will not return the transaction even if the corresponding transaction is known to the node.
 
 ## Appendix
 
@@ -85,7 +86,7 @@ The corresponding byte array for this transaction (assuming the protocol impleme
 byteArray = '0x0022dcb9040eb0a6d7b862dc35c856c02c47fde3b4f60f2f3571a888b9a8ca7540c6793243ef4d6324449e824f6319182b020000002092abc5dd72d42b289f69ddfa85d0145d0bfc19a0415be4496c189e5fdd5eff02f57849f484192b7d34b1671c17e5c22ce76479b411cad83681132f53d7b309'
 ```
 
-The transactionID is then
+The transactionID is then:
 
 ```
 transactionID = SHA-256(byteArray) = '0xda63e78daf2096db8316a157a839c8b9a616d3ce6692cfe61d6d380a623a1902'
