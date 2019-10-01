@@ -29,3 +29,5 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0015](proposals/lip-0015.md) | Enable transaction invalidation by using nonces instead of timestamps                          | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0016](proposals/lip-0016.md) | Implement fee estimation algorithm for dynamic fee system                                      | Iker Alustiza                                | Standards Track | Draft         |
 | [0017](proposals/lip-0017.md) | Make multisignature accounts more flexible, prevent spamming, and prevent signature mutability | Andreas Kendziorra                           | Standards Track | Draft         |
+| [0018](proposals/lip-0018.md) | Use base32 encoding of long hash of public key plus checksum for address                       | Andreas Kendziorra                           | Standards Track | Draft         |
+| [0019](proposals/lip-0019.md) | Use SHA-256 hash of transaction header as transactionID                                        | Andreas Kendziorra                           | Standards Track | Draft         |
