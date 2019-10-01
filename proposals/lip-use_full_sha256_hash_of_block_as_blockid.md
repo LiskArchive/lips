@@ -5,8 +5,8 @@ Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/use-full-sha-256-hash-of-block-header-as-blockid/188
 Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2019-09-06
+Updated: 2019-09-24
 ```
 
 ## Abstract
