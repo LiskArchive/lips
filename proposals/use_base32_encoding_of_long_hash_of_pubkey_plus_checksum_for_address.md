@@ -44,7 +44,7 @@ The output of step 5 is the address for the given account. An example of an addr
 
 #### Step 2: BCH checksum
 
-The checksum is computed using the [BCH](https://en.wikipedia.org/wiki/BCH_code) code proposed in [BIP 173](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki). In this section, we only provide example Javascript code that computes and validates the checksum correctly (based on the code from [bech32](https://github.com/sipa/bech32/blob/master/ref/javascript/bech32.js)). For a more formal description, see the [appendix](#formal-description-of-the-bch-code).
+The checksum is computed using the [BCH](https://en.wikipedia.org/wiki/BCH_code) code proposed in [BIP 173](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki). In this section, we only provide example JavaScript code that computes and validates the checksum correctly (based on the code from [bech32](https://github.com/sipa/bech32/blob/master/ref/javascript/bech32.js)). For a more formal description, see the [appendix](#formal-description-of-the-bch-code).
 
 ##### Creating checksum
 
@@ -86,7 +86,6 @@ function verifyChecksum (codeword) {
   return polymod(codeword) === 1;
 }
 ```
-
 
 As for the checksum creation, the input for `verifyChecksum `must be a sequence of integers between 0 and 31. The 6 most right integers of the codeword represent the checksum.
 
@@ -156,7 +155,7 @@ This subsection does not contain rules for the protocol, but recommendations for
 
 Whenever an address value has to be serialized, the 20 bytes of the public key hash are taken, i.e. the bytes which are used as the input for the checksum computation. This applies for the serialization of the `recipientID` property of balance transfer transaction and for any other property of a transaction (or block) that contains and address.
 
-### Converting Existing Accounts 
+### Converting Existing Accounts
 
 We distinguish between accounts with and without associated public key. Note that an account has an associated key if and only if an outgoing transaction from this account is included in the blockchain.
 
@@ -182,16 +181,16 @@ A reclaim transaction is of the following form:
 
 ```
 {
-  "type": <type>, // at the time of writing, the value must be 8
+  "type": <type>, // At the time of writing, the value must be 8
   "senderPublicKey": <Public key of the sender>,
   ...
   "asset" : {
-    "amount" : <amount in Beddows>
+    "amount" : <Amount in Beddows>
   }
 }
 ```
 
-###### Validity 
+###### Validity
 
 A reclaim transaction, `tx`, must fulfil the following points to be valid:
 
@@ -219,7 +218,6 @@ The asset property of a reclaim transaction `tx` needs to be serialized to an ar
 To keep the length of the addresses at a reasonable level, a hash of the public key with a length smaller than 256 bits is used instead of the public key itself. When choosing the hash length, one crucial requirement has to be kept in mind: For a given address, it should be computationally infeasible to find a key pair (public key and private key) that yields this address. This requirement prevents that an attacker can find a key pair for an address for which no public key is yet associated to (a public key gets associated to an address the first time a transaction outgoing from this account is included in a block). If an attacker were able to find such a key pair, they could transfer the funds from this account. In the current Lisk protocol, it is computationally very expensive to find a key pair for a given address, but it is not infeasible. For an account with no associated public key, such an attack may be economically profitable if there are enough funds in the account. Therefore, it is currently recommended to do at least one transaction per account such that the address is associated to the account holder's public key. This process is sometimes referred to as the "address registration" process. However, the address registration process is an additional step required from the user, and it is highly desired to make it obsolete.
 
 The length of the hash output determines the resistance against the mentioned attack. Although a security level of 128 bits is considered to be sufficient for the next years (see the security recommendations from ECRYPT [1, Chapter 2] and NIST [2, Section 5.6.2]), we choose a hash output length of 160 bits which provides 160-bit resistance against such attacks. Besides the strong pre-image resistance, this output length also provides sufficient collision resistance, namely 80-bit resistance. Note that collisions do not provide any value to an attacker. Therefore, the hash function does not need to be resistant against brute force attacks for collisions. However, collisions of addresses could result in “accidental” losses of money: If a user creates a new account by creating a key pair and provides the resulting address to another user in order to receive a payment, and the address is already associated to another public key, then the user will never be able to spend the funds send to this address. Only the key pair associated with the address can be used to spend the funds. With the chosen hash length, the probability for an address collision becomes negligible, even for very large numbers of addresses. For example, the probability of having an address collision after 10<sup>15</sup> addresses is smaller than 10<sup>-18</sup>.
-
 
 #### Why SHA-256?
 
@@ -249,8 +247,7 @@ Several [cyclic redundancy check](https://en.wikipedia.org/wiki/Cyclic_redundanc
 
 #### BCH Codes
 
-BCH codes have many free parameters which results in many possible choices. Finding a suitable choice of parameters requires an extensive computational search. We simply use the result presented in [BIP 173](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki) without performing the search ourselves. This code is well suited for a base32 encoding. It provides detection guarantee of up to 4 characters in base32 encoding for the input length of 38 characters, has good error detection capabilities for more than 4 errors and is relatively efficient. Moreover, the authors of BIP 173 claim that it was optimized for detecting low numbers of bit inversions which fits well together with the base32 encoding proposed here (see 
-[below](#the-encoding-function) for the reasoning of the specific encoding function).
+BCH codes have many free parameters which results in many possible choices. Finding a suitable choice of parameters requires an extensive computational search. We simply use the result presented in [BIP 173](https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki) without performing the search ourselves. This code is well suited for a base32 encoding. It provides detection guarantee of up to 4 characters in base32 encoding for the input length of 38 characters, has good error detection capabilities for more than 4 errors and is relatively efficient. Moreover, the authors of BIP 173 claim that it was optimized for detecting low numbers of bit inversions which fits well together with the base32 encoding proposed here (see [below](#the-encoding-function) for the reasoning of the specific encoding function).
 
 ### Base32 Encoding
 
@@ -266,24 +263,24 @@ The alphabet should not contain mixed case letters to ease the communication, fo
 
 #### The Encoding Function
 
-The encoding function which maps each 5-bit string to a character of the alphabet was chosen in the way to have few bit inversions for some error types that are expected to be common. As the checksum is optimized for detecting low numbers of bit inversions, the probability of detecting more than 4 errors of these types increases. The types of error considered are
+The encoding function which maps each 5-bit string to a character of the alphabet was chosen in the way to have few bit inversions for some error types that are expected to be common. As the checksum is optimized for detecting low numbers of bit inversions, the probability of detecting more than 4 errors of these types increases. The types of error considered are:
 
 1. mistyping a character by a left or right adjacent character on the keyboard, and
 2. mistyping a character by a similar looking character.
 
-Errors of the first kind were given a priority. The 32-bit [Gray code](https://en.wikipedia.org/wiki/Gray_code) was used to ensure that two elements of the alphabet that are in the same row and adjacent on a QWERTY keyboard differ in exactly one bit. In fact, all possible permutations of the contiguous rows of the QWERTY keyboard consisting of elements from the alphabet, i.e. the rows
+Errors of the first kind were given a priority. The 32-bit [Gray code](https://en.wikipedia.org/wiki/Gray_code) was used to ensure that two elements of the alphabet that are in the same row and adjacent on a QWERTY keyboard differ in exactly one bit. In fact, all possible permutations of the contiguous rows of the QWERTY keyboard consisting of elements from the alphabet, i.e. the rows:
 
 ```
 23456789, qwertyu, op, asdfghjk, zxcvbnm
 ```
 
-fulfil this condition when their concatenation is mapped to the Gray code. Moreover, using the reversed rows and rotations of the concatenations fulfils the same condition. Hence, all these different orderings were considered, and the one that is the best with respect to the second kind of error was chosen. More precisely, the bit representations of any of the pairs<sup>&#8224;</sup>
+fulfil this condition when their concatenation is mapped to the Gray code. Moreover, using the reversed rows and rotations of the concatenations fulfils the same condition. Hence, all these different orderings were considered, and the one that is the best with respect to the second kind of error was chosen. More precisely, the bit representations of any of the pairs<sup>&#8224;</sup>:
 
 ```
 (b, 6), (g, q), (g, 9), (q, 9), (s, 5), (v, u), (z, 2), (q, p), (r, v)
 ```
 
-should differ in at most two bits, and the number of pairs differing in two bits should be as small as possible. The lowest number of pairs differing in two bits is 7. In fact, there are 40 different orderings that fulfil this number. The encoding function `f` defined in the 
+should differ in at most two bits, and the number of pairs differing in two bits should be as small as possible. The lowest number of pairs differing in two bits is 7. In fact, there are 40 different orderings that fulfil this number. The encoding function `f` defined in the
 [specification](#encoding) is just a random choice from these 40 possibilities.
 
 ### Prefix
@@ -303,7 +300,7 @@ One may argue that the amount property of a reclaim transaction is not required 
 
 ## Backwards Compatibility
 
-This change introduces a hard fork because 
+This change introduces a hard fork because:
 
 - balance transactions using the current address format get rejected by nodes following the proposed rules, and vice versa, and
 - reclaim transactions get rejected by nodes following the current protocol.
@@ -316,14 +313,13 @@ This change introduces a hard fork because
 
 [3] G. Castagnoli, S. Brauer, M. Herrmann, “Optimization of cyclic redundancy-check codes with 24 and 32 parity bits”, IEEE Transactions on Communications, Vol. 41 (6), pp. 883 - 892, Jun. 1993
 
-
 ## Appendix
 
 ### Examples
 
 #### Address Computation
 
-In the following, the address for the public key
+In the following, the address for the public key:
 
 ```
 pubkey = 0x0eb0a6d7b862dc35c856c02c47fde3b4f60f2f3571a888b9a8ca7540c6793243
@@ -331,43 +327,43 @@ pubkey = 0x0eb0a6d7b862dc35c856c02c47fde3b4f60f2f3571a888b9a8ca7540c6793243
 
 gets computed.
 
-1. Let
+1. Let:
 
   ```
   H' = SHA-256(pubkey) = 0xc247a42e09e6aafd818821f75b2f5b0de47c8235b580881bd7750c9365993d25
-  ``` 
-  
-  and let `H `be the first 160 bits of `H'`, i.e.,
-  
+  ```
+
+  and let `H `be the first 160 bits of `H'`, i.e.
+
   ```
   H = 0xc247a42e09e6aafd818821f75b2f5b0de47c8235.
   ```
-  
-  The representation of `H` as a sequence of 5-bit integers is
-  
+
+  The representation of `H` as a sequence of 5-bit integers is:
+
   ```
   H_5bit = [24 9 3 26 8 11 16 9 28 26 21 15 27 0 12 8 4 7 27 21 22 11 26 27 1 23 18 7 25 0 17 21].
   ```
-  
-2. Let `CS` be the checksum of `H`, i.e.,
+
+2. Let `CS` be the checksum of `H`, i.e.
 
   ```
   CS = createChecksum(H_5bit) = [21 21 31 11 22 16].
   ```
-  
+
 3. Let `HCS` be the concatenation of `H` and `CS` in 5-bit representation, i.e.
 
   ```
   HCS = [24 9 3 26 8 11 16 9 28 26 21 15 27 0 12 8 4 7 27 21 22 11 26 27 1 23 18 7 25 0 17 21 21 21 31 11 22 16]
   ```
-  
+
 4. Let `B` be the base32 encoding of `HCS`, i.e.
 
   ```
   B = 24cd35u4jdq8szo3pnsqe5dsxwrnazyqqqg5eu.
   ```
-  
-5. Adding the prefix "lsk" to `B` yields the address
+
+5. Adding the prefix "lsk" to `B` yields the address:
 
   ```
   lsk24cd35u4jdq8szo3pnsqe5dsxwrnazyqqqg5eu.
@@ -423,30 +419,32 @@ lsk24dc35u4jdq8szo3pnsqe5dsxwrnazyqqqg5eu   # invalid checksum due to character 
 
 ### Formal Description of the BCH Code
 
-The specification section provides example code for creating and validating the checksum, but not a formal description. This shall be done here (see also the documentation of the [Bitcoin implementation of bech32](https://github.com/bitcoin/bitcoin/blob/5c24d3b98cb7bb0474e14eda8452356b4573879d/src/bech32.cpp#L34) for some details; for example, the representation of the generator polynomial as an array of 32 bit numbers is explained there) . 
+The specification section provides example code for creating and validating the checksum, but not a formal description. This shall be done here (see also the documentation of the [Bitcoin implementation of bech32](https://github.com/bitcoin/bitcoin/blob/5c24d3b98cb7bb0474e14eda8452356b4573879d/src/bech32.cpp#L34) for some details; for example, the representation of the generator polynomial as an array of 32 bit numbers is explained there).
 
 Let **F<sub>32</sub>** be the finite field with 32 elements. We use the representation **F<sub>2</sub>**[x]/(x<sup>5</sup>+x<sup>3</sup>+1) for **F<sub>32</sub>**, i.e., every element in **F<sub>32</sub>** is interpreted as a polynomial with coefficients in **F<sub>2</sub>** modulo x<sup>5</sup>+x<sup>3</sup>+1. Each polynomial is identified by the decimal number whose bit representation matches with the polynomial. For example, the decimal number 23 represents the polynomial x<sup>4</sup>+x<sup>2</sup>+x+1 because the bit representation of 23 equals 10111. Let _g_(x) be the polynomial with coefficients in **F<sub>32</sub>** of the following form:
 
-_g_(x) = x<sup>6</sup> + 29x<sup>5</sup> + 22x<sup>4</sup> + 20x<sup>3</sup> + 21x<sup>2</sup> + 29x + 18. 
+_g_(x) = x<sup>6</sup> + 29x<sup>5</sup> + 22x<sup>4</sup> + 20x<sup>3</sup> + 21x<sup>2</sup> + 29x + 18
 
-_g_(x) is the generator polynomial of the BCH code. Every input for the checksum is interpreted as a polynomial with coefficients in **F<sub>32</sub>** too. For example, the input
+_g_(x) is the generator polynomial of the BCH code. Every input for the checksum is interpreted as a polynomial with coefficients in **F<sub>32</sub>** too. For example, the input:
+
 ```
 d = 0xc247a42e09e6aafd818821f75b2f5b0de47c8235
 ```
-is interpreted as the polynomial
+
+is interpreted as the polynomial:
 
 _d_(x) = 24x<sup>31</sup> + 9x<sup>30</sup> + 3x<sup>29</sup> + … + 25x<sup>3</sup> + 0x<sup>2</sup> + 17x +  21
 
-where each coefficient represents 5 bits of _d_ (see the 
-[example above](#address-computation) for all coefficients). To achieve that a codeword can be represented as the concatenation of the input and the checksum, [systematic encoding](https://en.wikipedia.org/wiki/Systematic_code) is used. In this specific case, the checksum polynomial, _chk_(x), can be computed by 
+where each coefficient represents 5 bits of _d_ (see the
+[example above](#address-computation) for all coefficients). To achieve that a codeword can be represented as the concatenation of the input and the checksum, [systematic encoding](https://en.wikipedia.org/wiki/Systematic_code) is used. In this specific case, the checksum polynomial, _chk_(x), can be computed by:
 
 _chk_(x) = - (_d_(x) \* x<sup>6</sup> mod _g_(x))
 
-for an input polynomial _d_(x). Then, the whole codeword, represented as a polynomial _c_(x), has the form
+for an input polynomial _d_(x). Then, the whole codeword, represented as a polynomial _c_(x), has the form:
 
-_c_(x) = _d_(x) \* x<sup>6</sup> + _chk_(x).
+_c_(x) = _d_(x) \* x<sup>6</sup> + _chk_(x)
 
-A polynomial _p_(x) with coefficients in **F<sub>32</sub>** is then a valid codeword if and only if 
+A polynomial _p_(x) with coefficients in **F<sub>32</sub>** is then a valid codeword if and only if:
 
 0 = _p_(x) mod _g_(x)
 
@@ -454,15 +452,15 @@ holds. However, two more tweaks were used for the design of the bech32 checksum.
 
 #### Adding a Leading Term to the Input Polynomial
 
-A leading term is added to the input polynomial in bech32. More precisely, if _k_ is the length of the input sequence of 5-bit integers, then let
+A leading term is added to the input polynomial in bech32. More precisely, if _k_ is the length of the input sequence of 5-bit integers, then let:
 
-_d’_(x) = x<sup>_k_</sup> + _d_(x).
+_d’_(x) = x<sup>_k_</sup> + _d_(x)
 
-The polynomial _d’_(x) is then used for the checksum computation instead of _d_(x). This ensures that the checksum differs if some zeros are added to the left of the input sequence of 5-bit integers. E.g., the inputs
+The polynomial _d’_(x) is then used for the checksum computation instead of _d_(x). This ensures that the checksum differs if some zeros are added to the left of the input sequence of 5-bit integers. E.g., the inputs:
 
 `[5, 21, 31]` and `[0, 0, 5, 21, 31]`
 
-yield different checksums in bech32. Here, this property is not needed due the fixed length input, but was kept to be compatible with bech32. Since the input sequence has always length 32, we always have
+yield different checksums in bech32. Here, this property is not needed due the fixed length input, but was kept to be compatible with bech32. Since the input sequence has always length 32, we always have:
 
 _d’_(x) = x<sup>32</sup> + _d_(x)
 
@@ -470,25 +468,25 @@ in our case.
 
 #### Codewords Are not Multiples of Generator Polynomial
 
-The second tweak is to add 1 to _d’_(x) * x<sup>6</sup> when computing the checksum, i.e., the checksum is computed as 
+The second tweak is to add 1 to _d’_(x) * x<sup>6</sup> when computing the checksum, i.e., the checksum is computed as:
 
-_chk’_(x) = - (_d’_(x) \* x<sup>6</sup> + 1 mod _g_(x)).
+_chk’_(x) = - (_d’_(x) \* x<sup>6</sup> + 1 mod _g_(x))
 
-Then, a polynomial _p_(x) with coefficients in **F<sub>32</sub>** is a valid codeword if and only if
+Then, a polynomial _p_(x) with coefficients in **F<sub>32</sub>** is a valid codeword if and only if:
 
 -1 = _p_(x) mod _g_(x)
 
-holds (note that 1=-1 holds in **F<sub>32</sub>**). This avoids that appending some zeros to the right of a codeword yields again a valid codeword. If the checksum were computed by 
+holds (note that 1=-1 holds in **F<sub>32</sub>**). This avoids that appending some zeros to the right of a codeword yields again a valid codeword. If the checksum were computed by:
 
-_chk_(x) = - (_d_(x) \* x<sup>6</sup> mod _g_(x)), 
+_chk_(x) = - (_d_(x) \* x<sup>6</sup> mod _g_(x))
 
-then appending _n_ zeros to the right of a valid codeword would yield again a valid codeword. This is because 
+then appending _n_ zeros to the right of a valid codeword would yield again a valid codeword. This is because:
 
-0 = _c_(x) mod _g_(x) &nbsp;	implies &nbsp;	0 = _c_(x) \* x<sup>_n_</sup> mod _g_(x).
+0 = _c_(x) mod _g_(x) &nbsp;	implies &nbsp;	0 = _c_(x) \* x<sup>_n_</sup> mod _g_(x)
 
 This property is not strictly required for this proposal due to the fixed length of codewords, but was kept to be compatible with bech32.
 
 ## Notes
 
 [<sup>&#8224;</sup>]:
-     Note that this list of pairs of similar looking characters is based on subjective perception since no scientific result is known to the author. 
+    Note that this list of pairs of similar looking characters is based on subjective perception since no scientific result is known to the author.
