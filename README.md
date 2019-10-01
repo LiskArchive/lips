@@ -21,7 +21,7 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0007](proposals/lip-0007.md) | Use a consistent and informative versioning scheme                                             | Maciej Baj                                   | Informational   | Active        |
 | [0008](proposals/lip-0008.md) | Remove pre-hashing for block and transaction signatures                                        | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0009](proposals/lip-0009.md) | Mitigate transaction replay on different chains                                                | Manu Nelamane Siddalingegowda, Iker Alustiza | Standards Track | Draft         |
-| [0010](proposals/lip-0010.md) | Use SHA3-256 hash of block header as blockID                                                   | Andreas Kendziorra                           | Standards Track | Draft         |
+| [0010](proposals/lip-0010.md) | Use SHA3-256 hash of block header as blockID                                                   | Andreas Kendziorra                           | Standards Track | Withdrawn     |
 | [0011](proposals/lip-0011.md) | Implement extensible data persistence model                                                    | Nazar Hussain                                | Informational   | Active        |
 | [0012](proposals/lip-0012.md) | Remove redundant properties from transaction objects                                           | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0013](proposals/lip-0013.md) | Replace static fee system by dynamic fee system                                                | Iker Alustiza                                | Standards Track | Draft         |
@@ -30,4 +30,5 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0016](proposals/lip-0016.md) | Implement fee estimation algorithm for dynamic fee system                                      | Iker Alustiza                                | Standards Track | Draft         |
 | [0017](proposals/lip-0017.md) | Make multisignature accounts more flexible, prevent spamming, and prevent signature mutability | Andreas Kendziorra                           | Standards Track | Draft         |
 | [0018](proposals/lip-0018.md) | Use base32 encoding of long hash of public key plus checksum for address                       | Andreas Kendziorra                           | Standards Track | Draft         |
-| [0019](proposals/lip-0019.md) | Use SHA-256 hash of transaction header as transactionID                                        | Andreas Kendziorra                           | Standards Track | Draft         |
+| [0019](proposals/lip-0019.md) | Use full SHA-256 hash of transaction header as transactionID                                   | Andreas Kendziorra                           | Standards Track | Draft         |
+| [0020](proposals/lip-0020.md) | Use full SHA-256 hash of block header as blockID                                               | Andreas Kendziorra                           | Standards Track | Draft         |
