@@ -1,11 +1,11 @@
 ```
 LIP: <LIP number>
-Title: Use full SHA-256 hash of transaction as transactionID
+Title: Use SHA-256 hash of transaction header as transactionID
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/use-sha-256-hash-of-transaction-header-as-transactionid/35
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2019-09-06
+Updated: 2019-10-01
 ```
 
 ## Abstract
