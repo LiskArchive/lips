@@ -47,8 +47,6 @@ We introduce a new transaction type: proof of misbehavior (abbreviated PoM in th
 
 This transaction contains the information necessary to prove that a delegate has breached the BFT protocol. Beside the mandatory properties of a transaction (`type`, `senderPublicKey`, etc.), the PoM needs the following properties:
 
-
-
 *   ``asset.header1``: the header of a block.
 *   ``asset.header2``: the header of a second block. 
 
@@ -56,8 +54,6 @@ This transaction contains the information necessary to prove that a delegate has
 #### Validity of a PoM Transaction
 
 To include a PoM transaction in a block at height `h`, we verify the validity of the asset property by checking the conditions below:
-
-
 
 *   `|header1.height - h| < 260,000`.
 *   `|header2.height - h| < 260,000`.
@@ -91,7 +87,6 @@ If `pomHeights` then has length 4, the `isBanned` property of the misbehaving de
 
 A reward is added to the account sending the PoM. This amount is subtracted from the account balance of the misbehaving delegate. We set the reward to be equal to the regular block reward at the height of inclusion (3 LSK when writing this LIP). In the unlikely event that the misbehaving account has balance less than the regular block reward, then the reward is reduced to equal that balance. To be precise: 
 
-
 ```
 let A be the account of the misbehaving delegate
 
@@ -120,7 +115,6 @@ getPoMAssetBytes(asset):
 This proposal modifies the use of the delegate weight for the selection of forging delegates`.` Suppose that round `r` starts at height `h`. If the delegate `D` is punished at height `h` then `D.weight` is replaced by 0 for the purpose of selecting the forging delegates for round `r`. 
 
 The BFT LIP specifies that the delegate weights used for selecting the forging delegates have to be delayed by two rounds. The above paragraph implies that the following is done at the beginning of round `r`: 
-
 
 *   Let `W(D)` be the weight of delegate `D` from the beginning of round `r-2`.
 *   If `D` is punished at the beginning of round `r`, set `W(D)=0`.
@@ -240,6 +234,3 @@ If the implementation of this proposal is done at height `h` then we additionall
 ## Reference Implementation
 
 TBD
-
-
-<!-- Docs to Markdown version 1.0β17 -->
