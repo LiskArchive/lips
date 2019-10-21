@@ -74,8 +74,7 @@ At first, we want to list the main desired properties of a voting system for Lis
 Another property that may be intuitively named is “fairness”. This property is very subjective and is hard to precisely define, but we try to address it in the next subsection. 
 
 
-### One Voting Lisk – 
-Power
+### One Voting Lisk – One Vote Power
 
 We believe that a first step to a more “fair” system is the “1 LSK = 1 vote power” principle. This principle gives accounts with similar amounts of tokens a similar impact on the selection mechanism, regardless of the fact that those accounts take part of a voting group or not. The proposed system includes this mechanism as one LSK can only be locked to one delegate. This contrasts with the current voting system where accounts can vote for many delegates with their total balance as vote weight. 
 
