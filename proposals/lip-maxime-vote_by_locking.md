@@ -23,7 +23,6 @@ That LIP and the corresponding forum thread contain valuable information used to
 We encourage community members to read that LIP in order to understand the similarities and differences between these proposals. 
 
 
-
 ## Copyright
 
 This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
@@ -32,8 +31,6 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 ## Motivation
 
 In the current voting system, every account holder can vote for up to 101 delegates. The vote weight of each vote is the balance of the voting account. The current voting system suffers from several shortcomings. 
-
-
 
 *   **Incentive to form coalitions:** As the vote weight is independent of the number of votes, there is a high incentive for delegates to form a coalition or pool by voting for each other. The Lisk blockchain aims to be a trustless system, relying on decentralisation for its security. As such, the voting system should give no economic incentive to form groups.
 *   **High entry barrier:** There is currently a very high barrier for anybody to become an active delegate. For example, a delegate with support of roughly 5% of the total amount of LSK might not able to become an active delegate. This contradicts a core principle of PoS asserting that the probability of an account getting (or, as in the case of DPoS, delegating) a forging slot is according to the amount of coins it holds.
@@ -55,8 +52,6 @@ It is important to acknowledge that one perfect voting system for Delegated Proo
 
 ### Technical Glossary
 
-
-
 *   Delegate weight: the weight of the delegate in the process of choosing the block forgers. The way this weight is calculated is described in the 
 [specification section](#specification). This proposal does not modify the way we use the delegate weights to select forging delegates.
 *   Voting: the way LSK holders use to show support for a delegate. Users can vote for delegates and those votes impact the delegate weight.
@@ -70,8 +65,6 @@ It is important to acknowledge that one perfect voting system for Delegated Proo
 ### Desired Properties
 
 At first, we want to list the main desired properties of a voting system for Lisk. The following properties are not listed in order of importance.
-
-
 
 *   **Decentralization:** In order to have a truly decentralized network, the delegates should act as independent entities and the voting system should give no incentive for delegates to form coalitions. Instead, it should foster competition for the active delegate ranks. The future implementation of the [BFT consensus protocol](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md) will provide block finality to the Lisk protocol. However, it assumes that there are at least 68 delegates honestly following the protocol. That is a further reason to encourage influence groups or coalitions to remain small and independent.
 *   **Flexibility:** The voting system should allow users to vote for different delegates and to tune their votes to suitably reflect their voting preferences. In turn, this encourages the participation of stakeholders in the voting system.
@@ -95,8 +88,6 @@ This proposal introduces a mechanism locking tokens used for voting. The voting 
 
 The proposed mechanism works as follows: 
 
-
-
 *   Any amounts of LSK used for voting cannot be used for any other transactions. This includes but is not limited to balance transfers, further voting or fees. 
 *   To use those LSK, the account has to submit a vote transaction with a negative amount (also called “unvote”). This will start the unlocking procedure and the LSK will be ready for unlock 2000 blocks later (roughly 5 hours and 30 minutes).
 
@@ -104,8 +95,6 @@ The proposed mechanism works as follows:
 #### Explicit Unlock Mechanism
 
 To recover the locked tokens, the account has to submit two transactions. 
-
-
 
 *   First, the tokens have to be unvoted. This is done with the new vote transaction, the transaction just needs to contain a negative amount. 
     *   The tokens are now in an “unlocking” state. They have been unvoted but are not usable yet.
@@ -126,8 +115,6 @@ This new voting system needs a new vote transaction. The way voting is done is d
 To cast a vote or unvote, we propose to use the Lisk address of the delegate, as opposed to the public key in the current implementation. This will make the transaction smaller and hence cheaper assuming [LIP 0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md) is implemented.
 
 The amount of each vote has to be specified. This amount can be positive (for a vote) or negative (for an unvote).  We also impose that voting is done in multiples of 10 LSK. This will prevent the number of transactions from becoming too high, and hence avoid over encumbering the network. This does not affect the user experience much and has a big positive impact on the network.
-
- 
 
 These changes will make the voting process more **flexible**. [LIP 0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md) will also make voting much cheaper on average. We believe that the increased flexibility and the decreased fee will improve the participation of Lisk users in the voting procedure.
 
@@ -177,8 +164,6 @@ For those reasons, we believe the current proposal should be preferred to the �
 
 
 ## Specification
-
-  
 
 
 ### Delegate Weight
@@ -231,7 +216,6 @@ This means that a delegate banned during a particular round cannot forge in any 
 
 This proposal introduces a locking mechanism for Lisk. Locked tokens cannot be used for any other transactions. The balance property of the account now denotes the non-locked tokens, or the  “available balance”. This means that:
 
-
         Total tokens owned = balance + sum of locked amounts.
 
 
@@ -239,16 +223,12 @@ This proposal introduces a locking mechanism for Lisk. Locked tokens cannot be u
 
 Every account state now has two new properties. Both properties contain objects used to record locked tokens.
 
-
-
 1. `account.votes`: this property is an array of vote objects, it records the current votes by the account. A vote object is an object of size 2 with keys `delegateAddress` and `amount`.
     1. `delegateAddress` is the Lisk address of the delegate the vote is for.
     2. `amount` is a 64 bit signed integer. It represents the number of Beddows voted for the delegate. This number is non-negative. This number is updated with vote transactions.
 
   `account.votes` is ordered by lexicographical order of `delegateAddress`.
   The size of this array is at most 10.
-
-
 
 2. `account.unlocking`: this property is an array of unlocking objects. Unvoted but not yet unlocked tokens are recorded in this property. An unlock object is an object of size 3 with keys `delegateAddress`, `amount` and `unvoteHeight`.
     1.  `delegateAddress` is the Lisk address of the delegate being unvoted.
@@ -262,8 +242,6 @@ Every account state now has two new properties. Both properties contain objects 
 ### New Vote Transaction
 
 We introduce a new vote transaction. Beside the mandatory properties (`type`, `senderPublicKey`, etc.), the transaction has the following property:
-
-
 
 *   `asset.votes`: an array of votes. Each vote is an object of size 2 with keys `delegateAddress` and `amount`.
     *   `delegateAddress` is the Lisk address of the delegate the vote is for.
@@ -322,7 +300,6 @@ Then all votes with positive amounts are applied in the following manner:
 
 The asset property of a vote transaction has to be serialized as in the function `getAssetBytes` below:
 
-
 ```
 getAssetBytes(asset):
     let buffer be an empty byte buffer 
@@ -336,7 +313,6 @@ getAssetBytes(asset):
 #### Undoing a Vote Transaction
 
 When undoing a block containing a vote transaction, the following is done for each vote in `asset.votes`:
-
 
 *   If the vote has a positive amount, this amount is added to the account balance.
 *   Update the corresponding entry in `account.votes`.
@@ -360,8 +336,6 @@ An unlock object has the same format as the ones present in the `account.unlocki
 
 To assert the validity of the asset property of an unlock transaction, we check the following rules:
 
-
-
 *   Every unlock object in `asset.unlockObjects` is valid. Let `account` be the account of the sender of the unlock transaction, an unlock object `U` is valid if:
     *   There exists an element `U'` in `account.unlocking` that is equal to `U`.
     *   The object has waited its locking period. This is verified according to the following logic.
@@ -380,7 +354,6 @@ To assert the validity of the asset property of an unlock transaction, we check 
     	else
                 return true
         ```
-
 
 *   If an object `U` appears k times in `asset.unlockObjects`, then it must appear at least k times in `account.unlocking`.
 *   `asset.unlockObjects` has at most 20 elements. This is implied by the previous bullet point, but this check can be done without access to the database.
@@ -417,8 +390,6 @@ Undoing an unlock transaction consists of adding all the unlock objects to the `
 
 For migrating from the old voting system to the new voting system, we propose to perform the migration in two steps. 
 
-
-
 *   First, starting from round r1 we activate the new transactions, 
 the new account properties, the locking mechanism and the new balance definition. 
 The new properties of delegate accounts are initialized with `consecutiveMissedBlocks` = 0, 
@@ -447,8 +418,6 @@ TBD
 
 ### Example of Delegate Weight
 
-
-
 1. Delegate has 100 LSK self-votes and 100 LSK other votes:
 
         delegates weight = 200 LSK = min {1000 LSK, 200 LSK}.
@@ -470,7 +439,6 @@ TBD
 
 With the current address system, 
 the asset property of a vote transaction could for example be:
-
 
 ```
 "asset": { "votes": [ {"delegateAddress": 16010222168256538112L, "amount": 50 0000 0000},
