@@ -30,7 +30,7 @@ In the current Lisk implementation, delegates only have popularity incentives to
 
 ### Voter accountability
 
-Voting is an important component of a healthy Lisk network. Voters should choose their delegates wisely and try to promote delegates who will maintain an effective setup and keep a secure network. The current proposal introduces a consequence for voters whose delegate misbehave. This consequence is milder than the one inflicted upon the misbehaving delegate.
+Voting is an important component of a healthy Lisk network. Voters should choose their delegates wisely and try to promote delegates who will maintain an effective setup and keep a secure network. The current proposal introduces a consequence for voters whose delegate misbehaves. This consequence is milder than the one inflicted upon the misbehaving delegate.
 
 
 ## Specification
