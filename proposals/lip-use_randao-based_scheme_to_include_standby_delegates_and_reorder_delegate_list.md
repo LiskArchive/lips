@@ -4,8 +4,8 @@ Title: Use Randao-based scheme to include standby delegates and reorder delegate
 Author: Iker Alustiza <iker@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/use-randao-based-scheme-to-include-standby-delegates-and-reorder-delegate-list/
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2019-09-30
+Updated: 2019-10-30
 ```
 
 ## Abstract
