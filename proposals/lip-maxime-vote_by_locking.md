@@ -4,8 +4,8 @@ Title: Introduce vote locking periods and new vote weight definition
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/introduce-vote-locking-periods-and-new-vote-weight-definition/191
 Type: Standards Track
-Created: -
-Updated: -
+Created: 2019-09-30
+Updated: 2019-10-30
 ```
 
 ## Abstract
