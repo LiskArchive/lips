@@ -4,9 +4,9 @@ Title: Punish BFT violations
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/punish-bft-violations/192
 Type: Standards Track
-Created: -
-Updated: -
-Requires: 0014, "Introduce vote locking periods and new vote weight definition"
+Created: 2019-09-30
+Updated: 2019-10-30
+Requires: 0014, 0023
 ```
 
 ## Abstract
