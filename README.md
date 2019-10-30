@@ -35,3 +35,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0021](proposals/lip-0021.md) | Change to one vote per account                                                                 | Jan Hackfeld                                 | Standards Track | Withdrawn     |
 | [0022](proposals/lip-0022.md) | Use Randao-based scheme to include standby delegates and reorder delegate list                 | Iker Alustiza                                | Standards Track | Draft         |
 | [0023](proposals/lip-0023.md) | Introduce vote locking periods and new vote weight definition                                  | Maxime Gagnebin                              | Standards Track | Draft         |
+| [0024](proposals/lip-0024.md) | Punish BFT violations                                                                          | Maxime Gagnebin                              | Standards Track | Draft         |
