@@ -74,18 +74,17 @@ function test1_basic() {
       test1Passed = false;
     }
   }
-  if (bft.getHeightFinalized() != Math.max(maxHeight - 135)) {
+  if (bft.getChainMaxHeightFinalized() != Math.max(maxHeight - 135)) {
     console.log(
       "Test 1.6 failed: incorrect height finalized, expected: ",
       Math.max(maxHeight - 135),
       " returned: ",
-      bft.getHeightFinalized()
+      bft.getChainMaxHeightFinalized()
     );
     test1Passed = false;
   }
   const bft2 = new LiskBFT();
   for (let h = 0; h <= 400; h++) {
-    // constructor(blockID, height,heightPrevious,heightPrevoted,heightSinceActive,delegatePubKey) {
     let b = new BlockHeader(h, h, h - 100, Math.max(h - 68, 0), 0, h % 100);
     bft2.addBlockheader(b);
   }
@@ -180,87 +179,87 @@ function test2_headersContradicting() {
   b1.delegatePubKey = 1;
   b1.blockID = 1;
   b1.height = 5;
-  b1.heightPrevoted = 0;
-  b1.heightPrevious = 0;
+  b1.maxHeightPrevoted = 0;
+  b1.maxHeightPreviouslyForged = 0;
   b2.delegatePubKey = 1;
   b2.blockID = 2;
   b2.height = 5;
-  b2.heightPrevoted = 0;
-  b2.heightPrevious = 0;
+  b2.maxHeightPrevoted = 0;
+  b2.maxHeightPreviouslyForged = 0;
   if (
     !bft.checkHeadersContradicting(b1, b2) ||
     !bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log(
-      "Test 2.3 failed: two different blocks by the same delegate at the same height and heightPrevoted are contradicting"
+      "Test 2.3 failed: two different blocks by the same delegate at the same height and maxHeightPrevoted are contradicting"
     );
     test2Passed = false;
   }
   b1.delegatePubKey = 1;
   b1.blockID = 1;
   b1.height = 5;
-  b1.heightPrevoted = 0;
-  b1.heightPrevious = 0;
+  b1.maxHeightPrevoted = 0;
+  b1.maxHeightPreviouslyForged = 0;
   b2.delegatePubKey = 1;
   b2.blockID = 2;
   b2.height = 6;
-  b2.heightPrevoted = 0;
-  b2.heightPrevious = 0;
+  b2.maxHeightPrevoted = 0;
+  b2.maxHeightPreviouslyForged = 0;
   if (
     !bft.checkHeadersContradicting(b1, b2) ||
     !bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log(
-      "Test 2.4 failed: blocks are contradicting due to wrong heightPrevious"
+      "Test 2.4 failed: blocks are contradicting due to wrong maxHeightPreviouslyForged"
     );
     test2Passed = false;
   }
   b1.delegatePubKey = 1;
   b1.blockID = 1;
   b1.height = 5;
-  b1.heightPrevoted = 0;
-  b1.heightPrevious = 0;
+  b1.maxHeightPrevoted = 0;
+  b1.maxHeightPreviouslyForged = 0;
   b2.delegatePubKey = 1;
   b2.blockID = 2;
   b2.height = 5;
-  b2.heightPrevoted = 1;
-  b2.heightPrevious = 5;
+  b2.maxHeightPrevoted = 1;
+  b2.maxHeightPreviouslyForged = 5;
   if (
     bft.checkHeadersContradicting(b1, b2) ||
     bft.checkHeadersContradicting(b2, b1)
   ) {
     console.log(
-      "Test 2.5 failed: blocks not contradicting as heightPrevoted increased"
+      "Test 2.5 failed: blocks not contradicting as maxHeightPrevoted increased"
     );
     test2Passed = false;
   }
   b1.delegatePubKey = 1;
   b1.blockID = 1;
   b1.height = 5;
-  b1.heightPrevoted = 0;
-  b1.heightPrevious = 51;
+  b1.maxHeightPrevoted = 0;
+  b1.maxHeightPreviouslyForged = 51;
   b2.delegatePubKey = 1;
   b2.blockID = 2;
   b2.height = 32;
-  b2.heightPrevoted = 0;
-  b2.heightPrevious = 50;
+  b2.maxHeightPrevoted = 0;
+  b2.maxHeightPreviouslyForged = 50;
   if (
     !bft.checkHeadersContradicting(b1, b2) ||
     !bft.checkHeadersContradicting(b2, b1)
   ) {
-    console.log("Test 2.6 failed: block contains wrong heightPrevious");
+    console.log("Test 2.6 failed: block contains wrong maxHeightPreviouslyForged");
     test2Passed = false;
   }
   b1.delegatePubKey = 1;
   b1.blockID = 1;
   b1.height = 75;
-  b1.heightPrevoted = 34;
-  b1.heightPrevious = 51;
+  b1.maxHeightPrevoted = 34;
+  b1.maxHeightPreviouslyForged = 51;
   b2.delegatePubKey = 1;
   b2.blockID = 2;
   b2.height = 135;
-  b2.heightPrevoted = 33;
-  b2.heightPrevious = 75;
+  b2.maxHeightPrevoted = 33;
+  b2.maxHeightPreviouslyForged = 75;
   if (
     !bft.checkHeadersContradicting(b1, b2) ||
     !bft.checkHeadersContradicting(b2, b1)
@@ -271,13 +270,13 @@ function test2_headersContradicting() {
   b1.delegatePubKey = 1;
   b1.blockID = 1;
   b1.height = 75;
-  b1.heightPrevoted = 34;
-  b1.heightPrevious = 51;
+  b1.maxHeightPrevoted = 34;
+  b1.maxHeightPreviouslyForged = 51;
   b2.delegatePubKey = 1;
   b2.blockID = 2;
   b2.height = 135;
-  b2.heightPrevoted = 34;
-  b2.heightPrevious = 75;
+  b2.maxHeightPrevoted = 34;
+  b2.maxHeightPreviouslyForged = 75;
   if (
     bft.checkHeadersContradicting(b1, b2) ||
     bft.checkHeadersContradicting(b2, b1)
@@ -288,13 +287,13 @@ function test2_headersContradicting() {
   b1.delegatePubKey = 1;
   b1.blockID = 1;
   b1.height = 75;
-  b1.heightPrevoted = 34;
-  b1.heightPrevious = 75;
+  b1.maxHeightPrevoted = 34;
+  b1.maxHeightPreviouslyForged = 75;
   b2.delegatePubKey = 1;
   b2.blockID = 2;
   b2.height = 135;
-  b2.heightPrevoted = 34;
-  b2.heightPrevious = 75;
+  b2.maxHeightPrevoted = 34;
+  b2.maxHeightPreviouslyForged = 75;
   if (
     bft.checkHeadersContradicting(b1, b2) ||
     bft.checkHeadersContradicting(b2, b1)
@@ -305,13 +304,13 @@ function test2_headersContradicting() {
   b1.delegatePubKey = 1;
   b1.blockID = 1;
   b1.height = 75;
-  b1.heightPrevoted = 34;
-  b1.heightPrevious = 80;
+  b1.maxHeightPrevoted = 34;
+  b1.maxHeightPreviouslyForged = 80;
   b2.delegatePubKey = 1;
   b2.blockID = 2;
   b2.height = 135;
-  b2.heightPrevoted = 34;
-  b2.heightPrevious = 80;
+  b2.maxHeightPrevoted = 34;
+  b2.maxHeightPreviouslyForged = 80;
   if (
     bft.checkHeadersContradicting(b1, b2) ||
     bft.checkHeadersContradicting(b2, b1)
@@ -347,8 +346,8 @@ function test3_exampleEos() {
   const correctPrevotes1 = [0, 3, 2, 1, 2, 2, 3, 2, 1];
   const correctPrecommits1 = [0, 1, 0, 0, 0, 0, 0, 0, 0];
   const correctHeightFinalized1 = 0;
-  if (bft.getHeightFinalized() != correctHeightFinalized1) {
-    console.log("Test 3.1 failed: incorrect chainHeightFinalized");
+  if (bft.getChainMaxHeightFinalized() != correctHeightFinalized1) {
+    console.log("Test 3.1 failed: incorrect chainMaxHeightFinalized");
     test3Passed = false;
   }
   for (let i = 1; i <= 8; i++) {
@@ -385,8 +384,8 @@ function test3_exampleEos() {
   const correctPrevotes2 = [0, 1, 2, 3, 2, 2, 1, 2, 1];
   const correctPrecommits2 = [0, 0, 0, 1, 0, 0, 0, 0, 0];
   const correctHeightFinalized2 = 0;
-  if (bft.getHeightFinalized() != correctHeightFinalized1) {
-    console.log("Test 3.4 failed: incorrect chainHeightFinalized");
+  if (bft.getChainMaxHeightFinalized() != correctHeightFinalized1) {
+    console.log("Test 3.4 failed: incorrect chainMaxHeightFinalized");
     test3Passed = false;
   }
   for (let i = 1; i <= 8; i++) {
@@ -433,28 +432,28 @@ function test4_addBlockheader() {
   }
   let h1 = startHeight + 302;
   let h2 = startHeight + 303;
-  // Invalid heightPrevoted not detected if <=302 headers
+  // Invalid maxHeightPrevoted not detected if <=302 headers
   try {
     b[h1] = new BlockHeader(h1, h1, h1 - 101, h1 - 100, 0, h1 % 101);
     bft.addBlockheader(b[h1]);
   } catch (e) {
     console.log(
-      "Test 4.2 failed: rejected block due to heightPrevoted although only <=302 headers stored."
+      "Test 4.2 failed: rejected block due to maxHeightPrevoted although only <=302 headers stored."
     );
   }
-  // Invalid heightPrevoted must be detected if >=303 headers
+  // Invalid maxHeightPrevoted must be detected if >=303 headers
   b[h2] = new BlockHeader(h2, h2, h2 - 101, Math.max(h2 - 65, 0), 0, h2 % 101);
   try {
     bft.addBlockheader(b[h2]);
     test4Passed = false;
-    console.log("Test 4.3 failed: accepted block with invalid heightPrevoted.");
+    console.log("Test 4.3 failed: accepted block with invalid maxHeightPrevoted.");
   } catch (e) {}
   bft.removeBlockheadersToHeight(h2 - 1);
   b[h2] = new BlockHeader(h2, h2, h2 - 102, Math.max(h2 - 68, 0), 0, h2 % 101);
   try {
     bft.addBlockheader(b[h2]);
     test4Passed = false;
-    console.log("Test 4.4 failed: accepted block with invalid heightPrevious.");
+    console.log("Test 4.4 failed: accepted block with invalid maxHeightPreviouslyForged.");
   } catch (e) {}
   b[h2] = new BlockHeader(h2, h2, h2 - 101, Math.max(h2 - 68, 0), 0, h2 % 101);
   try {
@@ -462,70 +461,70 @@ function test4_addBlockheader() {
     bft.addBlockheader(b[h2]);
   } catch (e) {
     test4Passed = false;
-    console.log("Test 4.5 failed: heightPrevoted false after removing blocks.");
+    console.log("Test 4.5 failed: maxHeightPrevoted false after removing blocks.");
   }
   let h3 = startHeight + 538;
   for (let h = h2 + 1; h <= h3; h++) {
     bft.addBlockheader(b[h]);
   }
   let curHeightFinalized = h3 - 67 - 68;
-  if (bft.getHeightFinalized() != curHeightFinalized) {
+  if (bft.getChainMaxHeightFinalized() != curHeightFinalized) {
     test4Passed = false;
     console.log(
       "Test 4.6 failed: heightFinalized incorrect. Expected: ",
       curHeightFinalized,
       " Returned: ",
-      bft.getHeightFinalized()
+      bft.getChainMaxHeightFinalized()
     );
   }
   for (let h = h3 + 1; h <= hMax; h++) {
-    b[h].heightPrevious = h - 100;
+    b[h].maxHeightPreviouslyForged = h - 100;
     bft.addBlockheader(b[h]);
   }
-  if (bft.getHeightFinalized() != curHeightFinalized) {
+  if (bft.getChainMaxHeightFinalized() != curHeightFinalized) {
     test4Passed = false;
     console.log(
       "Test 4.7 failed: heightFinalized incorrect. Expected: ",
       curHeightFinalized,
       " Returned: ",
-      bft.getHeightFinalized()
+      bft.getChainMaxHeightFinalized()
     );
   }
   bft.removeBlockheadersToHeight(h3);
   let curHeightPrevoted = h3 - 68;
-  if (bft.getHeightPrevoted() != curHeightPrevoted) {
+  if (bft.getChainMaxHeightPrevoted() != curHeightPrevoted) {
     test4Passed = false;
     console.log(
-      "Test 4.8 failed: heightPrevoted incorrect. Expected: ",
+      "Test 4.8 failed: maxHeightPrevoted incorrect. Expected: ",
       curHeightPrevoted,
       " Returned: ",
-      bft.getHeightPrevoted()
+      bft.getChainMaxHeightPrevoted()
     );
   }
-  // No further commits as heightPrevious=height-67 so that all bloccks only get 67 Prevotes
+  // No further commits as maxHeightPreviouslyForged=height-67 so that all bloccks only get 67 Prevotes
   for (let h = h3 + 1; h <= hMax; h++) {
-    b[h].heightPrevious = h - 67;
-    b[h].heightPrevoted = curHeightPrevoted;
+    b[h].maxHeightPreviouslyForged = h - 67;
+    b[h].maxHeightPrevoted = curHeightPrevoted;
     bft.addBlockheader(b[h]);
   }
-  if (bft.getHeightPrevoted() != curHeightPrevoted) {
+  if (bft.getChainMaxHeightPrevoted() != curHeightPrevoted) {
     test4Passed = false;
     console.log(
-      "Test 4.9 failed: heightPrevoted incorrect. Expected: ",
+      "Test 4.9 failed: maxHeightPrevoted incorrect. Expected: ",
       curHeightPrevoted,
       " Returned: ",
-      bft.getHeightPrevoted()
+      bft.getChainMaxHeightPrevoted()
     );
   }
-  // Removing last 202 blocks should not change heightPrevoted or heightFinalized as these blocks do not increase these values
+  // Removing last 202 blocks should not change maxHeightPrevoted or heightFinalized as these blocks do not increase these values
   bft.removeBlockheadersToHeight(hMax - 202);
   if (
-    bft.getHeightPrevoted() != curHeightPrevoted ||
-    bft.getHeightFinalized() != curHeightFinalized
+    bft.getChainMaxHeightPrevoted() != curHeightPrevoted ||
+    bft.getChainMaxHeightFinalized() != curHeightFinalized
   ) {
     test4Passed = false;
     console.log(
-      "Test 4.10 failed: heightPrevoted or heightFinalized incorrect."
+      "Test 4.10 failed: maxHeightPrevoted or heightFinalized incorrect."
     );
   }
   // Remove all blocks up to startHeight+maxNumBlocks-500,
@@ -533,56 +532,56 @@ function test4_addBlockheader() {
   bft.removeBlockheadersToHeight(hMax - 500);
   curHeightPrevoted = hMax - 500 - 68;
   for (let h = hMax - 499; h <= hMax - 202; h++) {
-    b[h].heightPrevious = h;
-    b[h].heightPrevoted = curHeightPrevoted;
+    b[h].maxHeightPreviouslyForged = h;
+    b[h].maxHeightPrevoted = curHeightPrevoted;
     bft.addBlockheader(b[h]);
   }
   for (let h = hMax - 201; h <= hMax - 201 + 66; h++) {
     try {
-      b[h].heightPrevious = h - 68;
-      b[h].heightPrevoted = curHeightPrevoted;
+      b[h].maxHeightPreviouslyForged = h - 68;
+      b[h].maxHeightPrevoted = curHeightPrevoted;
       bft.addBlockheader(b[h]);
     } catch (e) {
       break;
     }
   }
-  // After 67 additional blocks the heightPrevoted has not increased
+  // After 67 additional blocks the maxHeightPrevoted has not increased
   if (
-    bft.getHeightPrevoted() != curHeightPrevoted ||
-    bft.getHeightFinalized() != curHeightFinalized
+    bft.getChainMaxHeightPrevoted() != curHeightPrevoted ||
+    bft.getChainMaxHeightFinalized() != curHeightFinalized
   ) {
     test4Passed = false;
     console.log(
-      "Test 4.11 failed: heightPrevoted or heightFinalized incorrect.",
-      bft.getHeightPrevoted(),
+      "Test 4.11 failed: maxHeightPrevoted or heightFinalized incorrect.",
+      bft.getChainMaxHeightPrevoted(),
       curHeightPrevoted,
-      bft.getHeightFinalized(),
+      bft.getChainMaxHeightFinalized(),
       curHeightFinalized
     );
   }
-  // Add block 68 to current chain, no the heightPrevoted must increase
+  // Add block 68 to current chain, no the maxHeightPrevoted must increase
   let h4 = hMax - 201 + 67;
-  b[h4].heightPrevious = h4 - 68;
-  b[h4].heightPrevoted = curHeightPrevoted;
+  b[h4].maxHeightPreviouslyForged = h4 - 68;
+  b[h4].maxHeightPrevoted = curHeightPrevoted;
   bft.addBlockheader(b[h4]);
   if (
-    bft.getHeightPrevoted() != h4 - 67 ||
-    bft.getHeightFinalized() != curHeightFinalized
+    bft.getChainMaxHeightPrevoted() != h4 - 67 ||
+    bft.getChainMaxHeightFinalized() != curHeightFinalized
   ) {
     test4Passed = false;
     console.log(
-      "Test 4.12 failed: heightPrevoted or heightFinalized incorrect.",
-      bft.getHeightPrevoted(),
+      "Test 4.12 failed: maxHeightPrevoted or heightFinalized incorrect.",
+      bft.getChainMaxHeightPrevoted(),
       h2 - 68,
-      bft.getHeightFinalized(),
+      bft.getChainMaxHeightFinalized(),
       curHeightFinalized
     );
   }
   // Add all blocks up to startHeight + maxNumBlocks
   for (let h = h4 + 1; h <= hMax; h++) {
     try {
-      b[h].heightPrevious = h - 68;
-      b[h].heightPrevoted = h - 68;
+      b[h].maxHeightPreviouslyForged = h - 68;
+      b[h].maxHeightPrevoted = h - 68;
       bft.addBlockheader(b[h]);
     } catch (e) {
       console.log(e);
@@ -590,12 +589,12 @@ function test4_addBlockheader() {
     }
   }
   if (
-    bft.getHeightPrevoted() != hMax - 67 ||
-    bft.getHeightFinalized() != curHeightFinalized
+    bft.getChainMaxHeightPrevoted() != hMax - 67 ||
+    bft.getChainMaxHeightFinalized() != curHeightFinalized
   ) {
     test4Passed = false;
     console.log(
-      "Test 4.13 failed: heightPrevoted or heightFinalized incorrect."
+      "Test 4.13 failed: maxHeightPrevoted or heightFinalized incorrect."
     );
   }
   return test4Passed;
@@ -612,8 +611,8 @@ function test5_removeBlockheader() {
     b[h] = new BlockHeader(h, h, h - 101, Math.max(h - 68, 0), 0, h % 101);
     bft.addBlockheader(b[h]);
   }
-  let tempHeightPrevoted = bft.getHeightPrevoted();
-  let tempHeightFinalized = bft.getHeightFinalized();
+  let tempHeightPrevoted = bft.getChainMaxHeightPrevoted();
+  let tempHeightFinalized = bft.getChainMaxHeightFinalized();
   bft.clearAllHeaders();
   for (let h = startHeight + 300; h <= maxHeight; h++) {
     bft.addBlockheader(b[h]);
@@ -628,12 +627,12 @@ function test5_removeBlockheader() {
   bft.addBlockheader(b[maxHeight - 1]);
   bft.addBlockheader(b[maxHeight]);
   if (
-    tempHeightPrevoted != bft.getHeightPrevoted() ||
-    tempHeightFinalized != bft.getHeightFinalized()
+    tempHeightPrevoted != bft.getChainMaxHeightPrevoted() ||
+    tempHeightFinalized != bft.getChainMaxHeightFinalized()
   ) {
     test5Passed = false;
     console.log(
-      "Test 5.1 failed: heightPrevoted or heightFinalized incorrect."
+      "Test 5.1 failed: chainMaxHeightPrevoted or chainMaxHeightFinalized incorrect."
     );
   }
   return test5Passed;
@@ -647,8 +646,8 @@ function test6_changeActiveDelegates() {
     b[h] = new BlockHeader(h, h, -1, 0, 0, h % 101);
     bft.addBlockheader(b[h]);
   }
-  if (bft.getHeightPrevoted() != 100 - 67) {
-    console.log("Test 6.1 failed: incorrect heightPrevoted");
+  if (bft.getChainMaxHeightPrevoted() != 100 - 67) {
+    console.log("Test 6.1 failed: incorrect chainMaxHeightPrevoted");
     test6Passed = false;
   }
   // All block proposers change from heigh 101 onwards
@@ -656,8 +655,8 @@ function test6_changeActiveDelegates() {
     b[h] = new BlockHeader(h, h, -1, 0, 101, (h % 101) + 101);
     bft.addBlockheader(b[h]);
   }
-  if (bft.getHeightPrevoted() != 201 - 67) {
-    console.log("Test 6.2 failed: incorrect heightPrevoted");
+  if (bft.getChainMaxHeightPrevoted() != 201 - 67) {
+    console.log("Test 6.2 failed: incorrect chainMaxHeightPrevoted");
     test6Passed = false;
   }
   // All block proposers change from height 202 onwards
@@ -665,8 +664,8 @@ function test6_changeActiveDelegates() {
     b[h] = new BlockHeader(h, h, -1, 0, 202, (h % 101) + 202);
     bft.addBlockheader(b[h]);
   }
-  if (bft.getHeightPrevoted() != 302 - 67) {
-    console.log("Test 6.3 failed: incorrect heightPrevoted");
+  if (bft.getChainMaxHeightPrevoted() != 302 - 67) {
+    console.log("Test 6.3 failed: incorrect chainMaxHeightPrevoted");
     test6Passed = false;
   }
   for (let i = 1; i <= 3; i++) {

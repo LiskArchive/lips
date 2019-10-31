@@ -5,15 +5,15 @@ const BlockHeader = require("./BlockHeader.js");
  * This class stores the last MAX_HEADERS blockheaders of the current chain and is used for the following:
  * - Update the Prevote and Precommit counts for these blocks according to the Lisk-BFT consensus
  * - Update up to which height all blocks are finalized
- * - Update the current value of heightPrevoted in order to check this value for new blocks
+ * - Update the current value of chainMaxHeightPrevoted in order to check the maxHeightPrevoted value for new blocks
  * - Check if a blockheader is contradicting one of the last blockheaders
  */
 class LiskBFT {
   constructor() {
     // Largest height of a block in the current chain that has at least 68 prevotes
-    this.chainHeightPrevoted = 0;
+    this.chainMaxHeightPrevoted = 0;
     // Height up to which all blocks are finalized
-    this.chainHeightFinalized = 0;
+    this.chainMaxHeightFinalized = 0;
     // Only the blockheaders in the range [minHeightStored, ..., maxHeightStored] are stored in blockheaders
     // the total number is bounded by MAX_HEADERS
     this.minHeightStored = -1;
@@ -42,7 +42,7 @@ class LiskBFT {
    */
   applyPrevotesPrecommits(newBlockheader) {
     // In this case the blockheader does not imply any Prevote or Precommit
-    if (newBlockheader.heightPrevious >= newBlockheader.height) {
+    if (newBlockheader.maxHeightPreviouslyForged >= newBlockheader.height) {
       return;
     }
     const largestHeightPrecommit = this.delegatePubKeyToHeightPrecommit.get(
@@ -75,7 +75,7 @@ class LiskBFT {
     // newBlockheader.height-HEIGHT_OFFSET_PREVOTES_PRECOMMITS as specified in the respective section in the LIP.
     const minPrevoteHeight = Math.max(
       this.minHeightStored,
-      newBlockheader.heightPrevious + 1,
+      newBlockheader.maxHeightPreviouslyForged + 1,
       newBlockheader.heightSinceActive,
       newBlockheader.height - this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS
     );
@@ -98,9 +98,9 @@ class LiskBFT {
       this.minHeightStored,
       newBlockheader.height - this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS
     );
-    let heightPreviousBlock = newBlockheader.heightPrevious;
+    let heightPreviousBlock = newBlockheader.maxHeightPreviouslyForged;
     let h = Math.max(
-      newBlockheader.heightPrevious,
+      newBlockheader.maxHeightPreviouslyForged,
       newBlockheader.height - this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS
     );
     while (h >= minHeightConsidered) {
@@ -110,11 +110,11 @@ class LiskBFT {
         if (
           this.blockheaders.get(h).delegatePubKey !=
             newBlockheader.delegatePubKey ||
-          this.blockheaders.get(h).heightPrevious >= h
+          this.blockheaders.get(h).maxHeightPreviouslyForged >= h
         ) {
           break;
         } else {
-          heightPreviousBlock = this.blockheaders.get(h).heightPrevious;
+          heightPreviousBlock = this.blockheaders.get(h).maxHeightPreviouslyForged;
         }
       }
       h--;
@@ -142,35 +142,35 @@ class LiskBFT {
   }
 
   /**
-   * Updates the values of heightPrevoted and chainHeightFinalized from the current Prevote and Precommit counts.
+   * Updates the values of chainMaxHeightPrevoted and chainMaxHeightFinalized from the current Prevote and Precommit counts.
    */
   updateHeightPrevotedFinalized() {
     if (this.blockheaders.size == 0) {
       return;
     }
-    // heightPrevoted is only ever decreased if blockheaders are deleted. The heightPrevoted of
+    // chainMaxHeightPrevoted is only ever decreased if blockheaders are deleted. The chainMaxHeightPrevoted of
     // the block at the tip of the chain has been verified and is used as start value.
-    this.chainHeightPrevoted = this.blockheaders.get(
+    this.chainMaxHeightPrevoted = this.blockheaders.get(
       this.maxHeightStored
-    ).heightPrevoted;
+    ).maxHeightPrevoted;
     const minNewHeightPrevoted = Math.max(
       this.minHeightStored,
-      this.chainHeightPrevoted
+      this.chainMaxHeightPrevoted
     );
     for (let i = this.maxHeightStored; i >= minNewHeightPrevoted; i--) {
       if (this.prevotes.get(i) >= this.PREVOTE_THRESHOLD) {
-        this.chainHeightPrevoted = i;
+        this.chainMaxHeightPrevoted = i;
         break;
       }
     }
-    // chainHeightFinalized is NEVER decreased within this class
+    // chainMaxHeightFinalized is NEVER decreased within this class
     const minNewHeightFinalized = Math.max(
       this.minHeightStored,
-      this.chainHeightFinalized
+      this.chainMaxHeightFinalized
     );
-    for (let i = this.chainHeightPrevoted; i >= minNewHeightFinalized; i--) {
+    for (let i = this.chainMaxHeightPrevoted; i >= minNewHeightFinalized; i--) {
       if (this.precommits.get(i) >= this.PRECOMMIT_THRESHOLD) {
-        this.chainHeightFinalized = i;
+        this.chainMaxHeightFinalized = i;
         break;
       }
     }
@@ -219,11 +219,11 @@ class LiskBFT {
     let b1 = blockheader1;
     let b2 = blockheader2;
     if (
-      b1.heightPrevious > b2.heightPrevious ||
-      (b1.heightPrevious == b2.heightPrevious &&
-        b1.heightPrevoted > b2.heightPrevoted) ||
-      (b1.heightPrevious == b2.heightPrevious &&
-        b1.heightPrevoted == b2.heightPrevoted &&
+      b1.maxHeightPreviouslyForged > b2.maxHeightPreviouslyForged ||
+      (b1.maxHeightPreviouslyForged == b2.maxHeightPreviouslyForged &&
+        b1.maxHeightPrevoted > b2.maxHeightPrevoted) ||
+      (b1.maxHeightPreviouslyForged == b2.maxHeightPreviouslyForged &&
+        b1.maxHeightPrevoted == b2.maxHeightPrevoted &&
         b1.height > b2.height)
     ) {
       b1 = blockheader2;
@@ -237,18 +237,18 @@ class LiskBFT {
       // No contradiction, as blockheaders are the same
       return false;
     } else if (
-      b1.heightPrevoted == b2.heightPrevoted &&
+      b1.maxHeightPrevoted == b2.maxHeightPrevoted &&
       b1.height >= b2.height
     ) {
       // Violation of the fork choice rule as delegate moved to different chain
-      // without strictly larger heightPrevoted or larger height as justification.
+      // without strictly larger maxHeightPrevoted or larger height as justification.
       // This in particular happens, if a delegate is double forging.
       return true;
-    } else if (b1.height > b2.heightPrevious) {
+    } else if (b1.height > b2.maxHeightPreviouslyForged) {
       // Violates disjointness condition
       return true;
-    } else if (b1.heightPrevoted > b2.heightPrevoted) {
-      // Violates that delegate chooses branch with largest heightPrevoted
+    } else if (b1.maxHeightPrevoted > b2.maxHeightPrevoted) {
+      // Violates that delegate chooses branch with largest maxHeightPrevoted
       return true;
     } else {
       // No contradiction between blockheaders
@@ -277,8 +277,8 @@ class LiskBFT {
    *
    * @return height up to which all blocks are finalized
    */
-  getHeightFinalized() {
-    return this.chainHeightFinalized;
+  getChainMaxHeightFinalized() {
+    return this.chainMaxHeightFinalized;
   }
 
   /**
@@ -286,10 +286,10 @@ class LiskBFT {
    * That that HEIGHT_OFFSET_PREVOTES_PRECOMMITS+1 blockheaders must be stored so that this value is guaranteed to be computed
    * correctly.
    *
-   * @return heightPrevoted of current chain
+   * @return chainMaxHeightPrevoted of current chain
    */
-  getHeightPrevoted() {
-    return this.chainHeightPrevoted;
+  getChainMaxHeightPrevoted() {
+    return this.chainMaxHeightPrevoted;
   }
 
   /**
@@ -313,7 +313,7 @@ class LiskBFT {
   /**
    * Append a blockheader to the current chain. The implied Prevotes and Precommits
    * are added to the map data structures counting the overall Prevotes and Precommits.
-   * Moreover, the heightPrevoted and chainHeightFinalized of the current chain are updated.
+   * Moreover, the chainMaxHeightPrevoted and chainMaxHeightFinalized of the current chain are updated.
    *
    * @param  newBlockheader  instance of BlockHeader satisfying b.height = this.maxHeightStored+1
    */
@@ -327,19 +327,19 @@ class LiskBFT {
           "Error: Height of inserted blocks need to be montonously increasing by 1."
         );
       } else if (
-        newBlockheader.heightPrevoted != this.chainHeightPrevoted &&
+        newBlockheader.maxHeightPrevoted != this.chainMaxHeightPrevoted &&
         this.maxHeightStored - this.minHeightStored >=
           this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS
       ) {
-        // Only if we have this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS headers stored, we can guarantee that heightPrevoted is computed correctly
-        throw new Error("Error: Wrong heightPrevoted in blockheader.");
+        // Only if we have this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS headers stored, we can guarantee that chainMaxHeightPrevoted is computed correctly
+        throw new Error("Error: Wrong maxHeightPrevoted in blockheader.");
       } else if (
         this.checkHeaderContradictingChain(
           newBlockheader,
           this.HEIGHT_OFFSET_PREVOTES_PRECOMMITS
         )
       ) {
-        throw new Error("Error: Contradicting heightPrevious in blockheader.");
+        throw new Error("Error: Contradicting maxHeightPreviouslyForged in blockheader.");
       }
       this.maxHeightStored += 1;
 
@@ -370,7 +370,7 @@ class LiskBFT {
 
   /**
    * Removes all stored blockheaders up to height h, i.e., all blockheaders in the range [h+1,...,maxHeightStored].
-   * The Prevote and Precommit counts are updated afterwards together with the heightPrevoted of the current chain.
+   * The Prevote and Precommit counts are updated afterwards together with the chainMaxHeightPrevoted value of the current chain.
    *
    * @param  h  integer giving the height up to which to remove the blockheaders.
    */

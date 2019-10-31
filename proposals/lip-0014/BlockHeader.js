@@ -8,8 +8,8 @@ class BlockHeader {
   constructor(
     blockID,
     height,
-    heightPrevious,
-    heightPrevoted,
+    maxHeightPreviouslyForged,
+    maxHeightPrevoted,
     heightSinceActive,
     delegatePubKey
   ) {
@@ -18,9 +18,9 @@ class BlockHeader {
     // Height of the block
     this.height = height;
     // Largest height at which delegate previously forged a block, see LIP/paper
-    this.heightPrevious = heightPrevious;
+    this.maxHeightPreviouslyForged = maxHeightPreviouslyForged;
     // Largest height of a block in the current chain (up to the predecessor of this block) that has at least 68 prevotes
-    this.heightPrevoted = heightPrevoted;
+    this.maxHeightPrevoted = maxHeightPrevoted;
     // Height since when the delegate has been continuously active,
     // i.e., the first block of that round since when the delegate is continuosly active
     // note that this information is typically obtained from a separate data structure

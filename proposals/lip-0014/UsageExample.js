@@ -20,8 +20,8 @@ function examplesUsage() {
   // Example 1: Workflow when adding headers to BFT class and this class already contains at least 303 headers
   if (
     b1[h1].height == bft.getMaxHeightStored() + 1 &&
-    b1[h1].heightPrevoted == bft.getHeightPrevoted() &&
-    !bft.checkHeaderConflictingChain(b1[h1])
+    b1[h1].maxHeightPrevoted == bft.getChainMaxHeightPrevoted() &&
+    !bft.checkHeaderContradictingChain(b1[h1])
   ) {
     bft.addBlockheader(b1[h1]);
   } else {
@@ -36,7 +36,7 @@ function examplesUsage() {
     b2[h] = new BlockHeader(h, h, h - 78, Math.max(h - 68, 0), 0, h % 101);
   }
 
-  if (bft.getHeightFinalized() > lastCommonHeight) {
+  if (bft.getChainMaxHeightFinalized() > lastCommonHeight) {
     console.error("Error. Cannot revert finalized block.");
   } else {
     if (
@@ -46,11 +46,11 @@ function examplesUsage() {
     // Need so trigger sync, see Example 3 below
     } else {
       bft.removeBlockheadersToHeight(lastCommonHeight);
-      for (let h = lastCommonHeight + 1; h <= 1100; h++) {
+      for (let h = lastCommonHeight + 1; h <= 910; h++) {
         if (
           b2[h].height == bft.getMaxHeightStored() + 1 &&
-          b2[h].heightPrevoted == bft.getHeightPrevoted() &&
-          !bft.checkHeaderConflictingChain(b2[h])
+          b2[h].maxHeightPrevoted == bft.getChainMaxHeightPrevoted() &&
+          !bft.checkHeaderContradictingChain(b2[h])
         ) {
           bft.addBlockheader(b2[h]);
         } else {
@@ -61,7 +61,7 @@ function examplesUsage() {
   }
 
   // Example 3: Workflow when removing more than 202 headers to move to chain b1 or after
-  if (bft.getHeightFinalized() > lastCommonHeight) {
+  if (bft.getChainMaxHeightFinalized() > lastCommonHeight) {
     console.error("Error. Cannot revert finalized block.");
   } else {
     if (
@@ -79,8 +79,8 @@ function examplesUsage() {
       for (let h = lastCommonHeight + 1; h <= 1400; h++) {
         if (
           b1[h].height == bft.getMaxHeightStored() + 1 &&
-          b1[h].heightPrevoted == bft.getHeightPrevoted() &&
-          !bft.checkHeaderConflictingChain(b1[h])
+          b1[h].maxHeightPrevoted == bft.getChainMaxHeightPrevoted() &&
+          !bft.checkHeaderContradictingChain(b1[h])
         ) {
           bft.addBlockheader(b1[h]);
         } else {
