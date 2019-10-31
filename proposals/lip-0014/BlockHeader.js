@@ -29,6 +29,10 @@ class BlockHeader {
     // Public key of delegate forging the block
     this.delegatePubKey = delegatePubKey;
   }
+
+  toString(){
+    return "BlockID: "+this.blockID+" height: "+this.height+" delegatePubKey:"+this.delegatePubKey+" maxHeightPreviouslyForged: "+this.maxHeightPreviouslyForged+" maxHeightPrevoted: "+ this.maxHeightPrevoted + " heightSinceActive: "+ this.heightSinceActive;
+  }
 }
 
 module.exports = BlockHeader;

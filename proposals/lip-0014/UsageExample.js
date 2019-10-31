@@ -46,7 +46,7 @@ function examplesUsage() {
     // Need so trigger sync, see Example 3 below
     } else {
       bft.removeBlockheadersToHeight(lastCommonHeight);
-      for (let h = lastCommonHeight + 1; h <= 910; h++) {
+      for (let h = lastCommonHeight + 1; h <= 1100; h++) {
         if (
           b2[h].height == bft.getMaxHeightStored() + 1 &&
           b2[h].maxHeightPrevoted == bft.getChainMaxHeightPrevoted() &&
