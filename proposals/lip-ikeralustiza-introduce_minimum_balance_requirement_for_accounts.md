@@ -118,4 +118,4 @@ This proposal changes the validation process for every transaction type. This wi
 
 TBD
 
-<sup>[1]</sup>Note that the value given here for `MinBalance` may vary before the activation of the LIP.
+<sup>[1]</sup>Note that the value given here for `minBalance` may vary before the activation of the LIP.
