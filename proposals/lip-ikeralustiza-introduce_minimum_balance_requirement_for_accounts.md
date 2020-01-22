@@ -1,4 +1,3 @@
-
 ```
 LIP: lip-ikeralustiza-introduce_minimum_balance_requirement_for_accounts
 Title: Introduce minimum balance requirement for accounts
@@ -9,24 +8,19 @@ Updated: <YYYY-MM-DD>
 Requires: 0013
 ```
 
-
-
 ## Abstract
 
 This LIP introduces a new rule for the validity of transactions, which implies that the balances of sender and recipient cannot go below a certain constant value, _minBalance_, defined by the protocol.
-
 
 ## Copyright
 
 This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
 
-
 ## Motivation
 
-Once [LIP-0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md) becomes active and assuming that blocks are not always full, the majority of transactions will pay a fee that is a couple of orders of magnitude cheaper than the current one. For example, the minimum fee for a balance transaction will be [0.00125 LSK](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md#a-minimum-fee-implications) in contrast to the current 0.1 LSK. This means that a malicious user with 1250 LSK could broadcast around 1M transactions to create 1M new accounts (currently the blockchain has around 240000 accounts in its database). Eventually this issue, usually called [_dust accounts_](https://github.com/ethereum/EIPs/issues/168), can become a burden for the database and hinder the scalability of the platform. 
+Once [LIP-0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md) becomes active and assuming that blocks are not always full, the majority of transactions will pay a fee that is a couple of orders of magnitude cheaper than the current one. For example, the minimum fee for a balance transaction will be [0.00125 LSK](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md#a-minimum-fee-implications) in contrast to the current 0.1 LSK. This means that a malicious user with 1250 LSK could broadcast around 1M transactions to create 1M new accounts (currently the blockchain has around 240000 accounts in its database). Eventually this issue, usually called [_dust accounts_](https://github.com/ethereum/EIPs/issues/168), can become a burden for the database and hinder the scalability of the platform.
 
 We believe that the minimum fee per Byte set in[ LIP-0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md#minimum-fee-per-byte-minfeeperbyte), 10<sup>-5</sup> LSK/Byte, is a good trade-off given the different sized transactions and expected network usage, and increasing it may lead to other limitations. Therefore, the solution, as in other blockchain projects (see approaches for [Bitcoin](https://github.com/bitcoin/bitcoin/commit/9022aa3) or for [Ethereum](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-161.md)), should come from other means. Also, the fact that every balance transaction to a new account implies a new row in the accounts table suggests that this specific action should have a cost to account for the extra account storage. Note that account data, in contrast to past blocks and transactions, cannot be pruned.
-
 
 ## Rationale
 
@@ -34,48 +28,36 @@ This LIP introduces a new rule for the validity of the transactions in order to 
 
 Conceptually, one could say that this proposal introduces a required amount, denoted by _minBalance_, to maintain a Lisk account. Specifically, this is realized in the following way:
 
-
-
-*   Outgoing transactions from accounts are only valid if the balance of the account after applying the transaction is equal to or greater than _minBalance_.
-*   Incoming transactions to accounts are only valid if the balance of the account after applying the transaction is equal to or greater than _minBalance_.
+* Outgoing transactions from accounts are only valid if the balance of the account after applying the transaction is equal to or greater than _minBalance_.
+* Incoming transactions to accounts are only valid if the balance of the account after applying the transaction is equal to or greater than _minBalance_.
 
 Bear in mind that this is not setting directly any rule for the validity of accounts. It may happen that the balance of an account is smaller than _minBalance_ because this was its state before the implementation of this proposal.
-
 
 ### Choosing the value of the constant parameter _minBalance_
 
 The changes in the protocol introduced by this proposal are minimal. However, choosing the right value for the constant parameter introduced before has important implications for the network usability and performance:
-
-
 
 1. If the value of this constant is too low, the dust accounts issue will not be sufficiently mitigated.
 2. If this value is excessively high, basic actions of the Lisk blockchain, like funding an account for the first time, will be too expensive and deter new users from creating an account.  
 
 With that in mind, the proposed value for _minBalance_ is 0.05 LSK<sup>[1]</sup> which implies the following:
 
-
-
-*   Creating 1M dust accounts as explained above will require to use more than 50000 LSK, roughly 50 times more than the current situation.
-*   Users funding new accounts (zero balance accounts in general) will need to send a transaction with an amount larger than 0.05 LSK.
-
+* Creating 1M dust accounts as explained above will require to use more than 50000 LSK, roughly 50 times more than the current situation.
+* Users funding new accounts (zero balance accounts in general) will need to send a transaction with an amount larger than 0.05 LSK.
 
 ### Discarded options
-
 
 #### Minimum amount required for balance transactions
 
 A minimum amount is defined in the protocol as a constant and a balance transaction sending an amount below that amount is invalid. This approach does not solve the issue since one can always send an arbitrary amount of tokens to _n_ accounts in _n_ hops, i. e., from A to B, from B to C, from C to D...
 
-
 #### Initialize account fee: extra fee paid by the sender
 
-Every time a balance transaction is sent to a new account, i.e. an account not existing in the database, the sender has to add an extra fee to the transaction. We believe that this approach is unfair in the way that the sender is the one required to pay to create the new account. 
-
+Every time a balance transaction is sent to a new account, i.e. an account not existing in the database, the sender has to add an extra fee to the transaction. We believe that this approach is unfair in the way that the sender is the one required to pay to create the new account.
 
 #### Initialize account fee: fixed amount deducted from the receiver
 
 Every time a balance transaction is sent to a new account, i.e. an account not existing in the database, a certain quantity is deducted from the transaction amount. This approach solves the disadvantage of the previous one. However, it implies a complexity in the protocol that we believe is not acceptable: There is no direct accountability of the deduced amount in the blockchain which may complicate certain verification and synchronization processes in the node.
-
 
 ## Specification
 
@@ -83,24 +65,19 @@ Every time a balance transaction is sent to a new account, i.e. an account not e
 
 The protocol defines a new constant, `minBalance`. This constant sets the required amount (in Beddows) used by the new validity rule for transactions:
 
-
+```js
+minBalance = 5000000;
 ```
- minBalance = 5000000;
-```
-
 
 ### Transaction validation process
 
 In general, the new rule specifies that, for a certain transaction to be valid, the balance of any account affected by said transaction cannot go below `minBalance` after applying the transaction. This has to be considered for any new transaction type to be defined in the future.
 
-
-In particular, for the existing transaction types in the current protocol, the new rules introduced by the proposal for a transaction to be valid are the following: 
-
+In particular, for the existing transaction types in the current protocol, the new rules introduced by the proposal for a transaction to be valid are the following:
 
 #### For every transaction type:
 
 For any transaction to be valid, the balance of the sender account after applying the transaction has to be equal to or greater than `minBalance`.
-
 
 #### For balance transactions:
 
@@ -108,11 +85,9 @@ Additionally, for a balance transaction to be valid, the balance of the recipien
 
 When a set of transactions are considered in the context of block validation, the rules specified in the [_Establish block validity by applying transactions sequentially_ LIP](https://research.lisk.io/t/establish-block-validity-by-applying-transactions-sequentially/197) apply exactly in the same way.
 
-
 ## Backwards Compatibility
 
 This proposal changes the validation process for every transaction type. This will result in a soft fork because the set of valid transactions becomes strictly smaller. Particularly, a balance transaction will be invalid if it implies that either the balance of the sender or the balance of the recipient is lower than  `minBalance` after applying this transaction.
-
 
 ## Reference Implementation
 
