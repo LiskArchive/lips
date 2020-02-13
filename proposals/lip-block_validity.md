@@ -1,7 +1,7 @@
 ```
 LIP: lip-maxime-block-validity
 Title: Establish block validity by applying transactions sequentially
-Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io> 
+Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
 Type: Standards Track
 Created: -
 Updated: -
@@ -9,116 +9,88 @@ Updated: -
 
 ## Abstract
 
-This LIP introduces a procedure to assert the validity of blocks containing multiple interdependent transactions. 
-This is done by defining a general way to order transactions. 
-We then consider a block valid if every transaction is valid against the transitory state leading up to it.
+This LIP introduces a procedure to assert the validity of blocks containing multiple interdependent transactions.  This is done by defining a general way to order transactions. We then consider a block valid if every transaction is valid against the transitory state leading up to it.
 
 This LIP also specifies when delegates receive their block rewards and fees.
-
 
 ## Copyright
 
 This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
 
-
 ## Motivation
 
-The current protocol has complicated rules to assert the validity of blocks containing dependent transactions. 
-The current rules are as follows:
+The current protocol has complicated rules to assert the validity of blocks containing dependent transactions. The current rules are as follows:
 
-*   All transactions in a block have to be valid against the state at the beginning of the block.
-*   If the transactions are applied sequentially, the state of the blockchain remains valid throughout.
-*   For each account, the spent amount is calculated by summing all the fees paid by this account and all the outgoing transfers from this account. 
+* All transactions in a block have to be valid against the state at the beginning of the block.
+* If the transactions are applied sequentially, the state of the blockchain remains valid throughout.
+* For each account, the spent amount is calculated by summing all the fees paid by this account and all the outgoing transfers from this account.
 This spent amount must be at most the balance of the account at the beginning of the block.
 
 The above rules implies that two (or more) transactions can be valid if they are included in different blocks, but invalid in the same block. For example:
 
-*   Alice has a balance of 10 LSK.
-*   She receives 40 LSK from Bob. This transaction is included at height 30.
-*   She sends 30 LSK to Charlie. This transaction is included at height 31.
+* Alice has a balance of 10 LSK.
+* She receives 40 LSK from Bob. This transaction is included at height 30.
+* She sends 30 LSK to Charlie. This transaction is included at height 31.
 
 The above scenario results in both transactions being executed. However, including the two transactions in a single block results in an invalid block.
 
-When creating new transaction types, special care has to be taken regarding which of the above rules the new transaction will have to respect. This makes creating new transaction types more difficult and error prone. 
+When creating new transaction types, special care has to be taken regarding which of the above rules the new transaction will have to respect. This makes creating new transaction types more difficult and error prone.
 
-This LIP simplifies the above conditions and defines a general rule to assert block validity. 
-
+This LIP simplifies the above conditions and defines a general rule to assert block validity.
 
 ## Rationale
 
 ### Applying Transactions in Order
 
-The Lisk blockchain and other chains created with the Lisk SDK are [replicated deterministic state machines](https://en.wikipedia.org/wiki/State_machine_replication), 
-which transition from one state to the next state according to blocks and transactions provided as input. 
-Before applying a transaction, a node must decide the transaction validity. 
-We think the following principle should apply to validation rules:
+The Lisk blockchain and other chains created with the Lisk SDK are [replicated deterministic state machines](https://en.wikipedia.org/wiki/State_machine_replication), which transition from one state to the next state according to blocks and transactions provided as input. Before applying a transaction, a node must decide the transaction validity. We think the following principle should apply to validation rules:
 
-    The validity of a transaction with respect to a given state 
+    The validity of a transaction with respect to a given state
     only depends on the transaction and the state.
 
-When applying a group of transactions of the Lisk blockchain, they are applied sequentially. 
-Therefore, it is natural to validate each transaction against the state on which it will be applied. 
-Transactions are grouped in blocks to be agreed on by the consensus protocol. 
-This has multiple benefits, but should not modify the transaction validity rules. 
-The current rules can hence be simplified to adhere to this principle as follows:  
+When applying a group of transactions of the Lisk blockchain, they are applied sequentially. Therefore, it is natural to validate each transaction against the state on which it will be applied. Transactions are grouped in blocks to be agreed on by the consensus protocol. This has multiple benefits, but should not modify the transaction validity rules. The current rules can hence be simplified to adhere to this principle as follows:
 
-*   Remove the additional validity check against the state at the beginning of the block. This state is therefore used only to validate the first transaction in the block.
-*   Remove the additional validity check that the sum of all fees and outgoing amounts from a given account has to be at most the balance of the account at the beginning of the block.
+* Remove the additional validity check against the state at the beginning of the block. This state is therefore used only to validate the first transaction in the block.
+* Remove the additional validity check that the sum of all fees and outgoing amounts from a given account has to be at most the balance of the account at the beginning of the block.
 
 Removing those two additional validity checks makes the validity procedure more coherent, faster and reduces the code base.
-
 
 ### Choice of the Transaction Order
 
 When generating a block, the order of transactions in the block could be determined in two ways:
 
-*   The order is deterministic and given by the protocol. For example: transactions in a block are ordered by transaction ID.
-*   The order is decided and fixed by the block creator.
+* The order is deterministic and given by the protocol. For example: transactions in a block are ordered by transaction ID.
+* The order is decided and fixed by the block creator.
 
 The second option gives the block creator more flexibility when generating the block. We see that this flexibility brings two main advantages:
 
-*   The block creator can try to arrange transactions as to maximize the amount of received fees.
-*   Managing the transaction pool can be done more efficiently. 
-Indeed, with this option, the block creator can always add new transactions to the end of the payload and does not have to revalidate other transactions in the payload. 
-If the order was imposed by the protocol, it could be that a newly received transaction needs to be included at the beginning of the payload and that all other transactions have to be validated again, as the state has changed.
+* The block creator can try to arrange transactions as to maximize the amount of received fees.
+* Managing the transaction pool can be done more efficiently.
 
-This second option however requires to keep track of the transaction position in the block payload, as it is important to calculate the correct block `payloadHash`. 
-In the current protocol, the block payload is an array of transactions. 
-When broadcasting blocks, transactions are send in this array and are thus kept in the same order. 
+Indeed, with this option, the block creator can always add new transactions to the end of the payload and does not have to revalidate other transactions in the payload. If the order was imposed by the protocol, it could be that a newly received transaction needs to be included at the beginning of the payload and that all other transactions have to be validated again, as the state has changed.
 
-When storing a transaction in the database, it is already necessary to store the block height at which it was included in the blockchain. 
-Storing at the same time the position of the transaction in the block is a very small increment of storage. 
-Two bytes are enough for this as they allow to order up to 65536 transactions per block.
+This second option however requires to keep track of the transaction position in the block payload, as it is important to calculate the correct block `payloadHash`. In the current protocol, the block payload is an array of transactions. When broadcasting blocks, transactions are send in this array and are thus kept in the same order.
+
+When storing a transaction in the database, it is already necessary to store the block height at which it was included in the blockchain. Storing at the same time the position of the transaction in the block is a very small increment of storage. Two bytes are enough for this as they allow to order up to 65536 transactions per block.
 
 Taking the arguments above into account, we think that the best solution is to let block creators chose the order of transactions in their blocks.
 
-
 ## Specification
-
 
 ### Order of Transactions
 
-Transactions in a block are stored in an array ordered by the block creator. 
-This array is used to create the payload hash and can therefore be verified, i.e. a block is only valid if the hash of the payload equals the value stored in `block.payloadHash`. 
-Note that if transactions are stored individually in a database, it is also necessary to store the position of the transaction in the block payload.
-
+Transactions in a block are stored in an array ordered by the block creator. This array is used to create the payload hash and can therefore be verified, i.e. a block is only valid if the hash of the payload equals the value stored in `block.payloadHash`. Note that if transactions are stored individually in a database, it is also necessary to store the position of the transaction in the block payload.
 
 ### Validity of Blocks
 
-Transactions are validated and applied sequentially. The payload is valid if, for every k, the k-th transaction is valid against the state obtained after applying the k-1 previous transactions of the array. 
-For k=0, the state of the blockchain at the end of the last block is considered.
-
+Transactions are validated and applied sequentially. The payload is valid if, for every `k`, the `k-th` transaction is valid against the state obtained after applying the `k-1` previous transactions of the array. For `k=0`, the state of the blockchain at the end of the last block is considered.
 
 ### Block Rewards and Fees
 
-The block reward and the fees from a block are added to the account of the block producer after all transactions in the block have been applied. 
-In particular, a block producer cannot receive and spend the reward within the same block.
-
+The block reward and the fees from a block are added to the account of the block producer after all transactions in the block have been applied. In particular, a block producer cannot receive and spend the reward within the same block.
 
 ## Backwards Compatibility
 
 This change will induce a hard fork in the network as some previously invalid blocks will be valid with this proposal.
-
 
 ## Reference Implementation
 
