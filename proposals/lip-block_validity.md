@@ -2,9 +2,10 @@
 LIP: lip-maxime-block-validity
 Title: Establish block validity by applying transactions sequentially
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/establish-block-validity-by-applying-transactions-sequentially/197
 Type: Standards Track
-Created: -
-Updated: -
+Created: 2020-01-14
+Updated: 2020-02-13
 ```
 
 ## Abstract
