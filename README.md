@@ -37,3 +37,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0023](proposals/lip-0023.md) | Introduce vote locking periods and new vote weight definition                                  | Maxime Gagnebin                              | Standards Track | Draft         |
 | [0024](proposals/lip-0024.md) | Punish BFT violations                                                                          | Maxime Gagnebin                              | Standards Track | Draft         |
 | [0025](proposals/lip-0025.md) | Introduce minimum balance requirement for accounts                                             | Iker Alustiza                                | Standards Track | Draft         |
+| [0026](proposals/lip-0026.md) | Establish block validity by applying transactions sequentially                                 | Maxime Gagnebin                              | Standards Track | Draft         |
