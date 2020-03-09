@@ -58,7 +58,7 @@ Some properties that are part of the [block header in the current protocol](#app
 
 ![alt_text](lip-define-schema-and-use-generic-serialization-for-blocks/block_schema.png "image_tooltip") 
 
-_A schematic of the block-serialization structure. The block header is serialized according to the <code>blockHeader</code> schema. The <code>payload</code> is an array of transactions, serialized according to the method described in [LIP0028][transactions-serialization]._
+_A schematic of the block-serialization structure. The block header is serialized according to the <code>blockHeader</code> schema. The <code>payload</code> is an array of transactions, serialized according to the method described in [LIP 0028][transactions-serialization]._
 
 The `block` schema is used to serialize blocks, for example before transmitting them to peers in the P2P layer.
 
@@ -66,7 +66,7 @@ The `block` schema contains 2 properties:
 
 
 1. `header`: The serialized block header. Its serialization is specified by the `blockHeader` schema.
-2. `payload`: The block payload, containing all transactions included in the block, serialized according to [LIP0028][transactions-serialization].
+2. `payload`: The block payload, containing all transactions included in the block, serialized according to [LIP 0028][transactions-serialization].
 
 
 #### Serialization
@@ -74,7 +74,7 @@ The `block` schema contains 2 properties:
 Consider a data structure `blockData` to be serialized, representing a valid block according to the Lisk protocol. The serialization procedure is done in 3 steps:
 
 
-1. Each transaction `trs` in the block payload `blockData.payload` is serialized according to the method described in [LIP0028][transactions-serialization]. The resulting bytes replace the original `trs` in the payload.
+1. Each transaction `trs` in the block payload `blockData.payload` is serialized according to the method described in [LIP 0028][transactions-serialization]. The resulting bytes replace the original `trs` in the payload.
 2. The block header `blockData.header` is serialized using the [method described below](#serialization-1), and the resulting bytes replace the original value in `blockData`.
 3. `blockData` is serialized according to the `block` schema.
 
@@ -85,7 +85,7 @@ Consider a binary message `blockMsg` to be deserialized. The deserialization pro
 
 
 1. `blockMsg` is deserialized according to the `block` schema.
-2. Each transaction in the block payload `block.payload` is deserialized using the method defined in [LIP0028][transactions-serialization].
+2. Each transaction in the block payload `block.payload` is deserialized using the method defined in [LIP 0028][transactions-serialization].
 3. The block header `block.header` is deserialized using the the [method described below](#deserialization-1).
 
 
