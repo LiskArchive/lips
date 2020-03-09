@@ -58,7 +58,7 @@ Those restrictions are not used for serializing, but are used with validation to
 Using two different schemas for validation and serialization would be possible, but would introduce risks of incompatibilities between the two schemas.
 We therefore recommend using the same schema for both validation and serialization.
 
-![Serialization_diagram|690x191](upload://pqW4MeAqDlTEOeEmAL8817qi10c.png) 
+![Serialization_diagram|690x191](lip-generic_serialization/serialization_diagram.png) 
 
 _In the Lisk protocol, messages are validated and serialized using the same Lisk JSON Schema. The resulting binary message can be stored and transmitted efficiently. Finally, using the same schema, the binary message can be deserialized, and eventually validated, to recover the original data structure._
 
