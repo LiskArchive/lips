@@ -886,7 +886,7 @@ Applications of the proposed serialization method will be proposed in separate L
     { "dataType": "string" }
     ```
 *   Root schema does not have the `properties` keyword:
-    ```
+    ```json
     { "type": "object" }
     ```
 *   `dataType` or `type` is not specified for the property `a`:
