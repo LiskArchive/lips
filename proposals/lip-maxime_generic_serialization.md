@@ -938,7 +938,7 @@ Applications of the proposed serialization method will be proposed in separate L
     }
     ```
 *   The property `a` is of type array, but the `items` keyword is missing:
-    ```
+    ```json
     {
         "type": "object",
         "properties": {
