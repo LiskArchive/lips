@@ -12,7 +12,7 @@ Requires: 0027
 
 ## Abstract
 
-This LIP defines how the generic serialization defined in [LIP 0027 "A generic, deterministic and size efficient serialization method"][generic-serialization] is applied to blocks by specifying the appropriate JSON schema. We restructure the block header and introduce the block asset property, storing properties specific to the corresponding chain. We further specify the block-asset schema for the Lisk mainchain.
+This LIP defines how the generic serialization defined in [LIP 0027][generic-serialization] is applied to blocks by specifying the appropriate JSON schema. We restructure the block header and introduce the block asset property, storing properties specific to the corresponding chain. We further specify the block-asset schema for the Lisk mainchain.
 
 
 ## Copyright
