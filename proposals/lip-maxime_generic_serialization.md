@@ -72,7 +72,7 @@ The Lisk protocol uses the following data types:
 *   **Integer** is used to represent an amount of tokens or other integers, like the height of a block or the transaction type.
     *   In Lisk, amounts can be larger than 2^53 (90 million LSK).
     Therefore, they are not suited to be stored in a JavaScript _number_ and are stored as _[bigints](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt)_.
-*   **Boolean** is used in [LIP-0023](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md) to indicate if a delegate is banned or not.
+*   **Boolean** is used in [LIP 0023](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md) to indicate if a delegate is banned or not.
 
 **Floating point number** is not used in the Lisk protocol and should be avoided in blockchain applications. If the need to represent fractional parts of an object arises, it is best to define a new fractional object (like Beddows in Lisk) and then consider integer amounts of this fractional object.
 
