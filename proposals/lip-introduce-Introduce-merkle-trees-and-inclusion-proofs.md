@@ -223,6 +223,9 @@ With the structure of the tree and `idxs`, the Verifier is able to identify the 
 
 This proposal does not introduce any forks in the network, as it only defines the specification to build a Merkle tree in the Lisk protocol. Future protocol changes involving the introduction of Merkle trees (such as [LIP 0032 "Replace payloadHash with Merkle tree root in block header"][replace-payloadhash] or the ["Introduce decentralized re-genesis"](https://lisk.io/roadmap) roadmap objective) will require this proposal.
 
+## Reference Implementation
+
+TBD.
 
 ## Appendix A: Proof-of-Inclusion Implementation
 
