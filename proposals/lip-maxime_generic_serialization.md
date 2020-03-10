@@ -925,7 +925,7 @@ Applications of the proposed serialization method will be proposed in separate L
     ```
 *   The keyword `properties` is missing for the property `a`:
 
-    ```
+    ```json
     {
         "type": "object",
         "properties": {
