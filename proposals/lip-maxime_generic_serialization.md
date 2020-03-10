@@ -901,7 +901,7 @@ Applications of the proposed serialization method will be proposed in separate L
     }
     ```
 *   `dataType` and `type` are both specified for the property `a`:
-    ```
+    ```json
     {
         "type": "object",
         "properties": {
