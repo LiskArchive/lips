@@ -951,7 +951,7 @@ Applications of the proposed serialization method will be proposed in separate L
     }
     ```
 *   The items of the array `a` have several types:
-    ```
+    ```json
     {
         "type": "object",
         "properties": {
