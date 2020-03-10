@@ -1018,7 +1018,7 @@ is_scalar_type(dataType):
 get_proto_type_for_scalar_json_type(dataType):
     if dataType == "boolean":
    	 return "bool"
-    return type
+    return dataType
 
 
 create_proto_message_type_for_object(messageName, jsonSchema):
