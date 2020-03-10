@@ -60,7 +60,7 @@ As mentioned above, we choose option 2.
 
 We assume [LIP 0019 "Use full SHA-256 hash of transaction as transactionID"](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0019.md) is already effective, and transaction IDs are 32 bytes long. 
 
-Given a Merkle tree and corresponding Merkle root `merkleRoot` built from the array `transactionIDsArray` according to the specifications defined in [LIP 0031][introduce-MT], the `transactionRoot` is set as `transactionRoot = merkleRoot`. Here `transactionIDsArray` is an array of `bytes` containing the serialized transaction ids. The `transactionRoot` is then stored in the block header instead of `payloadHash`.
+Given a Merkle tree and corresponding Merkle root `merkleRoot` built from the array `transactionIDsArray` according to the specifications defined in [LIP 0031][introduce-MT], the `transactionRoot` is set as `transactionRoot = merkleRoot`. Here `transactionIDsArray` is an array of `bytes` containing the serialized transaction IDs. The `transactionRoot` is then stored in the block header instead of `payloadHash`.
 
 To verify the validity of the block, `transactionIDsArray` is again built from the serialized transactions stored in the payload hash, keeping the same order, and used to calculate the Merkle root `merkleRoot`. The `transactionRoot` is valid if `transactionRoot == merkleRoot`.
 
@@ -71,3 +71,7 @@ This proposal introduces a hard fork. Blocks forged with the new `transactionRoo
 
 [introduce-MT]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md
 [establish-validity]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0026.md
+
+## Reference Implementation
+
+TBD
