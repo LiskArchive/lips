@@ -1,6 +1,6 @@
 ```
 LIP: <LIP number>
-Title: Introduce Merkle Trees and Inclusion Proofs
+Title: Introduce Merkle trees and inclusion proofs
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
 Type: Standards Track
 Created: <YYYY-MM-DD>
