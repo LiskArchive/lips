@@ -31,7 +31,7 @@ In this LIP, we define how the `transactionRoot` of a block is calculated as the
 
 ## Rationale
 
-The general specifications to build a Merkle tree in the Lisk protocol are given in [LIP 0031 "Introduce Merkle Trees and Inclusion Proofs"][introduce-MT]. In this LIP we specify which changes are required to store the root of the transaction Merkle tree as the `transactionRoot` in a block header and to verify the validity of new blocks after this change.
+The general specifications to build a Merkle tree in the Lisk protocol are given in [LIP 0031][introduce-MT]. In this LIP we specify which changes are required to store the root of the transaction Merkle tree as the `transactionRoot` in a block header and to verify the validity of new blocks after this change.
 
 
 ### Block Forging
