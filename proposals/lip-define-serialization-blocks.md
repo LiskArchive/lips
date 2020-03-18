@@ -1,10 +1,11 @@
 ```
 LIP: <LIP number>
-Title: Define schema and use generic serialization for blocks 
+Title: Define schema and use generic serialization for blocks
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
-Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Discussions-To: https://research.lisk.io/t/define-schema-and-use-generic-serialization-for-blocks/209
+Type: Informational
+Created: 2020-02-18
+Updated: 2020-03-18
 Requires: 0027
 ```
 
