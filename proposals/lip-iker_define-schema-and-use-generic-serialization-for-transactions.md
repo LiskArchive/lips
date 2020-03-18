@@ -2,9 +2,10 @@
 LIP: <LIP number>
 Title: Define schema and use generic serialization for transactions
 Author: Iker Alustiza <iker@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/define-schema-and-use-generic-serialization-for-transactions/211
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2020-02-18
+Updated: 2020-03-18
 Requires: 0027
 ```
 
