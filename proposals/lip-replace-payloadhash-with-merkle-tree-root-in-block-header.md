@@ -2,9 +2,10 @@
 LIP: <LIP number>
 Title: Replace payload hash with Merkle tree root in block header
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/replace-payload-hash-with-merkle-tree-root-in-block-header/214
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2020-02-19
+Updated: 2020-03-18
 Requires: 0019, 0031
 ```
 
