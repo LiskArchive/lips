@@ -3,9 +3,10 @@ LIP: <LIP number>
 Title: A generic serialization method
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
         Andrea Kendziorra <andreas.kendziorra@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/a-generic-serialization-method/208
 Type: Informational
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2020-02-18
+Updated: 2020-03-18
 ```
 
 ## Abstract
