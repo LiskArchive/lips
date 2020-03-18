@@ -43,3 +43,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0029](proposals/lip-0029.md) | Define schema and use generic serialization for blocks                                         | Alessandro Ricottone                         | Informational   | Draft         |
 | [0030](proposals/lip-0030.md) | Define schema and use generic serialization for account state                                  | Alessandro Ricottone                         | Informational   | Draft         |
 | [0031](proposals/lip-0031.md) | Introduce Merkle trees and inclusion proofs                                                    | Alessandro Ricottone                         | Informational   | Draft         |
+| [0032](proposals/lip-0032.md) | Replace payload hash with Merkle tree root in block header                                     | Alessandro Ricottone                         | Standards Track | Draft         |
