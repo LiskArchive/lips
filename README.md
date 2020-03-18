@@ -39,3 +39,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0025](proposals/lip-0025.md) | Introduce minimum balance requirement for accounts                                             | Iker Alustiza                                | Standards Track | Draft         |
 | [0026](proposals/lip-0026.md) | Establish block validity by applying transactions sequentially                                 | Maxime Gagnebin                              | Standards Track | Draft         |
 | [0027](proposals/lip-0027.md) | A generic serialization method                                                                 | Maxime Gagnebin, Andreas Kendziorra          | Informational   | Draft         |
+| [0028](proposals/lip-0028.md) | Define schema and use generic serialization for transactions                                   | Iker Alustiza                                | Informational   | Draft         |
