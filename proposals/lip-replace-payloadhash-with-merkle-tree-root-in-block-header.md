@@ -8,17 +8,13 @@ Updated: <YYYY-MM-DD>
 Requires: 0019, 0031
 ```
 
-
-
 ## Abstract
 
 This LIP proposes to remove the `payloadHash` value stored in each block header and replace it with `transactionRoot`, the root  of a Merkle tree built from the transactions included in the payload.
 
-
 ## Copyright
 
 This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
-
 
 ## Motivation
 
@@ -28,42 +24,36 @@ In the current protocol, the `payloadHash` is calculated by taking the SHA-256 h
 
 In this LIP, we define how the `transactionRoot` of a block is calculated as the root of the Merkle tree built from the transactions included in it.
 
-
 ## Rationale
 
 The general specifications to build a Merkle tree in the Lisk protocol are given in [LIP 0031][introduce-MT]. In this LIP we specify which changes are required to store the root of the transaction Merkle tree as the `transactionRoot` in a block header and to verify the validity of new blocks after this change.
 
-
 ### Block Forging
 
-To forge a new block, a delegate selects a set of transactions to be included in the block payload. Currently, these transactions are sorted using the [`sortTransactions`](https://github.com/LiskHQ/lisk-sdk/blob/a800c3217e50a94c5e865febd0240ddd834dfb3c/framework/src/modules/chain/blocks/block.js) function and then serialized. The `payloadHash` is calculated as the SHA-256 of the concatenated serialized transactions. 
+To forge a new block, a delegate selects a set of transactions to be included in the block payload. Currently, these transactions are sorted using the [`sortTransactions`](https://github.com/LiskHQ/lisk-sdk/blob/a800c3217e50a94c5e865febd0240ddd834dfb3c/framework/src/modules/chain/blocks/block.js) function and then serialized. The `payloadHash` is calculated as the SHA-256 of the concatenated serialized transactions.
 
-Once [LIP 0026 "Establish block validity by applying transactions sequentially"][establish-validity] is implemented, transactions will be sorted by the block forger in the order in which they are applied to the blockchain, and included in the same order in the block payload. The serialized transaction IDs in the transaction application order are used to build a Merkle tree according to the specifications defined in "Introduce Merkle Trees and Inclusion Proofs". The `transactionRoot` is set to the resulting Merkle root and included in the block header instead of `payloadHash`. Notice that `transactionRoot` has the same type and size as `payloadHash`.
-
+Once [LIP 0026 "Establish block validity by applying transactions sequentially"][establish-validity] is implemented, transactions will be sorted by the block forger in the order in which they are applied to the blockchain, and included in the same order in the block payload. The serialized transaction IDs in the transaction application order are used to build a Merkle tree according to the specifications defined in [LIP 0031 "Introduce Merkle trees and inclusion proofs"][introduce-MT]). The `transactionRoot` is set to the resulting Merkle root and included in the block header instead of `payloadHash`. Notice that `transactionRoot` has the same type and size as `payloadHash`.
 
 ### Block Verification
 
-To verify the validity of a block, first the Merkle root is calculated from the transactions included in the block payload and checked against the `transactionRoot` stored in the block header. The same set of transactions sorted in a different way would result in a different Merkle root, and consequently an invalid block. In this sense, the `transactionRoot` contains information about the order in which the transactions were applied to the blockchain. Then, the transactions are verified and applied in the same order in which they have been inserted in the payload. 
-
+To verify the validity of a block, first the Merkle root is calculated from the transactions included in the block payload and checked against the `transactionRoot` stored in the block header. The same set of transactions sorted in a different way would result in a different Merkle root, and consequently an invalid block. In this sense, the `transactionRoot` contains information about the order in which the transactions were applied to the blockchain. Then, the transactions are verified and applied in the same order in which they have been inserted in the payload.
 
 ### Transactions Ordering
 
 To reproduce the same Merkle root consistently, the transactions have to be sorted in a consistent way. We consider two viable options:
 
-1. Sort by transaction ID: transactions are sorted according to their transaction ID in ascending order. Using this sorting method, it is easy to give a proof-of-absence for a certain transaction by giving a proof-of-inclusion for two transactions next to each other in the tree and whose IDs bound the target transaction ID. 
+1. Sort by transaction ID: transactions are sorted according to their transaction ID in ascending order. Using this sorting method, it is easy to give a proof-of-absence for a certain transaction by giving a proof-of-inclusion for two transactions next to each other in the tree and whose IDs bound the target transaction ID.
 2. Sort by application order: after [LIP 0026][establish-validity] comes into effect, transactions will be applied to the blockchain state in a specific order, chosen by the forger. Therefore, transactions will be already sorted in this way in the block payload. Using this sorting method to build the Merkle tree and consequently calculate the `transactionRoot` allows to implicitly make the application order an immutable part of the block header. This approach does not allow for an efficient proof-of-absence, however this is only a marginal downside as proofs-of-absence do not have relevant use-case scenarios in the current protocol.
 
 As mentioned above, we choose option 2.
 
-
 ## Specification
 
-We assume [LIP 0019 "Use full SHA-256 hash of transaction as transactionID"](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0019.md) is already effective, and transaction IDs are 32 bytes long. 
+We assume [LIP 0019 "Use full SHA-256 hash of transaction as transactionID"](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0019.md) is already effective, and transaction IDs are 32 bytes long.
 
 Given a Merkle tree and corresponding Merkle root `merkleRoot` built from the array `transactionIDsArray` according to the specifications defined in [LIP 0031][introduce-MT], the `transactionRoot` is set as `transactionRoot = merkleRoot`. Here `transactionIDsArray` is an array of `bytes` containing the serialized transaction IDs. The `transactionRoot` is then stored in the block header instead of `payloadHash`.
 
 To verify the validity of the block, `transactionIDsArray` is again built from the serialized transactions stored in the payload hash, keeping the same order, and used to calculate the Merkle root `merkleRoot`. The `transactionRoot` is valid if `transactionRoot == merkleRoot`.
-
 
 ## Backwards Compatibility
 
