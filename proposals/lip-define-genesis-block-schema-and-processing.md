@@ -11,9 +11,7 @@ Requires: 0003, 0014, 0017, 0018, 0022, 0029, 0030, 0032
 
 ## Abstract
 
-This LIP defines a new block asset schema that allows to specify an initial state of accounts and an initial delegate list valid for a certain bootstrapping period. The LIP also specifies how such a block is processed.
-This can make it easier to create a *genesis block*, the first block of a new blockchain, with a desired initial state using the Lisk SDK.
-The block schema is general enough to also define a more complex state computed as a snapshot of an existing blockchain.
+This LIP defines a new block asset schema that allows to specify an initial state of accounts and an initial delegate list valid for a certain bootstrapping period. The LIP also specifies how such a block is processed. This can make it easier to create a *genesis block*, the first block of a new blockchain, with a desired initial state using the Lisk SDK. The block schema is general enough to also define a more complex state computed as a snapshot of an existing blockchain.
 
 ## Copyright
 
@@ -21,14 +19,9 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The [Lisk mainnet genesis block](https://github.com/LiskHQ/lisk-core/blob/6ad049c6e26b5dc05e059701ddad82e040beffee/config/mainnet/genesis_block.json) creates the initial state of the Lisk blockchain by including a set of transactions that result in the desired state after being processed.
-The transaction processing logic in the genesis block, however, works differently than in other blocks. For instance, the desired token distribution is achieved by balance transfers transactions originating from a special *genesis account* (public key `d121d3abf5425fdc0f161d9ddb32f89b7750b4bdb0bff7d18b191d4b4bafa6d4` and Lisk address `6566229458323231555L` in the old format), which is allowed to have a negative balance.
-Additionally, an initial set of forgers is defined by including the respective delegate registration transactions and vote transactions. In contrast to transactions in other blocks, however, the transaction fee for all transactions in the genesis block is 0.
-This means that the transaction processing logic requires redundancy or special exceptions to be able to process the genesis block. Moreover, introducing the genesis account with special account rules creates extra complexity.
+The [Lisk mainnet genesis block](https://github.com/LiskHQ/lisk-core/blob/6ad049c6e26b5dc05e059701ddad82e040beffee/config/mainnet/genesis_block.json) creates the initial state of the Lisk blockchain by including a set of transactions that result in the desired state after being processed. The transaction processing logic in the genesis block, however, works differently than in other blocks. For instance, the desired token distribution is achieved by balance transfers transactions originating from a special *genesis account* (public key `d121d3abf5425fdc0f161d9ddb32f89b7750b4bdb0bff7d18b191d4b4bafa6d4` and Lisk address `6566229458323231555L` in the old format), which is allowed to have a negative balance. Additionally, an initial set of forgers is defined by including the respective delegate registration transactions and vote transactions. In contrast to transactions in other blocks, however, the transaction fee for all transactions in the genesis block is 0. This means that the transaction processing logic requires redundancy or special exceptions to be able to process the genesis block. Moreover, introducing the genesis account with special account rules creates extra complexity.
 
-For these reasons, this LIP defines a new block asset schema that allows to specify an initial state directly, which is simpler and more compact.
-Using this new block schema, it should be easier for developers to define the desired initial state of a new blockchain created with the Lisk SDK.
-For defining the initial state of accounts we use the account schema and serialization introduced in [LIP 0030][account-serialization-lip].
+For these reasons, this LIP defines a new block asset schema that allows to specify an initial state directly, which is simpler and more compact. Using this new block schema, it should be easier for developers to define the desired initial state of a new blockchain created with the Lisk SDK. For defining the initial state of accounts we use the account schema and serialization introduced in [LIP 0030][account-serialization-lip].
 
 ## Specification
 
@@ -98,18 +91,19 @@ Note that we impose no limit on the size of the overall block `b`.
 A block `b` obeying the schema and validity conditions above implies the following state changes:
 
 * The state of accounts is set as defined in `b.header.asset.accounts`. Only accounts defined in `b.header.asset.accounts` exist.
-* The direct child block of `b`  is the first block of a round. It further must have height equal to `b.header.height + 1`,  `previousBlockID` equal to the block ID of `b` and a timestamp of at least `b.header.timestamp+BLOCK_SLOT_LENGTH`, where `BLOCK_SLOT_LENGTH` is the length of a block slot in seconds.
-This way, the genesis block timestamp defines the block slots of the blockchain as `[b.header.timestamp+BLOCK_SLOT_LENGTH, b.header.timestamp + 2*BLOCK_SLOT_LENGTH)`,  `[b.header.timestamp + 2*BLOCK_SLOT_LENGTH, b.header.timestamp + 3*BLOCK_SLOT_LENGTH)`, and so on.
+* The direct child block of `b`  is the first block of a round. It further must have height equal to `b.header.height + 1`,  `previousBlockID` equal to the block ID of `b` and a timestamp of at least `b.header.timestamp+BLOCK_SLOT_LENGTH`, where `BLOCK_SLOT_LENGTH` is the length of a block slot in seconds. This way, the genesis block timestamp defines the block slots of the blockchain as `[b.header.timestamp+BLOCK_SLOT_LENGTH, b.header.timestamp + 2*BLOCK_SLOT_LENGTH)`,  `[b.header.timestamp + 2*BLOCK_SLOT_LENGTH, b.header.timestamp + 3*BLOCK_SLOT_LENGTH)`, and so on.
 
 ### Consensus
 
 The generation of the forger list and consensus on blocks works differently during the bootstrap period of `b.header.asset.initRounds` rounds, compared to the rounds afterwards.
 
 The forger list of a round, which assigns delegates to block slots, is computed as follows:
+
 * For the first `b.header.asset.initRounds` rounds, the forger list is given by `initDelegates`.
 * From round `b.header.asset.initRounds+1` onwards, the forger list is generated as specified in [LIP 0003](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0003.md) and [LIP 0022](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md).
 
 For the Lisk-BFT consensus protocol, specified in [LIP 0014][lip-0014], the values `chainMaxHeightPrevoted` and `chainMaxHeightFinalized` are both initialized with `b.header.height`. Additionally, the number of prevotes and precommits for blocks is computed as follows:
+
 * The consensus weight of a delegates in `b.header.asset.initDelegates` is 0 during the first `b.header.asset.initRounds` rounds, which implies that any prevotes or precommits for blocks in these rounds are ignored. If `lastHeightBootstrap` is the height of the last block in round `b.header.asset.initRounds`, then this means that `prevoteCounts[h]==0` and `precommitCounts[h]==0` holds for any `h` with `b.header.height<h<=lastHeightBootstrap`. See also [Section "Computing Prevotes and Precommits" in LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#computing-prevotes-and-precommits).
 Note that this change of consensus weight up to round `b.header.asset.initRounds` has no impact on the delegate weight in the DPoS voting system.
 * From round `b.header.asset.initRounds+1` onwards, the consensus works as specified in [LIP 0014][lip-0014].
@@ -122,12 +116,10 @@ This can be achieved by setting `delegateMinHeightActive` to at least `lastHeigh
 
 Proof-of-Work blockchains such as Bitcoin do not require an initial distribution of tokens to start the blockchain, as new tokens can simply be created and distributed with new blocks. However, for a (Delegated) Proof-of-Stake blockchain, the right to create blocks necessarily depends on the distribution of stake. Therefore, an initial distribution of tokens is typically defined in the genesis block of the blockchain.
 
-One approach to define an initial state is to start from a very simple starting state (no accounts/UTXOs or only one account/UTXO controlling all tokens) and include a set of transactions in the genesis block that result in the desired initial state. One advantage is that this makes it easier to guarantee that the initial state is consistent because it can be obtained from a sequence of valid transactions.
-This is the approach used for the [Lisk mainnet genesis block](https://github.com/LiskHQ/lisk-core/blob/6ad049c6e26b5dc05e059701ddad82e040beffee/config/mainnet/genesis_block.json).
+One approach to define an initial state is to start from a very simple starting state (no accounts/UTXOs or only one account/UTXO controlling all tokens) and include a set of transactions in the genesis block that result in the desired initial state. One advantage is that this makes it easier to guarantee that the initial state is consistent because it can be obtained from a sequence of valid transactions. This is the approach used for the [Lisk mainnet genesis block](https://github.com/LiskHQ/lisk-core/blob/6ad049c6e26b5dc05e059701ddad82e040beffee/config/mainnet/genesis_block.json).
 
 Many Proof-of-Stake blockchains, however,  define the desired initial state directly ([Cardano](https://input-output-hk.github.io/jormungandr/advanced/01_the_genesis_block.html), [Cosmos](https://github.com/cosmos/launch/blob/master/genesis.json), [Substrate](https://substrate.dev/docs/en/development/deployment/chain-spec#the-genesis-state)).
-This can be simpler and more compact than creating and signing a set of transactions that result in the desired state, in particular, if that state is rather complex.
-For instance, the desired initial token distribution can be achieved by specifying only the address, balance and initial nonce for all accounts according to [LIP 0030][account-serialization-lip], which is more compact than a set of signed balance transfer transactions to every account.
+This can be simpler and more compact than creating and signing a set of transactions that result in the desired state, in particular, if that state is rather complex. For instance, the desired initial token distribution can be achieved by specifying only the address, balance and initial nonce for all accounts according to [LIP 0030][account-serialization-lip], which is more compact than a set of signed balance transfer transactions to every account.
 
 Further note that the block defined in the specifications enforces a unique account ordering and does not contain any signatures (which could only be created by the party holding the respective private key). This means that multiple parties that agree on the same initial state can independently create equal genesis blocks.
 
@@ -135,23 +127,15 @@ Overall, we therefore propose to define the state of accounts and the set of ini
 
 ### Initial State and Protocol Parameters
 
-In order to keep the block asset schema as simple as possible, we choose to only include the ability to define an initial blockchain state, i.e., the state of accounts and an initial set of delegates used to generate the forger list valid for a certain number of rounds.
-Other configurable protocol parameters of a blockchain build with the Lisk SDK (for instance, the block time, the length of a round or the network identifier) are not included in the block asset schema.
-Of course these parameters as well as custom transactions or any chain-specific logic must still be shared among all nodes that run the same blockchain.
+In order to keep the block asset schema as simple as possible, we choose to only include the ability to define an initial blockchain state, i.e., the state of accounts and an initial set of delegates used to generate the forger list valid for a certain number of rounds. Other configurable protocol parameters of a blockchain build with the Lisk SDK (for instance, the block time, the length of a round or the network identifier) are not included in the block asset schema. Of course these parameters as well as custom transactions or any chain-specific logic must still be shared among all nodes that run the same blockchain.
 
 ### Bootstrap Period
 
-Using a sufficiently long bootstrapping time to allow for the majority of stake to vote is important for the security of the blockchain.
-That is why the length of the bootstrapping period can be defined using the property `b.header.asset.initRounds`. If there is only a short bootstrapping period in which only a small fraction of stake votes, then the delegates in the first rounds are only supported by a small fraction of stake. This means that a malicious entity with small stake could control more than 2/3 of the forging delegates in one of the first rounds. This can be an issue as these delegates could attempt to perform a [Long Range Attack](https://blog.ethereum.org/2014/05/15/long-range-attacks-the-serious-problem-with-adaptive-proof-of-work/) at any later stage.
+Using a sufficiently long bootstrapping time to allow for the majority of stake to vote is important for the security of the blockchain. That is why the length of the bootstrapping period can be defined using the property `b.header.asset.initRounds`. If there is only a short bootstrapping period in which only a small fraction of stake votes, then the delegates in the first rounds are only supported by a small fraction of stake. This means that a malicious entity with small stake could control more than 2/3 of the forging delegates in one of the first rounds. This can be an issue as these delegates could attempt to perform a [Long Range Attack](https://blog.ethereum.org/2014/05/15/long-range-attacks-the-serious-problem-with-adaptive-proof-of-work/) at any later stage.
 
-The selection of standby delegates and shuffling of the forger list for a round `r` depends on `seedReveal` values of blocks in rounds `r-1`, `r-2` and `r-3`, see [LIP 0022](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md).
-Moreover, the selection of active delegates and random selection of standby delegates for round `r` uses the delegate weights at the end or round `r-2`.
-In order to avoid some edge cases, we therefore require that `b.header.asset.initRounds` is set to at least `3`.
+The selection of standby delegates and shuffling of the forger list for a round `r` depends on `seedReveal` values of blocks in rounds `r-1`, `r-2` and `r-3`, see [LIP 0022](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md). Moreover, the selection of active delegates and random selection of standby delegates for round `r` uses the delegate weights at the end or round `r-2`. In order to avoid some edge cases, we therefore require that `b.header.asset.initRounds` is set to at least `3`.
 
-During the bootstrap period, the prevotes and precommits by the delegates in `b.header.asset.initDelegates` are ignored and therefore no blocks are finalized.
-This is to avoid the possibility that a huge change of delegates at the end of the bootstrap period together with adverse network conditions could lead to two conflicting blocks being considered final.
-As discussed in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#changes-of-delegates), the safety guarantee of the Lisk-BFT consensus algorithm only holds if not too many honest delegates change at the same time.
-As the bootstrap period is rather short and users are mainly expected to vote during this period, we believe it is acceptable that blocks can only be finalized after the bootstrap period.
+During the bootstrap period, the prevotes and precommits by the delegates in `b.header.asset.initDelegates` are ignored and therefore no blocks are finalized. This is to avoid the possibility that a huge change of delegates at the end of the bootstrap period together with adverse network conditions could lead to two conflicting blocks being considered final. As discussed in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#changes-of-delegates), the safety guarantee of the Lisk-BFT consensus algorithm only holds if not too many honest delegates change at the same time. As the bootstrap period is rather short and users are mainly expected to vote during this period, we believe it is acceptable that blocks can only be finalized after the bootstrap period.
 
 ### Using the New Block Asset to Bootstrap a New Blockchain
 
@@ -169,7 +153,8 @@ In this section, we shortly want to elaborate how the block asset defined above 
 This LIP defines a new block schema and processing, but does not imply a hardfork of the Lisk mainnet.
 
 ## Reference Implementation
-TBD.
+
+TBD
 
 [account-serialization-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0030.md
 [block-serialization-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0029.md
