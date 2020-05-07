@@ -45,3 +45,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0031](proposals/lip-0031.md) | Introduce Merkle trees and inclusion proofs                                                    | Alessandro Ricottone                         | Informational   | Draft         |
 | [0032](proposals/lip-0032.md) | Replace payload hash with Merkle tree root in block header                                     | Alessandro Ricottone                         | Standards Track | Draft         |
 | [0033](proposals/lip-0033.md) | Introduce numbering scheme for transaction types                                               | Nazar Hussain, Iker Alustiza                 | Informational   | Draft         |
+| [0034](proposals/lip-0034.md) | Define new block schema and processing for genesis block                                       | Jan Hackfeld, Nazar Hussain                  | Standards Track | Draft         |
