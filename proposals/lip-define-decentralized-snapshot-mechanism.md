@@ -3,9 +3,10 @@ LIP: <LIP number>
 Title: Define decentralized snapshot and hardfork process
 Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
         Nazar Hussain <nazar@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/define-decentralized-snapshot-and-hardfork-process/222
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2020-04-08
+Updated: 2020-05-07
 Requires: 0017, 0018, 0020, 0030, 0031, 0034
 ```
 
