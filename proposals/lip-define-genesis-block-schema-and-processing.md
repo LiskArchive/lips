@@ -3,9 +3,10 @@ LIP: <LIP number>
 Title: Define new block schema and processing for genesis block
 Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
         Nazar Hussain <nazar@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/define-new-block-schema-and-processing-for-genesis-block/221
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2020-04-08
+Updated: 2020-04-24
 Requires: 0003, 0014, 0017, 0018, 0022, 0029, 0030, 0032
 ```
 
