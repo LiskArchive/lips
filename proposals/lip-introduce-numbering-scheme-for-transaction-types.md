@@ -3,9 +3,10 @@ LIP: <LIP number>
 Title: Introduce numbering scheme for transaction types
 Author: Nazar Hussain <nazar@lightcurve.io>
         Iker Alustiza <iker@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/introduce-numbering-scheme-for-transaction-types/220
 Type: Informational
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2020-03-26
+Updated: 2020-05-07
 ```
 
 ## Abstract
