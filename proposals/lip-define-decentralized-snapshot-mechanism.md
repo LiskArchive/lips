@@ -6,12 +6,12 @@ Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Requires: 0017, 0018, 0020, 0030, 0031, 003X
+Requires: 0017, 0018, 0020, 0030, 0031, 0034
 ```
 
 ## Abstract
 
-This LIP defines how a unique *snapshot block* can be computed from the Lisk mainnet blockchain up to a certain height. This block follows the schema introduced in [LIP "Define genesis block schema and processing"][genesis-block-lip] and, in particular, contains the state of all accounts. This yields a snapshot mechanism that can be used to perform a hardfork on the Lisk mainnet as all Lisk mainnet nodes can independently compute the snapshot block at the same time. The additional benefit of such a snapshot block is that nodes can directly synchronize from this block instead of having to synchronize from the original genesis block of the Lisk blockchain. This enables an implementation that is only partially backwards compatible, i.e., it can apply blocks and transactions following the latest version of the protocol, but cannot apply blocks and transactions from previous protocol versions.
+This LIP defines how a unique *snapshot block* can be computed from the Lisk mainnet blockchain up to a certain height. This block follows the schema introduced in [LIP 0034 "Define genesis block schema and processing"][genesis-block-lip] and, in particular, contains the state of all accounts. This yields a snapshot mechanism that can be used to perform a hardfork on the Lisk mainnet as all Lisk mainnet nodes can independently compute the snapshot block at the same time. The additional benefit of such a snapshot block is that nodes can directly synchronize from this block instead of having to synchronize from the original genesis block of the Lisk blockchain. This enables an implementation that is only partially backwards compatible, i.e., it can apply blocks and transactions following the latest version of the protocol, but cannot apply blocks and transactions from previous protocol versions.
 
 ## Copyright
 
@@ -31,7 +31,7 @@ In this section, we define how the snapshot block is computed and how it can be 
 
 ### Snapshot Block
 
-Let `HEIGHT_SNAPSHOT` be a constant defining the height at which the snapshot of the state of the Lisk mainnet blockchain is supposed to be performed (to be defined at the time of release). In this section, we describe how to compute a snapshot block `b`, which obeys the schema defined in [LIP "Define genesis block schema and processing"][genesis-block-lip], from the state of the Lisk mainnet blockchain after processing the block at height `HEIGHT_SNAPSHOT`. We assume that the block at height `HEIGHT_SNAPSHOT` is the last block of a round.
+Let `HEIGHT_SNAPSHOT` be a constant defining the height at which the snapshot of the state of the Lisk mainnet blockchain is supposed to be performed (to be defined at the time of release). In this section, we describe how to compute a snapshot block `b`, which obeys the schema defined in [LIP 0034 "Define genesis block schema and processing"][genesis-block-lip], from the state of the Lisk mainnet blockchain after processing the block at height `HEIGHT_SNAPSHOT`. We assume that the block at height `HEIGHT_SNAPSHOT` is the last block of a round.
 
 #### General Block Properties
 
@@ -41,7 +41,7 @@ Let `a` be the block at height `HEIGHT_SNAPSHOT`.
 * The value of `b.header.height` is the height of `a` plus 1.
 * The value of `b.header.previousBlockID` is computed as follows. For every block from height 1 (genesis block of Lisk mainnet) to height `HEIGHT_SNAPSHOT`, let `blockHash` be the 256 bit block hash computed according to [LIP 0020](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0020.md). Let `blockHashArray` be the array of bytes containing the `blockHash` values of all blocks from height `1` to `HEIGHT_SNAPSHOT` (inclusive) ordered ascending by height. Then `b.header.previousBlockID` is the 256 bit Merkle root generated from `blockHashArray` according to [LIP 0031][merkle-tree-lip].
 
-The values of the properties in `b.header.asset` are described in the next sections. All other properties have the value required in  [LIP "Define genesis block schema and processing"][genesis-block-lip].
+The values of the properties in `b.header.asset` are described in the next sections. All other properties have the value required in  [LIP 0034 "Define genesis block schema and processing"][genesis-block-lip].
 
 #### Account State
 
@@ -92,7 +92,7 @@ In this section, we describe the process of every node in the Lisk mainnet compu
 
 2. After 201 subsequent blocks are built on `a`, the node computes the snapshot block `b` as specified in the previous section.
 
-3. A new node can be started running an implementation of the new protocol with the snapshot block `b` as input. The node processes `b` as defined in [LIP "Define genesis block schema and processing"][genesis-block-lip] and afterwards processes new blocks according to the new protocol.
+3. A new node can be started running an implementation of the new protocol with the snapshot block `b` as input. The node processes `b` as defined in [LIP 0034 "Define genesis block schema and processing"][genesis-block-lip] and afterwards processes new blocks according to the new protocol.
 
 After the hardfork and after the snapshot block `b` is finalized, the implementation of the new protocol can provide the following two options for new nodes joining the network:
 
