@@ -27,7 +27,7 @@ This approach also allows that the implementation of the new protocol is only pa
 
 ## Specification
 
-In this section, we define how the snapshot block is computed and how it can be used to conduct a decentralized snapshot and hardfork on Lisk mainnet.
+In this section, we define how the snapshot block is computed and how it can be used to conduct a decentralized snapshot and hardfork on the Lisk mainnet.
 
 ### Snapshot Block
 
@@ -47,7 +47,7 @@ The values of the properties in `b.header.asset` are described in the next secti
 
 This section describes how the array of account states provided in `b.header.asset.accounts` is computed.
 
-The state of an account on Lisk mainnet after applying the block at height `HEIGHT_SNAPSHOT` is specified following the schema defined in [LIP 0030][account-serialization-lip] and then serialized accordingly. The required properties of an account are set as follows:
+The state of an account on the Lisk mainnet after applying the block at height `HEIGHT_SNAPSHOT` is specified following the schema defined in [LIP 0030][account-serialization-lip] and then serialized accordingly. The required properties of an account are set as follows:
 
 * The value of the `address` property of an account is the 20-byte value specified in [LIP 0018](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md) if the account has a registered public key. Otherwise, it is the 8-byte value of the legacy address.
 * The value of the `balance` property is the account balance in Beddows.
@@ -82,7 +82,7 @@ Additionally, the so-called *Genesis Account* with public key `d121d3abf5425fdc0
 
 This section describes how the values provided in `b.header.asset.initDelegates` and `b.header.asset.initRounds` are computed.
 
-The byte array `b.header.asset.initDelegates` contains the 20-byte addresses of the 103 delegates with largest vote weight at height `HEIGHT_SNAPSHOT` according to the DPoS system active on Lisk mainnet at that height (using the tie-breaking rules of the active DPoS system). The delegates in the array are ordered descending by the total vote weight with the same tie-breaking as used for the selection. The value of `b.header.asset.initRounds` is `600` (600 rounds are approximately 7 days assuming no missed blocks).
+The byte array `b.header.asset.initDelegates` contains the 20-byte addresses of the 103 delegates with largest vote weight at height `HEIGHT_SNAPSHOT` according to the DPoS system active on the Lisk mainnet at that height (using the tie-breaking rules of the active DPoS system). The delegates in the array are ordered descending by the total vote weight with the same tie-breaking as used for the selection. The value of `b.header.asset.initRounds` is `600` (600 rounds are approximately 7 days assuming no missed blocks).
 
 ### Decentralized Snapshot and Hardfork Process
 
@@ -119,7 +119,7 @@ Assuming that SHA256 is a cryptographic hash function, then the 256 bit block ID
 
 In this section, we want to justify the choice for some free parameters in the snapshot block that are chosen to ensure a smooth and robust snapshot and hardfork process. Most properties of the snapshot block are simply dictated by the fact that the block is a snapshot of the blockchain state at a certain height.
 
-* We change timestamps to Unix time in the Lisk protocol to follow a well-known standard. Therefore, `b.header.timestamp` is set by converting `a.header.timestamp+7200` to Unix time and rounding down to a multiple of 10. The rounding ensures that the starting time of a block slot is always divisible by 10. Adding 7200 implies that there is a gap of 2 hours with no blocks between `a` and `b`. This is to ensure that nodes can first wait for 201 subsequent blocks to be build on `a` (this takes about 34 minutes assuming no missed block) and then there is sufficient time for all nodes to compute the snapshot block `b`. The gap of 2 hours avoids that there is a large number of missed blocks after the hardfork. The offset of 7200 can be adjusted once there is an implementation for computing the snapshot block that can be benchmarked.
+* We change timestamps to Unix time in the Lisk protocol to follow a well-known standard. Therefore, `b.header.timestamp` is set by converting `a.header.timestamp+7200` to Unix time and rounding down to a multiple of 10. The rounding ensures that the starting time of a block slot is always divisible by 10. Adding 7200 implies that there is a gap of 2 hours with no blocks between `a` and `b`. This is to ensure that nodes can first wait for 201 subsequent blocks to be built on `a` (this takes about 34 minutes assuming no missed block) and then there is sufficient time for all nodes to compute the snapshot block `b`. The gap of 2 hours avoids that there is a large number of missed blocks after the hardfork. The offset of 7200 can be adjusted once there is an implementation for computing the snapshot block that can be benchmarked.
 * For a smooth transition from the current voting system in the Lisk mainnet to the new voting system (see [LIP 0022](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md]) and [LIP 0023](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md)) we propose to fix the top 103 delegates for around 7 days. This period should be long enough for the majority of stake to vote using the new vote transaction. Having the delegates selected by the new voting system already after a few rounds could imply drastic changes in the delegate set in the first rounds and would increase the risk for long range attacks.
 
 ### Historic Blocks and Transactions
@@ -140,7 +140,7 @@ Another possible solution would be to include hashes that authenticate the accou
 
 ## Backwards Compatibility
 
-This LIP describes the protocol and process for conducting a hardfork on Lisk mainnet.
+This LIP describes the protocol and process for conducting a hardfork on the Lisk mainnet.
 
 ## Reference Implementation
 
