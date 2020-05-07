@@ -68,8 +68,7 @@ In order to ensure the uniqueness of the account state, we perform the following
 
 * Ensure that an account only has an associated public key if and only if there is at least one outgoing transaction from that account.
 * Ensure that there is no account with no incoming transaction.
-* Ensure that there is at most one account for every 8-byte binary address (legacy address format).
-This means that if two accounts have different string addresses corresponding to the same 8-byte address (e.g., `123L` and `0123L`), they are merged by adding the respective balances. If one of the accounts has a registered public key, then this is the public key of the merged account.
+* Ensure that there is at most one account for every 8-byte binary address (legacy address format). This means that if two accounts have different string addresses corresponding to the same 8-byte address (e.g., `123L` and `0123L`), they are merged by adding the respective balances. If one of the accounts has a registered public key, then this is the public key of the merged account.
 
 We define the order of accounts in the array `b.header.asset.accounts` as follows:
 
@@ -106,38 +105,22 @@ After the hardfork and after the snapshot block `b` is finalized, the implementa
 
 One important requirement for the decentralized snapshot is that every node that has the same blockchain from height 1 to height `HEIGHT_SNAPSHOT` computes the same snapshot block `b`. Otherwise, different snapshot blocks would lead to a network split, which could be difficult to resolve.
 
-For all nodes with the same blockchain from height 1 to height `HEIGHT_SNAPSHOT` clearly the values of `b.header.timestamp`, `b.header.height` and `b.header.previousBlockID` must be the same. If the blockchain up to height `HEIGHT_SNAPSHOT` is the same, also the balances and votes must be the same.
-This implies that `b.header.asset.initDelegates` must be the same as we use uniform tie-breaking by smaller address. Clearly, also `b.header.asset.initRounds` is the same.
+For all nodes with the same blockchain from height 1 to height `HEIGHT_SNAPSHOT` clearly the values of `b.header.timestamp`, `b.header.height` and `b.header.previousBlockID` must be the same. If the blockchain up to height `HEIGHT_SNAPSHOT` is the same, also the balances and votes must be the same. This implies that `b.header.asset.initDelegates` must be the same as we use uniform tie-breaking by smaller address. Clearly, also `b.header.asset.initRounds` is the same.
 
-Moreover, [LIP 0030][account-serialization-lip] defines a unique way to serialize an account given that all account properties are the same.
-Hence, if all rows in the accounts table are the same for two nodes, the value of `b.header.asset.accounts` must be the same as we define a unique ordering of accounts.
+Moreover, [LIP 0030][account-serialization-lip] defines a unique way to serialize an account given that all account properties are the same. Hence, if all rows in the accounts table are the same for two nodes, the value of `b.header.asset.accounts` must be the same as we define a unique ordering of accounts.
 
-However, due to past bugs or inconsistent database migrations, there could be minor inconsistencies between the account tables of nodes in the network. That is why we perform the additional consistency checks for all accounts as described in the specifications.
-Moreover, we suggest to perform at least one off-chain test run where delegates compute the snapshot block for a height smaller than `HEIGHT_SNAPSHOT` and the block ID of this snapshot block is compared off-chain.
+However, due to past bugs or inconsistent database migrations, there could be minor inconsistencies between the account tables of nodes in the network. That is why we perform the additional consistency checks for all accounts as described in the specifications. Moreover, we suggest to perform at least one off-chain test run where delegates compute the snapshot block for a height smaller than `HEIGHT_SNAPSHOT` and the block ID of this snapshot block is compared off-chain.
 
 ### Security Implications
 
-Assuming that SHA256 is a cryptographic hash function, then the 256 bit block ID of the snapshot block `b`, computed according to [LIP 0020](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0020.md) and denoted by `SNAPSHOT_BLOCK_ID`, fully authenticates the complete account state at height `HEIGHT_SNAPSHOT`, the sequence of blocks from height 1 to height `HEIGHT_SNAPSHOT` and all included transactions.
-All relevant hash operations used for computing `SNAPSHOT_BLOCK_ID` utilize 256 bit digests which yield 256 bits preimage resistance.
-Note that although previous block IDs are only 64 bit long, we use full 256 bit hashes of the block header for the block tree.
-Similarly, the payload hash of a block also has 256 bit length and is computed from the full serialized transactions in a block (not from the 64 bit transaction IDs).
-Nodes that do not compute the snapshot block from the whole Lisk blockchain from height `1` to height `HEIGHT_SNAPSHOT` themselves, have to obtain it or its block ID from a trusted source.
-That is why we suggest to hardcode the block ID `SNAPSHOT_BLOCK_ID` once the snapshot block is finalized in order to let new nodes join the network without having to compute the snapshot block.
+Assuming that SHA256 is a cryptographic hash function, then the 256 bit block ID of the snapshot block `b`, computed according to [LIP 0020](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0020.md) and denoted by `SNAPSHOT_BLOCK_ID`, fully authenticates the complete account state at height `HEIGHT_SNAPSHOT`, the sequence of blocks from height 1 to height `HEIGHT_SNAPSHOT` and all included transactions. All relevant hash operations used for computing `SNAPSHOT_BLOCK_ID` utilize 256 bit digests which yield 256 bits preimage resistance. Note that although previous block IDs are only 64 bit long, we use full 256 bit hashes of the block header for the block tree. Similarly, the payload hash of a block also has 256 bit length and is computed from the full serialized transactions in a block (not from the 64 bit transaction IDs). Nodes that do not compute the snapshot block from the whole Lisk blockchain from height `1` to height `HEIGHT_SNAPSHOT` themselves, have to obtain it or its block ID from a trusted source. That is why we suggest to hardcode the block ID `SNAPSHOT_BLOCK_ID` once the snapshot block is finalized in order to let new nodes join the network without having to compute the snapshot block.
 
 ### Choice of Parameters
 
-In this section, we want to justify the choice for some free parameters in the snapshot block that are chosen to ensure a smooth and robust snapshot and hardfork process. Most properties of the snapshot block are simply dictacted by the fact that the block is a snapshot of the blockchain state at a certain height.
+In this section, we want to justify the choice for some free parameters in the snapshot block that are chosen to ensure a smooth and robust snapshot and hardfork process. Most properties of the snapshot block are simply dictated by the fact that the block is a snapshot of the blockchain state at a certain height.
 
-* We change timestamps to Unix time in the Lisk protocol to follow a well-known standard.
-Therefore, `b.header.timestamp` is set by converting `a.header.timestamp+7200` to Unix time and rounding down to a multiple of 10.
-The rounding ensures that the starting time of a block slot is always divisible by 10.
-Adding 7200 implies that there is a gap of 2 hours with no blocks between `a` and `b`.
-This is to ensure that nodes can first wait for 201 subsequent blocks to be build on `a` (this takes about 34 minutes assuming no missed block) and then there is sufficient time for all nodes to compute the snapshot block `b`.
-The gap of 2 hours avoids that there is a large number of missed blocks after the hardfork.
-The offset of 7200 can be adjusted once there is an implementation for computing the snapshot block that can be benchmarked.
-* For a smooth transition from the current voting system in the Lisk mainnet to the new voting system (see [LIP 0022](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md]) and [LIP 0023](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md)) we propose to fix the top 103 delegates for around 7 days.
-This period should be long enough for the majority of stake to vote using the new vote transaction.
-Having the delegates selected by the new voting system already after a few rounds could imply drastic changes in the delegate set in the first rounds and would increase the risk for long range attacks.
+* We change timestamps to Unix time in the Lisk protocol to follow a well-known standard. Therefore, `b.header.timestamp` is set by converting `a.header.timestamp+7200` to Unix time and rounding down to a multiple of 10. The rounding ensures that the starting time of a block slot is always divisible by 10. Adding 7200 implies that there is a gap of 2 hours with no blocks between `a` and `b`. This is to ensure that nodes can first wait for 201 subsequent blocks to be build on `a` (this takes about 34 minutes assuming no missed block) and then there is sufficient time for all nodes to compute the snapshot block `b`. The gap of 2 hours avoids that there is a large number of missed blocks after the hardfork. The offset of 7200 can be adjusted once there is an implementation for computing the snapshot block that can be benchmarked.
+* For a smooth transition from the current voting system in the Lisk mainnet to the new voting system (see [LIP 0022](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md]) and [LIP 0023](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md)) we propose to fix the top 103 delegates for around 7 days. This period should be long enough for the majority of stake to vote using the new vote transaction. Having the delegates selected by the new voting system already after a few rounds could imply drastic changes in the delegate set in the first rounds and would increase the risk for long range attacks.
 
 ### Historic Blocks and Transactions
 
@@ -153,7 +136,7 @@ One simple solution would be to perform a centralized snapshot at a previously a
 
 #### Account Tree
 
-Another possible solution would be to include hashes that authenticate the account states and block history as part of every block. Then a decentralized snapshot could be performed at any height without a specific snapshot block. This would, however, require more complex data structures such as [Sparse Merkle Trees](https://eprint.iacr.org/2016/683.pdf) and [Patricia Tree](https://github.com/ethereum/wiki/wiki/Patricia-Tree) to be able to quickly compute the updated hash authenticating the new states of the accounts. Such a change would also need to be implemented first as a hardfork before it could be used to simplify the process for future hardforks.  Additionally, a different storage layer would likely be necessary for sufficient performance. Due to this overall complexity, this solution was discarded.
+Another possible solution would be to include hashes that authenticate the account states and block history as part of every block. Then a decentralized snapshot could be performed at any height without a specific snapshot block. This would, however, require more complex data structures such as [Sparse Merkle Trees](https://eprint.iacr.org/2016/683.pdf) and [Patricia Tree](https://github.com/ethereum/wiki/wiki/Patricia-Tree) to be able to quickly compute the updated hash authenticating the new states of the accounts. Such a change would also need to be implemented first as a hardfork before it could be used to simplify the process for future hardforks. Additionally, a different storage layer would likely be necessary for sufficient performance. Due to this overall complexity, this solution was discarded.
 
 ## Backwards Compatibility
 
@@ -161,7 +144,7 @@ This LIP describes the protocol and process for conducting a hardfork on Lisk ma
 
 ## Reference Implementation
 
-TBD.
+TBD
 
 [account-serialization-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0030.md
 [merkle-tree-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md
