@@ -44,19 +44,19 @@ The transaction type numbering scheme works as follows. Every transaction type w
 
 The following table specifies the transaction type values we will be using for the protocol.
 
-| Transaction Type             | Network Security<br>3.0 | Base type value  | Network Economics <br>DPOS<br>Network Longevity<br>4.0 | Interoperability<br>5.0 |
-|------------------------------|-------------------------|------------------|--------------------------------------------------------|-------------------------|
-| Transfer                     | 8                       | 100              | 100                                                    | 101                     |
-| Delegate Registration        | 10                      | 200              | 200                                                    | 201                     |
-| Vote                         | 11                      | 300              | 300                                                    | 301                     |
-| Multisignature Registration  | 12                      | 400              | 400                                                    | 401                     |
-| Unlock Vote                  |                         | 500              | 500                                                    | 501                     |
-| PoM                          |                         | 600              | 600                                                    | 601                     |
-| Reclaim                      |                         | 700              | 700                                                    | 701                     |
-| Second passphrase            | 9                       | Disabled         |                                                        |                         |
-| Dapp Registration            | 5                       | Disabled for now |                                                        |                         |
-| Dapp In                      | 6                       | Disabled for now |                                                        |                         |
-| Dapp Out                     | 7                       | Disabled for now |                                                        |                         |
+| Transaction Type             | Network Security<br>3.0 | Base Type Value  | Network Economics/Consensus/Longevity<br>4.0 | Blockchain Interoperability<br>5.0 |
+|------------------------------|-------------------------|------------------|----------------------------------------------|------------------------------------|
+| Transfer                     | 8                       | 100              | 100                                          | 101                                |
+| Delegate Registration        | 10                      | 200              | 200                                          | 201                                |
+| Vote                         | 11                      | 300              | 300                                          | 301                                |
+| Multisignature Registration  | 12                      | 400              | 400                                          | 401                                |
+| Unlock Vote                  |                         | 500              | 500                                          | 501                                |
+| PoM                          |                         | 600              | 600                                          | 601                                |
+| Reclaim                      |                         | 700              | 700                                          | 701                                |
+| Second passphrase            | 9                       | Disabled         |                                              |                                    |
+| Dapp Registration            | 5                       | Disabled for now |                                              |                                    |
+| Dapp In                      | 6                       | Disabled for now |                                              |                                    |
+| Dapp Out                     | 7                       | Disabled for now |                                              |                                    |
 
 The following points should be considered:
 
