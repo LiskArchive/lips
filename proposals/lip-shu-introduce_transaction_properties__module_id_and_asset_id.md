@@ -3,8 +3,8 @@ LIP: lip-shu-introduce_transaction_properties__module_id_and_asset_id
 Title: Introduce transaction properties moduleID and assetID
 Author: Shusetsu Toda <shusetsu@lightcurve.io>
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2020-09-16
+Updated: 2020-09-28
 Requires: 0028
 ```
 
