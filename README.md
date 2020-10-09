@@ -47,3 +47,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0033](proposals/lip-0033.md) | Introduce numbering scheme for transaction types                                               | Nazar Hussain, Iker Alustiza                 | Informational   | Draft         |
 | [0034](proposals/lip-0034.md) | Define new block schema and processing for genesis block                                       | Jan Hackfeld, Nazar Hussain                  | Standards Track | Draft         |
 | [0035](proposals/lip-0035.md) | Define decentralized snapshot and hardfork process                                             | Jan Hackfeld, Nazar Hussain                  | Standards Track | Draft         |
+| [0036](proposals/lip-0036.md) | Introduce transaction properties moduleID and assetID                                          | Shusetsu Toda                                | Standards Track | Draft         |
