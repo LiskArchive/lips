@@ -1,0 +1,93 @@
+```
+LIP: <LIP number>
+Title: Use message tags and network identifiers for signatures
+Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+```
+
+## Abstract
+
+We introduce the concept of message tags for signatures. These message tags are prepended to the binary messages before being signed. A unique tag has to be used for each message type (transaction, block header, etc.), and in particular for each schema. This ensures that a signature for one message cannot be a valid signature for another message that serializes to the same binary message.
+
+Moreover, we generalize the usage of the network identifiers, which are currently used for transaction and block header signatures, to arbitrary signatures. This will prevent replay attacks for arbitrary messages.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+We want to avoid (1) replay attacks and (2) the re-usage of a signature for a different message of a different type.
+
+Case (2) could happen if there are two messages that are of different types but are serialized to the same binary message. For example, consider a block header `bh` that is serialized to the binary message `bm`. If the binary message `bm` can be deserialized against a transaction schema to a transaction `tx`, then a signature of `bh` would also be a valid signature of `tx` for the generator public key of `bh`. Note that for several reasons it is very unlikely that a concrete instance of this example passes block validation for `bh` and transaction validation for `tx`. For instance, the current schemas do not allow that`bh.generatorPublicKey` and `tx.senderPublicKey` are encoded in the same position of the binary message.
+
+Nevertheless, it is highly desirable to prevent such re-usage cases in general. In particular for new data structures that require a signature introduced by some future protocol enhancements.
+
+Replay attacks for transactions and blocks, i.e. replaying transactions or blocks on other chains, are already addressed by [LIP 0009](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md) and [LIP 0024](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#update-to-the-block-header-signing-procedure) respectively. However, replay attacks should be prevented for any kind of data structure for the same reason as above.
+
+## Rationale
+
+### Message Tags
+
+Prepending a tag to a binary message before signing, where the tag is specific to the type of the message, prevents the signature re-usage in general. Consider again the blockheader `bh` and the transaction `tx` that are serialized to the same binary message `bm`. When the tag `"LSK_BH_"` is used for block header signatures and the tag `"LSK_TX_"` for transaction signatures, then the signatures for `bh` and `tx` are computed by signing the messages `"LSK_BH_" || bm` and `"LSK_TX_" || bm` respectively, where `"||"` denotes concatenation. Hence, the signature of `bh` cannot be a valid signature for `tx` and vice versa (assuming no collisions in the signing function).
+
+Note that any updates to the serialization specification of a message type must be accompanied by introducing a new tag. For example, when the [transaction schema](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0028.md#transactionschema-schema) is updated, a new tag like `"LSK_TX:V2_"` must be defined and used.
+
+### Network Identifiers
+
+Network identifiers for transaction signatures and block signatures were already introduced in [LIP 0009](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md#specification) and [LIP 0024](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#update-to-the-block-header-signing-procedure) respectively to prevent replay attacks on other chains. Here, we specify how to use a network identifier for any kind of message to prevent replay attacks on other chains in general.
+
+## Specification
+
+### Message Tags
+
+Every binary message must be tagged before being signed. This is done as specified by the function `tagMessage` in the pseudo code below: A specific ASCII-encoded tag and a network identifier as specified in [LIP 0009](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0009.md#specification) are prepended to the message.
+
+```python
+tagMessage(tag, networkIdentifier, message):
+    return tag || networkIdentifier || message
+```
+
+The tag is chosen depending on the message type. Moreover, different serialization methods for the same message type require different tags. The following table defines the tags currently needed.
+
+**message type**                                                                                                                                     | **tag**
+---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------
+transaction with serialization as specified in [LIP 0028](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0028.md#transactionschema-schema) | "LSK_TX_"
+block header with serialization as specified in [LIP 0029](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0029.md#blockheader-schema)      | "LSK_BH_"
+
+#### Creating New Tags
+
+When a new tag is required in the future, the format
+
+    "LSK_" || TAG || "_"
+
+has to be used where:
+
+- Strings in double quotes are ASCII-encoded literals.
+- TAG is a unique string indicating the scheme and, optionally, additional information, e.g., to specify a version number as shown [above](#message-tags). TAG must contain only ASCII characters between 0x21 and 0x7e (inclusive), except that it must not contain underscore (0x5f).
+
+### Signing and Verifying with Ed25519
+
+Let [`Sign`](https://tools.ietf.org/html/rfc8032#section-5.1.6) and [`Verify`](https://tools.ietf.org/html/rfc8032#section-5.1.7) be the signing and verifying functions of Ed25519 as specified in [RFC 8032](https://tools.ietf.org/html/rfc8032). Then the signature for a binary message `m` and a secret key `sk` is generated by `signMessage(sk, tag, networkIdentifier, m)` as defined below. `tag` must be the correct message tag for `m` and `networkIdentifier` the correct network identifier for the chain. The resulting signature `sig` in combination with the message `m` and the matching public key `pk` is verified by `verifyMessageSig(pk, tag, networkIdentifier, m, sig)`.
+
+```python
+signMessage(sk, tag, networkIdentifier, m):
+    taggedMessage = tagMessage(tag, networkIdentifier, m)
+    return Sign(sk, taggedMessage)
+
+verifyMessageSig(pk, tag, networkIdentifier, m, sig):
+    taggedMessage = tagMessage(tag, networkIdentifier, m)
+    return Verify(pk, taggedMessage, sig)
+```
+
+## Backwards Compatibility
+
+Due to adding message tags to transaction and block signatures, the proposed signature scheme is incompatible with the current one and implies a hard fork.
+
+## Appendix
+
+### Examples
+
+TBA
