@@ -3,9 +3,10 @@ LIP: <LIP number>
 Title: Use message tags and network identifiers for signatures
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
 Discussions-To: https://research.lisk.io/t/use-message-tags-and-network-identifiers-for-signatures/
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-04-07
+Updated: 2021-04-30
 ```
 
 ## Abstract
