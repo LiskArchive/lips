@@ -54,7 +54,7 @@ The public key for a secret key `sk` is created by `SkToPk(sk)`.
 
 #### Signing and Verifying
 
-Let `m` be a binary message, `tag` the correct message tag for `m` as specified in the LIP ["Use message tags and network identifiers for signatures"][lip-use-message-tags-and-network-identifiers-for-signatures], `networkIdentifier` the correct network identifier of the chain and `sk` a secret key. Then, the signature is computed by `signBLS(sk, tag, networkIdentifier, m)` as defined below. The resulting signature `sig` in combination with the message `m` and the matching public key `pk` is verified by `verifyBLS(pk, tag, networkIdentifier, m, sig)`. In the following, let `tagMessage` be the function defined in the LIP ["Use message tags and network identifiers for signatures"][lip-use-message-tags-and-network-identifiers-for-signatures].
+Let `m` be a binary message, `tag` the correct message tag for `m` as specified in  LIP [0037][lip-use-message-tags-and-network-identifiers-for-signatures], `networkIdentifier` the correct network identifier of the chain and `sk` a secret key. Then, the signature is computed by `signBLS(sk, tag, networkIdentifier, m)` as defined below. The resulting signature `sig` in combination with the message `m` and the matching public key `pk` is verified by `verifyBLS(pk, tag, networkIdentifier, m, sig)`. In the following, let `tagMessage` be the function defined in LIP [0037][lip-use-message-tags-and-network-identifiers-for-signatures].
 
 ```python
 signBLS(sk, tag, networkIdentifier, m):
@@ -168,4 +168,4 @@ To create a new key pair, an initial randomness of at least 32 bytes is created,
 
 TBA
 
-[lip-use-message-tags-and-network-identifiers-for-signatures]: https://research.lisk.io/t/use-message-tags-and-network-identifiers-for-signatures/280
+[lip-use-message-tags-and-network-identifiers-for-signatures]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0037.md
