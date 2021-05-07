@@ -2,6 +2,7 @@
 LIP: <LIP number>
 Title: BLS signatures
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
+Discussions-To: https://research.lisk.io/t/bls-signatures/
 Type: Informational
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
