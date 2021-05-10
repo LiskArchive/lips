@@ -28,7 +28,7 @@ Very recent advancements have pushed the BLS signature scheme to a state that gi
 
 ## Specification
 
-The BLS signature scheme as specified in the IETF draft "[BLS Signatures draft-irtf-cfrg-bls-signature-04](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04)" is used. More specifically, the ciphersuite [BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04#section-4.2.3) is chosen. This ciphersuite uses the _[proof of possession](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04#section-3.3)_ scheme and the _[minimal-pubkey-size](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04#section-2.1)_ variant.
+The BLS signature scheme as specified in the IETF draft [BLS Signatures draft-irtf-cfrg-bls-signature-04](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04) is used. More specifically, the ciphersuite [BLS_SIG_BLS12381G2_XMD:SHA-256_SSWU_RO_POP_](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04#section-4.2.3) is chosen. This ciphersuite uses the _[proof of possession](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04#section-3.3)_ scheme and the _[minimal-pubkey-size](https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04#section-2.1)_ variant.
 
 The ciphersuite exposes the following functions:
 
@@ -54,7 +54,7 @@ The public key for a secret key `sk` is created by `SkToPk(sk)`.
 
 #### Signing and Verifying
 
-Let `m` be a binary message, `tag` the correct message tag for `m` as specified in  LIP [0037][lip-use-message-tags-and-network-identifiers-for-signatures], `networkIdentifier` the correct network identifier of the chain and `sk` a secret key. Then, the signature is computed by `signBLS(sk, tag, networkIdentifier, m)` as defined below. The resulting signature `sig` in combination with the message `m` and the matching public key `pk` is verified by `verifyBLS(pk, tag, networkIdentifier, m, sig)`. In the following, let `tagMessage` be the function defined in LIP [0037][lip-use-message-tags-and-network-identifiers-for-signatures].
+Let `m` be a binary message, `tag` the correct message tag for `m` as specified in [LIP 0037][lip-use-message-tags-and-network-identifiers-for-signatures], `networkIdentifier` the correct network identifier of the chain and `sk` a secret key. Then, the signature is computed by `signBLS(sk, tag, networkIdentifier, m)` as defined below. The resulting signature `sig` in combination with the message `m` and the matching public key `pk` is verified by `verifyBLS(pk, tag, networkIdentifier, m, sig)`. In the following, let `tagMessage` be the function defined in [LIP 0037][lip-use-message-tags-and-network-identifiers-for-signatures].
 
 ```python
 signBLS(sk, tag, networkIdentifier, m):
