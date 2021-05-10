@@ -54,15 +54,15 @@ The public key for a secret key `sk` is created by `SkToPk(sk)`.
 
 #### Signing and Verifying
 
-Let `m` be a binary message, `tag` the correct message tag for `m` as specified in [LIP 0037][lip-use-message-tags-and-network-identifiers-for-signatures], `networkIdentifier` the correct network identifier of the chain and `sk` a secret key. Then, the signature is computed by `signBLS(sk, tag, networkIdentifier, m)` as defined below. The resulting signature `sig` in combination with the message `m` and the matching public key `pk` is verified by `verifyBLS(pk, tag, networkIdentifier, m, sig)`. In the following, let `tagMessage` be the function defined in [LIP 0037][lip-use-message-tags-and-network-identifiers-for-signatures].
+Let `message` be a binary message, `tag` the correct message tag for `message` as specified in [LIP 0037][lip-use-message-tags-and-network-identifiers-for-signatures], `networkIdentifier` the correct network identifier of the chain and `sk` a secret key. Then, the signature is computed by `signBLS(sk, tag, networkIdentifier, message)` as defined below. The resulting signature `sig` in combination with the message `message` and the matching public key `pk` is verified by `verifyBLS(pk, tag, networkIdentifier, message, sig)`. In the following, let `tagMessage` be the function defined in [LIP 0037][lip-use-message-tags-and-network-identifiers-for-signatures].
 
 ```python
-signBLS(sk, tag, networkIdentifier, m):
-    taggedMessage = tagMessage(tag, networkIdentifier, m)
+signBLS(sk, tag, networkIdentifier, message):
+    taggedMessage = tagMessage(tag, networkIdentifier, message)
     return Sign(sk, taggedMessage)
 
-verifyBLS(pk, tag, networkIdentifier, m, sig):
-    taggedMessage = tagMessage(tag, networkIdentifier, m)
+verifyBLS(pk, tag, networkIdentifier, message, sig):
+    taggedMessage = tagMessage(tag, networkIdentifier, message)
     return Verify(pk, taggedMessage, sig).
 ```
 
@@ -78,7 +78,7 @@ The Lisk protocol could contain several transaction types that perform such a re
 
 We only consider signature aggregation for the case where several signatures for the same message are aggregated.
 
-Each aggregate signature needs to be accompanied by some information that specifies the set of public keys that correspond to the aggregate signature. Here, this is realized using a bitmap. Assume that `keyList` is a list that includes all potential public keys that could participate in the signature aggregation. The entries must be pairwise distinct. Moreover, let `pubKeySignaturePairs` be a list of pairs of public keys and signatures where all signatures belong to the same message, and all public keys are unique and contained in `keyList`. Then, the corresponding aggregate signature and bitmap can be computed via `createAggSig(keysList, pubKeySignaturePairs)` as in the pseudo code below. To verify if a signature is an aggregate signature of a binary message `m`, the function `verifyAggSig` can be used. `verifyAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, m)` returns `VALID` if and only if `signature` is an aggregate signature of the message `m` for the message tag `tag`, the network identifier `networkIdentifier` and for the public keys in `keyList` defined by `aggregationBits`.
+Each aggregate signature needs to be accompanied by some information that specifies the set of public keys that correspond to the aggregate signature. Here, this is realized using a bitmap. Assume that `keyList` is a list that includes all potential public keys that could participate in the signature aggregation. The entries must be pairwise distinct. Moreover, let `pubKeySignaturePairs` be a list of pairs of public keys and signatures where all signatures belong to the same message, and all public keys are unique and contained in `keyList`. Then, the corresponding aggregate signature and bitmap can be computed via `createAggSig(keysList, pubKeySignaturePairs)` as in the pseudo code below. To verify if a signature is an aggregate signature of a binary message `message`, the function `verifyAggSig` can be used. `verifyAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, message)` returns `VALID` if and only if `signature` is an aggregate signature of the message `message` for the message tag `tag`, the network identifier `networkIdentifier` and for the public keys in `keyList` defined by `aggregationBits`.
 
 ```python
 createAggSig(keysList, pubKeySignaturePairs):
@@ -91,8 +91,8 @@ createAggSig(keysList, pubKeySignaturePairs):
     signature = Aggregate(signatures)
     return (aggregationBits, signature)
 
-verifyAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, m):
-    taggedMessage = convert2BLSSignatureInput(tag, networkIdentifier, m)
+verifyAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, message):
+    taggedMessage = convert2BLSSignatureInput(tag, networkIdentifier, message)
     keys = []
     for every i in [0, …, ceil(length(keyList)/8)]:
         if i-th bit of aggregationBits is set to 1:
@@ -103,8 +103,8 @@ verifyAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, m):
 If one wants to additionally validate that the participating public keys satisfy a certain weight threshold, the function `verifyWeightedAggSig` can be used. The function takes additionally a list of weights, `weights`, where the i-th entry specifies the weight for the i-th public key in `keysList` and a weight threshold `threshold`.
 
 ```python
-verifyWeightedAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, weights, threshold, m):
-    taggedMessage = convert2BLSSignatureInput(tag, networkIdentifier, m)
+verifyWeightedAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, weights, threshold, message):
+    taggedMessage = convert2BLSSignatureInput(tag, networkIdentifier, message)
     keys = []
     weightSum = 0
     for every i in [0, …, ceil(length(keyList)/8)]:
