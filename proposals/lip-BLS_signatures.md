@@ -103,7 +103,7 @@ verifyAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, m):
 If one wants to additionally validate that the participating public keys satisfy a certain weight threshold, the function `verifyWeightedAggSig` can be used. The function takes additionally a list of weights, `weights`, where the i-th entry specifies the weight for the i-th public key in `keysList` and a weight threshold `threshold`.
 
 ```python
-verifyWeightedAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, m, weights, threshold):
+verifyWeightedAggSig(keysList, aggregationBits, signature, tag, networkIdentifier, weights, threshold, m):
     taggedMessage = convert2BLSSignatureInput(tag, networkIdentifier, m)
     keys = []
     weightSum = 0
