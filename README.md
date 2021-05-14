@@ -49,3 +49,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0035](proposals/lip-0035.md) | Define decentralized snapshot and hardfork process                                             | Jan Hackfeld, Nazar Hussain                  | Standards Track | Draft         |
 | [0036](proposals/lip-0036.md) | Introduce transaction properties moduleID and assetID                                          | Shusetsu Toda                                | Standards Track | Draft         |
 | [0037](proposals/lip-0037.md) | Use message tags and network identifiers for signatures                                        | Andreas Kendziorra                           | Standards Track | Draft         |
+| [0038](proposals/lip-0038.md) | BLS signatures                                                                                 | Andreas Kendziorra                           | Informational   | Draft         |
