@@ -98,7 +98,7 @@ For the rest of this proposal, we define the following constants:
 
 Each node in the tree has a `data` and a `hash` property. Leaf nodes store the key and value in their data property, while branch nodes store the hashes of the child nodes. Default empty nodes have a constant hash `EMPTY_HASH`.  In summary, we define 3 different nodes:
 
-```
+```java
 leafNode(key, value) = {
 	data: key|value,
 	hash: leafHash(data)
@@ -116,14 +116,14 @@ defaultEmptyNode() = {
 
 Similar to what we do for regular Merkle trees, we use a different hash function for leaf and branch nodes to protect against second preimage attacks:
 
-```
+```java
 leafHash(msg) = hash(LEAF_PREFIX | msg)
 branchHash(msg) = hash(BRANCH_PREFIX | msg),
 ```
 
 where `LEAF_PREFIX` and `BRANCH_PREFIX` are two constants set to:
 
-```
+```java
 LEAF_PREFIX = 0x00
 BRANCH_PREFIX = 0x01.
 ```
@@ -154,7 +154,7 @@ The Merkle root of a dataset is computed as follows:
 2. The Merkle root of a dataset with a single element is set to the leaf hash of that element.
 3. Otherwise, the Merkle root is the root of the tree resulting from inserting each key-value pair in the dataset using the update protocol outlined here. 
 
-```
+```java
 function update(k, v):
     if v is empty:
         throw error
@@ -230,7 +230,7 @@ function update(k, v):
 
 A certain key-value pair can be removed from the tree by deleting the corresponding leaf node and rearranging the affected nodes in the tree. The following protocol can be used to remove a key `k` from the tree.
 
-```
+```java
 function remove(k):
     if length of k != KEY_LENGTH:
         throw error
@@ -317,7 +317,7 @@ The properties and protocol for an inclusion proof have been introduced in the R
 
 The following function generates the query response to a single key, including the sibling hashes and the hash of the visited nodes.
 
-```
+```java
 function generateQueryProof(queryKey):
     let ancestorHashes be an empty array
     let siblingHashes be an empty array
@@ -373,7 +373,7 @@ function generateQueryProof(queryKey):
 Note that the first digit of `queryBitmap` is always a 1, else the tree would have been invalidly constructed. As a consequence, the hex encoded value of `queryBitmap` corresponds to a unique series of digits.
 To generate a complete inclusion proof, several query responses are combined together, and their sibling hashes are merged in a single array. We first define the utility function `sortByBitmapAndKey`.
 
-```
+```java
 function sortByBitmapAndKey(queries):
     sort queries by the longest binaryBitmap, breaking ties by smaller key. 
     //This corresponds to a bottom-up left-right ordering of the corresponding leaf nodes.
@@ -381,7 +381,7 @@ function sortByBitmapAndKey(queries):
 
 Given an array of keys `queryKeys`, the inclusion proof is obtained from the function `generateProof(queryKeys)`. 
 
-```
+```java
 function generateProof(queryKeys):
     //queries hold the individual responses, respecting
     //the same order of queryKeys
@@ -428,7 +428,7 @@ To check the proof, the Verifier calls the `verify(queryKeys, proof, merkleRoot)
 
 We define the utility functions `filterQueries`, `areSiblingQueries`, and `calculateRoot`. The general strategy is to recompute the Merkle root using `proof` and `queryKeys` in `calculateRoot`. The `verify` function then checks if the provided proof is valid against `queryKeys` and that the calculated root equals `merkleRoot`.
 
-```
+```java
 //This function filters the array of queries by keeping only those
 //with a different key prefix, i.e., by removing queries that have
 //merged together
@@ -448,7 +448,7 @@ function filterQueries(queries):
     return queries
 ```
 
-```
+```java
 //This function checks whether two queries correspond to nodes that are
 //children of the same branch node, with q1 and q2 the left and right 
 //child respectively 
@@ -467,7 +467,7 @@ function areSiblingQueries(q1, q2):
     return d1==0 and d2==1
 ```
 
-```
+```java
 function calculateRoot(siblingHashes, queries):
     //we add the hash property to each query, used to recompute the tree root
     for each query q in queries:
@@ -519,7 +519,7 @@ function calculateRoot(siblingHashes, queries):
     throw error
 ```
 
-```
+```java
 function verify(queryKeys, proof, merkleRoot):
     //check that the proof is valid with respect to queryKeys
     if length of queryKeys != length of proof.queries:
@@ -546,7 +546,7 @@ function verify(queryKeys, proof, merkleRoot):
 
 The inclusion proof is serialized according to the specifications defined in [LIP 0027](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0027.md) using the following JSON schema:
 
-```
+```java
 proof = {
   "type": "object",
   "properties": {
