@@ -92,7 +92,7 @@ For the rest of this proposal, we define the following constants:
 | EMPTY_HASH    | bytes   | SHA-256("") |
 | LEAF_PREFIX   | bytes   | 0x00        |
 | BRANCH_PREFIX | bytes   | 0x01        |
-| KEY_LENGTH    | integer | Set when initializing the data structure |
+| KEY_LENGTH_BYTES    | integer | Length of keys in bytes. Set when initializing the data structure |
 
 
 
@@ -118,19 +118,12 @@ Similar to what we do for regular Merkle trees, we use a different hash function
 
 ```java
 leafHash(msg) = hash(LEAF_PREFIX | msg)
-branchHash(msg) = hash(BRANCH_PREFIX | msg),
-```
-
-where `LEAF_PREFIX` and `BRANCH_PREFIX` are two constants set to:
-
-```java
-LEAF_PREFIX = 0x00
-BRANCH_PREFIX = 0x01.
+branchHash(msg) = hash(BRANCH_PREFIX | msg).
 ```
 
 Here the function `hash` returns the SHA-256 hash of the input. Leaf nodes are ''hardened'' by hashing their keys together with their values. Otherwise, in a subtree with only one non-empty node several keys would correspond to the same leaf node.   
 
-The Merkle tree is built on top of an underlying dataset consisting of a set of (key, value) tuples. The key fixes the position of each dataset element in the tree: starting from the root, each digit in the binary expansion indicates whether we should follow the left child (next digit is 0) or the right child (next digit is 1), see Figure 1. The length of the key (in bytes) is a fixed constant of the tree, `KEY_LENGTH`, larger than 0. The value property must be non-empty.
+The Merkle tree is built on top of an underlying dataset consisting of a set of (key, value) tuples. The key fixes the position of each dataset element in the tree: starting from the root, each digit in the binary expansion indicates whether we should follow the left child (next digit is 0) or the right child (next digit is 1), see Figure 1. The length of the key (in bytes) is a fixed constant of the tree, `KEY_LENGTH_BYTES`, larger than 0. The value property must be non-empty.
 
 As explained in the rationale, rather than explicitly creating a full tree, we simulate it by inserting only non-zero leaves into the tree whenever a new data block (a key-value pair) is added to the dataset, using the two optimizations:
 
@@ -141,7 +134,7 @@ We define the utility function:
 
 ```
 function binaryExpansion(k):
-    return the binary expansion of k. Enough leading 0s are prepended until the binary expansion has length=8*KEY_LENGTH  
+    return the binary expansion of k. Enough leading 0s are prepended until the binary expansion has length=8*KEY_LENGTH_BYTES  
 ```
 
 The functions defined in the following sections are methods of the tree, i.e. we assume that the tree is a global data structure that can be modified by these functions.
@@ -158,7 +151,7 @@ The Merkle root of a dataset is computed as follows:
 function update(k, v):
     if v is empty:
         throw error
-    if length of k != KEY_LENGTH:
+    if length of k != KEY_LENGTH_BYTES:
         throw error
     let newLeaf=leafNode(k,v)
     let ancestorNodes be an empty array
@@ -232,7 +225,7 @@ A certain key-value pair can be removed from the tree by deleting the correspond
 
 ```java
 function remove(k):
-    if length of k != KEY_LENGTH:
+    if length of k != KEY_LENGTH_BYTES:
         throw error
     let ancestorNodes be an empty array
     let currentNode be the tree root node 
@@ -313,7 +306,7 @@ proof={siblingHashes:[cc956a85, 3c516152, e041e1c0, 6400721e, 3c32b131],
 
 #### Proof Construction
 
-The properties and protocol for an inclusion proof have been introduced in the Rationale section, above. In this section, we specify how these properties are calculated. We assume that the queried keys have a fixed length `KEY_LENGTH`.
+The properties and protocol for an inclusion proof have been introduced in the Rationale section, above. In this section, we specify how these properties are calculated. We assume that the queried keys have a fixed length `KEY_LENGTH_BYTES`.
 
 The following function generates the query response to a single key, including the sibling hashes and the hash of the visited nodes.
 
@@ -330,7 +323,7 @@ function generateQueryProof(queryKey):
              binaryBitmap=empty string,
              siblingHashes=siblingHashes,
              ancestorHashes=ancestorHashes}
-    return response
+        return response
 
     let binaryKey=binaryExpansion(queryKey)
     let h = 0
@@ -530,11 +523,11 @@ function verify(queryKeys, proof, merkleRoot):
         if q.key == k:
             continue
         //q is an inclusion proof for another leaf node
-        let binaryQueryBitmap = binaryExpansion(q.bitmap) without leading zeros
-        let binaryQueryKey=binaryExpansion(q.key)
-        let binaryKey=binaryExpansion(k)
-        let sharedPrefix = the common prefix of binaryQueryKey and binaryKey
-        if length of binaryQueryBitmap > length of sharedPrefix:
+        let binaryResponseBitmap = binaryExpansion(q.bitmap) without leading zeros
+        let binaryResponseKey=binaryExpansion(q.key)
+        let binaryQueryKey=binaryExpansion(k)
+        let sharedPrefix = the common prefix of binaryResponseKey and binaryQueryKey
+        if length of binaryResponseBitmap > length of sharedPrefix:
             //q does not give an non-inclusion proof for k
             return false 
 
