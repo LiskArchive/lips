@@ -2,9 +2,11 @@
 LIP: <LIP number>
 Title: Introduce sparse Merkle trees
 Author: Alessandro Ricottone
+Discussions-To: https://research.lisk.com/t/introduce-sparse-merkle-trees
+Status: Draft
 Type: Informational
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-04-22
+Updated: 2021-06-08
 ```
 
 ## Abstract
