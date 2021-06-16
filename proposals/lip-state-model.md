@@ -100,4 +100,4 @@ The value of state root at a certain height `h`, `stateRoot(h)`, is the root of 
 
 This LIP is purely informational, hence it does not imply any incompatibilities per se.
 
-[LIP-SMT]: https://research.lisk.com/t/introduce-sparse-merkle-trees/283
+[LIP-SMT]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0039.md
