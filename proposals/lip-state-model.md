@@ -5,7 +5,7 @@ Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
 Type: Informational
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Required: Introduce sparse Merkle trees LIP
+Required: 0039
 ```
 
 
