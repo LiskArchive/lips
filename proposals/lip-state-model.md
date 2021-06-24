@@ -11,7 +11,7 @@ Required: 0039
 
 ## Abstract
 
-The state of an interoperable chain in the Lisk ecosystem is organized as a sparse Merkle tree, the state tree, built on top of a generic key-value storage for each module of the chain.
+The state of an interoperable chain in the Lisk ecosystem is organized as a sparse Merkle tree, the state tree, built on top of a generic key-value map for each module of the chain.
 This allows to authenticate the whole state with the tree Merkle root, the state root.
 In this LIP, we define the state model of a Lisk blockchain and the construction of the state tree from which the state root is calculated.
 
@@ -24,8 +24,8 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 ## Motivation
 
 A blockchain created with the  Lisk SDK is organized in a modular way: each module registered in the chain defines its own state and the possible state transitions, i.e., the transactions defined within the module or the handlers that can be called by other modules.
-This is reflected by the state tree: each module maintains its own key-value storage and sparse Merkle tree, which are finally merged together to form the complete state tree.
-This LIP specifies the general format for the key-value storages and the way in which they are combined together in the state tree. 
+This is reflected by the state tree: each module maintains its own key-value map and sparse Merkle tree, which are finally merged together to form the complete state tree.
+This LIP specifies the general format for the key-value maps and the way in which they are combined together in the state tree. 
 
 Organizing the state of a blockchain as a Merkle tree allows to cryptographically authenticate the whole state with a single hash, the state root.
 The state root property is calculated at the end of the block processing and included in the block header.
@@ -46,16 +46,16 @@ A node could download the state root from a trusted party and then check that th
 
 ## Rationale
 
-Each module registered in a chain maintains a separate key-value storage. 
-In this LIP, we specify how the entries of the key-value storage are inserted in a sparse Merkle tree (introduced in [LIP 0039][LIP-SMT]), the state tree. 
+Each module registered in a chain maintains a separate key-value map. 
+In this LIP, we specify how the entries of the key-value map are inserted in a sparse Merkle tree (introduced in [LIP 0039][LIP-SMT]), the state tree. 
 The state root is then set to the root of the state tree. 
-The key-value entries of the persistent storage are specified in the respective modules. 
+The key-value entries of the map are specified in the respective modules. 
 There is no a-priori separation between user and chain accounts, as they are treated as any generic key-value entry. 
 Each entry specifies a storage prefix and a storage key. 
-The storage prefix identifies different ''buckets'' within the module storage, i.e. group of entries with different scope. 
+The storage prefix identifies different ''buckets'' within the module map, i.e. group of entries with different scope. 
 The storage key identifies different entries within a bucket.
 
-Keys of the state tree leaf nodes are obtained by concatenating the module ID, the storage prefix and the hash of the storage key. 
+Keys of the leaf nodes of the state tree are obtained by concatenating the module ID, the storage prefix and the hash of the storage key. 
 Prepending the module ID allows to separate the state tree in smaller subtrees (one per module), each managed by the respective module, which is also responsible for creating witnesses relative to properties stored in their database (see Figure 1). 
 Similarly, the storage prefix separates the different buckets within the same database into different subtrees. 
 Storage keys are hashed in order to randomize them. 
@@ -76,8 +76,8 @@ The keys of the leaf nodes start with the module IDs, so that each module subtre
 Not all modules are depicted in this example._
 
 The state root is the root of a sparse Merkle tree (specified in [LIP 0039][LIP-SMT]), the state tree. 
-Each registered module of the chain defines a generic key-value storage. 
-Storage values can be arbitrary byte arrays, but they typically correspond to data structures serialized according to [LIP 0027](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0027.md). 
+Each registered module of the chain defines a generic key-value map. 
+Map values can be arbitrary byte arrays, but they typically correspond to data structures serialized according to [LIP 0027](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0027.md). 
 The corresponding leaf nodes have keys given by the concatenation of the module ID, storage prefix, and the SHA-256 hash of the storage key. 
 Here, module IDs are serialized as uint32, with a fixed length of 4 bytes, while storage prefixes are serialized as bytes, with a fixed length of 2. 
 This implies that a leaf-node key of the state tree has a fixed length of 4+2+32 = 38 bytes.
