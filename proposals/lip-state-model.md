@@ -57,7 +57,7 @@ The storage key identifies different entries within a bucket.
 
 Keys of the leaf nodes of the state tree are obtained by concatenating the module ID, the storage prefix and the hash of the storage key. 
 Prepending the module ID allows to separate the state tree in smaller subtrees (one per module), each managed by the respective module, which is also responsible for creating witnesses relative to properties stored in their database (see Figure 1). 
-Similarly, the storage prefix separates the different buckets within the same database into different subtrees. 
+Similarly, the storage prefix ensures that a group of key-value entries within one bucket are in the same subtree. 
 Storage keys are hashed in order to randomize them. 
 This effectively mitigates spam attacks that aim at creating many database entries (e.g., accounts) in a certain key neighborhood (e.g., close to the target account address), in order to increase the length of inclusion proofs for that key (in [our SMT implementation][LIP-SMT]).  
 
