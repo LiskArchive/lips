@@ -28,9 +28,10 @@ This is reflected by the state tree: each module maintains its own key-value map
 This LIP specifies the general format for the key-value maps and the way in which they are combined together in the state tree. 
 
 Organizing the state of a blockchain as a Merkle tree allows to cryptographically authenticate the whole state with a single hash, the state root.
-The state root property is calculated at the end of the block processing and included in the block header.
-When a certificate is posted to a chain, the state root is used to authenticate the information contained in it against the block header, which has been signed by the sending chain validators.
-For example, a node can verify that the cross-chain messages in the certificate payload have been included in the outbox of the sending chain by recomputing the state root signed in the block header from the outbox root.
+The state root property is calculated at the end of the block processing and included in the block header. 
+Information from the block header is then used to create a certificate and signed by the chain validators.
+When a certificate is posted to a chain, the state root is used to authenticate the information contained in it.
+For example, a node can verify that the cross-chain messages in the certificate payload have been included in the outbox of the sending chain by recomputing the state root signed in the certificate from the outbox root.
 This is done using a "witness", i.e. an array of hashes used to recompute the root starting from the known elements of the tree. 
 
 In the future, the state root could further facilitate the introduction of light clients.
