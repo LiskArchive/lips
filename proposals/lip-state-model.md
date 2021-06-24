@@ -56,7 +56,7 @@ The storage prefix identifies different ''buckets'' within the module map, i.e. 
 The storage key identifies different entries within a bucket.
 
 Keys of the leaf nodes of the state tree are obtained by concatenating the module ID, the storage prefix and the hash of the storage key. 
-Prepending the module ID allows to separate the state tree in smaller subtrees (one per module), each managed by the respective module, which is also responsible for creating witnesses relative to properties stored in their database (see Figure 1). 
+Prepending the module ID allows to separate the state tree in smaller subtrees (one per module), each managed by the respective module (see Figure 1). 
 Similarly, the storage prefix ensures that a group of key-value entries within one bucket are in the same subtree. 
 Storage keys are hashed in order to randomize them. 
 This effectively mitigates spam attacks that aim at creating many key-value entries (e.g., accounts) in a certain key neighborhood (e.g., close to the target account address), in order to increase the length of inclusion proofs for that key (in [our SMT implementation][LIP-SMT]).  
@@ -76,7 +76,7 @@ The keys of the leaf nodes start with the module IDs, so that each module subtre
 Not all modules are depicted in this example._
 
 The state root is the root of a sparse Merkle tree (specified in [LIP 0039][LIP-SMT]), the state tree. 
-Each registered module of the chain defines a generic key-value map. 
+Each registered module of the chain defines its own key-value map. 
 Map values can be arbitrary byte arrays, but they typically correspond to data structures serialized according to [LIP 0027](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0027.md). 
 The corresponding leaf nodes have keys given by the concatenation of the module ID, storage prefix, and the SHA-256 hash of the storage key. 
 Here, module IDs are serialized as uint32, with a fixed length of 4 bytes, while storage prefixes are serialized as bytes, with a fixed length of 2. 
