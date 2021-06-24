@@ -59,7 +59,7 @@ Keys of the leaf nodes of the state tree are obtained by concatenating the modul
 Prepending the module ID allows to separate the state tree in smaller subtrees (one per module), each managed by the respective module, which is also responsible for creating witnesses relative to properties stored in their database (see Figure 1). 
 Similarly, the storage prefix ensures that a group of key-value entries within one bucket are in the same subtree. 
 Storage keys are hashed in order to randomize them. 
-This effectively mitigates spam attacks that aim at creating many database entries (e.g., accounts) in a certain key neighborhood (e.g., close to the target account address), in order to increase the length of inclusion proofs for that key (in [our SMT implementation][LIP-SMT]).  
+This effectively mitigates spam attacks that aim at creating many key-value entries (e.g., accounts) in a certain key neighborhood (e.g., close to the target account address), in order to increase the length of inclusion proofs for that key (in [our SMT implementation][LIP-SMT]).  
 
 Given B buckets in a module store and N entries in the bucket, the module subtree will contain on average Log(B) + Log(N) layers. 
 The expected number of operations needed to validate a witness from a leaf to the state root is 32 (for the 4 bytes of the module ID), plus 16 (for the 2 bytes of the storage prefix), plus Log(N) for the module subtree. 
