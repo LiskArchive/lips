@@ -23,7 +23,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-A blockchain created with the  Lisk SDK is organized in a modular way: each module registered in the chain defines its own state and the possible state transitions, i.e., the transactions defined within the module or the handlers that can be called by other modules.
+A blockchain created with the Lisk SDK is organized in a modular way: each module registered in the chain defines its own state and the possible state transitions, i.e., the transactions defined within the module or the reducers that can be called by other modules.
 This is reflected by the state tree: each module maintains its own key-value map and sparse Merkle tree, which are finally merged together to form the complete state tree.
 This LIP specifies the general format for the key-value maps and the way in which they are combined together in the state tree. 
 
