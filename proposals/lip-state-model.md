@@ -11,7 +11,7 @@ Required: 0039
 
 ## Abstract
 
-The state of an interoperable chain in the Lisk ecosystem is organized as a sparse Merkle tree, the state tree, built on top of a generic key-value storage for each module of the chain.
+The state of an interoperable chain in the Lisk ecosystem is organized as a sparse Merkle tree, the state tree, built on top of a generic key-value map for each module of the chain.
 This allows to authenticate the whole state with the tree Merkle root, the state root.
 In this LIP, we define the state model of a Lisk blockchain and the construction of the state tree from which the state root is calculated.
 
