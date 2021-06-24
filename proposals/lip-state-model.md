@@ -47,7 +47,7 @@ A node could download the state root from a trusted party and then check that th
 ## Rationale
 
 Each module registered in a chain maintains a separate key-value storage. 
-In this LIP, we specify how the entries of the key-value storage are inserted in a sparse Merkle tree (introduced in [LIP "Introduce sparse Merkle trees"][LIP-SMT]), the state tree. 
+In this LIP, we specify how the entries of the key-value storage are inserted in a sparse Merkle tree (introduced in [LIP 0039][LIP-SMT]), the state tree. 
 The state root is then set to the root of the state tree. 
 The key-value entries of the persistent storage are specified in the respective modules. 
 There is no a-priori separation between user and chain accounts, as they are treated as any generic key-value entry. 
@@ -75,11 +75,11 @@ Each module defines a different generic key-value store.
 The keys of the leaf nodes start with the module IDs, so that each module subtree is separated from the others.
 Not all modules are depicted in this example._
 
-The state root is the root of a sparse Merkle tree (specified in [LIP "Introduce sparse Merkle trees"][LIP-SMT]), the state tree. 
+The state root is the root of a sparse Merkle tree (specified in [LIP 0039][LIP-SMT]), the state tree. 
 Each registered module of the chain defines a generic key-value storage. 
 Storage values can be arbitrary byte arrays, but they typically correspond to data structures serialized according to [LIP 0027](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0027.md). 
 The corresponding leaf nodes have keys given by the concatenation of the module ID, storage prefix, and the SHA-256 hash of the storage key. 
-Here, module IDs are serialized as uint32, with a fixed length of 4 bytes, while storage prefixes are serialized as uint16, with a fixed length of 2 bytes. 
+Here, module IDs are serialized as uint32, with a fixed length of 4 bytes, while storage prefixes are serialized as bytes, with a fixed length of 2. 
 This implies that a leaf-node key of the state tree has a fixed length of 4+2+32 = 38 bytes.
 
 In summary, for a module identified by `moduleID` and an entry with the storage prefix `storagePrefix`, storage key `storageKey`, and storage value `storageValue`, the corresponding leaf node is added to the state tree using `SMT.update(moduleID || storagePrefix || hash(storageKey), hash(storageValue))`, where `||` indicates the bytes-concatenation operation.
@@ -91,7 +91,7 @@ leaf.value = hash(storageValue),
 leaf.hash = leafHash(leaf.key, leaf.value),
 ```
 
-where the `leafHash` function is defined in [LIP "Introduce sparse Merkle trees"][LIP-SMT].
+where the `leafHash` function is defined in [LIP 0039][LIP-SMT].
 
 The value of state root at a certain height `h`, `stateRoot(h)`, is the root of the sparse Merkle tree computed from all key-value entries of all modules (as described above), after processing the block at height `h`.
 
