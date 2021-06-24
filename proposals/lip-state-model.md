@@ -48,6 +48,7 @@ A node could download the state root from a trusted party and then check that th
 ## Rationale
 
 Each module registered in a chain maintains a separate key-value map. 
+These key-value maps are then combined into a single global storage.
 In this LIP, we specify how the entries of the key-value map are inserted in a sparse Merkle tree (introduced in [LIP 0039][LIP-SMT]), the state tree. 
 The state root is then set to the root of the state tree. 
 The key-value entries of the map are specified in the respective modules. 
