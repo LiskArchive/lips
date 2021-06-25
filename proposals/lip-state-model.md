@@ -104,4 +104,4 @@ The value of state root at a certain height `h`, `stateRoot(h)`, is the root of 
 This LIP is purely informational, hence it does not imply any incompatibilities per se.
 
 [LIP-SMT]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0039.md
-[CCU-LIP] : https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
+[CCU-LIP]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
