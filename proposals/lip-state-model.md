@@ -71,7 +71,7 @@ Empty hashes are not included in the witness, and the resulting witness size is 
 
 <img src="lip-state-model/tree.png" width="90%" align="center">
 
-_Figure 1: The general structure of the state sparse Merkle tree for a Lisk blockchain defining two custom modules. 
+_Figure 1: The general structure of the state sparse Merkle tree for a Lisk blockchain using two application-specific modules. 
 The state root is the Merkle root. 
 Each module defines its own key-value map. 
 The keys of the leaf nodes start with the module IDs, so that each module subtree is separated from the others.
