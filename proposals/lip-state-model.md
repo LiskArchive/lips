@@ -30,8 +30,9 @@ This LIP specifies the general format for the key-value maps and the way in whic
 Organizing the state of a blockchain as a Merkle tree allows to cryptographically authenticate the whole state with a single hash, the state root.
 The state root property is calculated at the end of the block processing and included in the block header. 
 Information from the block header is then used to create a certificate and signed by the chain validators.
-When a certificate is posted to a chain, the state root is used to authenticate the information contained in it.
-For example, a node can verify that the cross-chain messages in the certificate payload have been included in the outbox of the sending chain by recomputing the state root signed in the certificate from the outbox root.
+Certificates are posted to a chain as part of a [cross-chain update transaction][CCU-LIP].
+The state root is used to authenticate the information contained in it.
+For example, a node can verify that the cross-chain messages in the cross-chain update payload have been included in the outbox of the sending chain by recomputing the state root signed in the certificate from the outbox root.
 This is done using a "witness", i.e. an array of hashes used to recompute the root starting from the known elements of the tree. 
 
 In the future, the state root could further facilitate the introduction of light clients.
@@ -103,3 +104,4 @@ The value of state root at a certain height `h`, `stateRoot(h)`, is the root of 
 This LIP is purely informational, hence it does not imply any incompatibilities per se.
 
 [LIP-SMT]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0039.md
+[CCU-LIP] : https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
