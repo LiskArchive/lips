@@ -49,23 +49,23 @@ A node could download the state root from a trusted party and then check that th
 ## Rationale
 
 Each module registered in a chain maintains a separate key-value map. 
-These key-value maps are then combined into a single global storage.
+These key-value maps are then combined into a single global store.
 In this LIP, we specify how the entries of the key-value map are inserted in a sparse Merkle tree (introduced in [LIP 0039][LIP-SMT]), the state tree. 
 The state root is then set to the root of the state tree. 
 The key-value entries of the map are specified in the respective modules. 
 There is no a-priori separation between user and chain accounts, as they are treated as any generic key-value entry. 
-Each entry specifies a storage prefix and a storage key. 
-The storage prefix identifies different ''buckets'' within the module map, i.e. group of entries with different scope. 
-The storage key identifies different entries within a bucket.
+Each entry specifies a store prefix and a store key. 
+The store prefix identifies different ''buckets'' within the module map, i.e. group of entries with different scope. 
+The store key identifies different entries within a bucket.
 
-Keys of the leaf nodes of the state tree are obtained by concatenating the module ID, the storage prefix and the hash of the storage key. 
+Keys of the leaf nodes of the state tree are obtained by concatenating the module ID, the store prefix and the hash of the store key. 
 Prepending the module ID allows to separate the state tree in smaller subtrees (one per module), each managed by the respective module (see Figure 1). 
-Similarly, the storage prefix ensures that a group of key-value entries within one bucket are in the same subtree. 
+Similarly, the store prefix ensures that a group of key-value entries within one bucket are in the same subtree. 
 Storage keys are hashed in order to randomize them. 
 This effectively mitigates spam attacks that aim at creating many key-value entries (e.g., accounts) in a certain key neighborhood (e.g., close to the target account address), in order to increase the length of inclusion proofs for that key (in [our SMT implementation][LIP-SMT]).
 
 Given B buckets in a module store and N entries in the bucket, the module subtree will contain on average Log(B) + Log(N) layers. 
-The expected number of operations needed to validate a witness from a leaf to the state root is 32 (for the 4 bytes of the module ID), plus 16 (for the 2 bytes of the storage prefix), plus Log(N) for the module subtree. 
+The expected number of operations needed to validate a witness from a leaf to the state root is 32 (for the 4 bytes of the module ID), plus 16 (for the 2 bytes of the store prefix), plus Log(N) for the module subtree. 
 Empty hashes are not included in the witness, and the resulting witness size is therefore Log(M) + Log(B) + Log(N), where M indicates the number of modules registered in the chain.
 
 ## Specification
@@ -81,16 +81,16 @@ Not all modules are depicted in this example._
 The state root is the root of a sparse Merkle tree (specified in [LIP 0039][LIP-SMT]), the state tree. 
 Each registered module of the chain defines its own key-value map. 
 Map values can be arbitrary byte arrays, but they typically correspond to data structures serialized according to [LIP 0027](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0027.md). 
-The corresponding leaf nodes have keys given by the concatenation of the module ID, storage prefix, and the SHA-256 hash of the storage key. 
-Here, module IDs are serialized as uint32, with a fixed length of 4 bytes, while storage prefixes are serialized as bytes, with a fixed length of 2. 
+The corresponding leaf nodes have keys given by the concatenation of the module ID, store prefix, and the SHA-256 hash of the store key. 
+Here, module IDs are serialized as uint32, with a fixed length of 4 bytes, while store prefixes are serialized as bytes, with a fixed length of 2. 
 This implies that a leaf-node key of the state tree has a fixed length of 4+2+32 = 38 bytes.
 
-In summary, for a module identified by `moduleID` and an entry with the storage prefix `storagePrefix`, storage key `storageKey`, and storage value `storageValue`, the corresponding leaf node is added to the state tree using `SMT.update(moduleID || storagePrefix || hash(storageKey), hash(storageValue))`, where `||` indicates the bytes-concatenation operation.
+In summary, for a module identified by `moduleID` and an entry with the store prefix `storePrefix`, store key `storeKey`, and store value `storeValue`, the corresponding leaf node is added to the state tree using `SMT.update(moduleID || storePrefix || hash(storeKey), hash(storeValue))`, where `||` indicates the bytes-concatenation operation.
 This leaf node will have the following properties:
 
 ```
-leaf.key = moduleID || storagePrefix || hash(storageKey),
-leaf.value = hash(storageValue),
+leaf.key = moduleID || storePrefix || hash(storeKey),
+leaf.value = hash(storeValue),
 leaf.hash = leafHash(leaf.key, leaf.value),
 ```
 
