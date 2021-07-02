@@ -113,7 +113,7 @@ leaf.value = hash(storeValue),
 leaf.hash = leafHash(leaf.key, leaf.value),
 ```
 
-where the `leafHash` function is defined in [LIP 0039][LIP-SMT].
+where the `leafHash` function is defined in [LIP 0039][LIP-SMT-specs].
 
 The state root at a certain height `h`, `stateRoot(h)`, is the root of the sparse Merkle tree computed from all key-value pairs of all module stores (as described above), after processing the block at height `h`.
 
@@ -123,4 +123,5 @@ The state root at a certain height `h`, `stateRoot(h)`, is the root of the spars
 This LIP is purely informational, hence it does not imply any incompatibilities per se.
 
 [LIP-SMT]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0039.md
+[LIP-SMT-specs]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0039.md#specification
 [CCU-LIP]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
