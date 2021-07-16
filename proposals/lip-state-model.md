@@ -2,9 +2,10 @@
 LIP: <LIP number>
 Title: State model and state root
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/state-model-and-state-root
 Type: Informational
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-05-22
+Updated: 2021-07-16
 Required: 0039
 ```
 
