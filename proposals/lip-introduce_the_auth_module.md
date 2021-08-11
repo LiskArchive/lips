@@ -3,6 +3,7 @@ LIP: <LIP number>
 Title: Introduce auth module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Ishan Tiwari <ishan.tiwari@lightcurve.io> 
+Discussions-To: https://research.lisk.com/t/introduce-auth-module
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
