@@ -202,7 +202,7 @@ isValidNonce(trs):
 
 Notice that a transaction in the transaction pool with a nonce greater than the account nonce is considered "pending" rather than invalid, since it could become valid in the future.
 
-* Check the signatures property of the transaction [as explained in LIP 0017](https://github.com/LiskHQ/lips-staging/blob/update-LIP31/proposals/lip-0017.md#signatures-replaces-signature) using `authAccount(address)`, where `address` is the address corresponding to `trs.senderPublicKey`.
+* Check the signatures property of the transaction [as explained in LIP 0017](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0017.md#signatures-replaces-signature) using `authAccount(address)`, where `address` is the address corresponding to `trs.senderPublicKey`.
 
 
 #### After Transaction Execution
