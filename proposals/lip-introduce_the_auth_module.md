@@ -198,7 +198,7 @@ As part of the verification of a transaction `trs`, the following checks are app
 isValidNonce(trs):
     let senderAddress be the address corresponding to trs.senderPublicKey
     if there is no entry in the in the auth data substore with storeKey == senderAddress:
-        create an entry in the auth data substore with storeKey = senderAddress, initialized to default values
+        return True
     return trs.nonce == authAccount(senderAddress).nonce
 ```
 
@@ -207,16 +207,28 @@ Notice that a transaction in the transaction pool with a nonce greater than the 
 * Check the signatures property of the transaction [as explained in LIP 0017](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0017.md#signatures-replaces-signature) using `authAccount(address)`, where `address` is the address corresponding to `trs.senderPublicKey`.
 
 
+#### Before Transaction Execution
+
+Before a transaction `trs` is executed, the following logic is applied.
+
+* Create an auth account if no account exists for the sender address: 
+
+```python
+let senderAddress be the address corresponding to trs.senderPublicKey
+if there is no entry in the in the auth data substore with storeKey == senderAddress:
+    create an entry in the auth data substore with storeKey = senderAddress, initialized to default values
+```
+
 #### After Transaction Execution
 
 After a transaction `trs` is executed, the following logic is applied.
 
 * Increment account nonce: 
 
-    ```python
-    let senderAddress be the address corresponding to trs.senderPublicKey
-    authAccount(senderAddress).nonce += 1
-    ```
+```python
+let senderAddress be the address corresponding to trs.senderPublicKey
+authAccount(senderAddress).nonce += 1
+```
 
 ## Backwards Compatibility
 
