@@ -197,6 +197,8 @@ As part of the verification of a transaction `trs`, the following checks are app
 ```python
 isValidNonce(trs):
     let senderAddress be the address corresponding to trs.senderPublicKey
+    if there is no entry in the in the auth data substore with storeKey == senderAddress:
+        create an entry in the auth data substore with storeKey = senderAddress, initialized to default values
     return trs.nonce == authAccount(senderAddress).nonce
 ```
 
