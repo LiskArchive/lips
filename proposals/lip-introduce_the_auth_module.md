@@ -198,7 +198,7 @@ As part of the verification of a transaction `trs`, the following checks are app
 isValidNonce(trs):
     let senderAddress be the address corresponding to trs.senderPublicKey
     if there is no entry in the in the auth data substore with storeKey == senderAddress:
-        return True
+        return trs.nonce == 0
     return trs.nonce == authAccount(senderAddress).nonce
 ```
 
