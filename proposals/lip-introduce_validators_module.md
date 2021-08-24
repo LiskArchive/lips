@@ -44,6 +44,14 @@ To mitigate this risk, we propose to add an extra key pair to a validator accoun
 
 The validators module store maintains an account for each validator registered in the chain. In particular, it stores the [BLS key](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md) associated with the validator, used to sign commits. BLS keys have to be unique across the chain, i.e. two validators are not allowed to register the same BLS key. To easily check whether a BLS key has been previously registered, we use a _registered BLS keys substore_, to store all the registered validator BLS keys. Store keys are set to the BLS key and the corresponding store value to the address of the validator that registered the key. This allows to check for the existence of a certain BLS key in constant time.
 
+### Block Slots
+
+In the Lisk protocol, time is divided into intervals of fixed length. 
+These intervals are called a _block slots_ and at most one block can be added to the blockchain during each slot. 
+The length of a block slot is a constant called _block time_.
+The validator module provides the functions to convert timestamp to block slots and viceversa.
+Furthermore, it maintains the _generator list_, an array of addresses corresponding to the accounts that are eligible to generate a block in the current round. 
+Each entry of the generator list corresponds to a block slot.
 
 ## Specification
 
@@ -559,27 +567,6 @@ After the genesis block `b` is executed, the following logic is executed:
 * Check the validity of the registered BLS keys substore included in the genesis block. In particular, for each entry `blsKey` in the registered BLS keys substore:
   * Let `validatorAddress` be the store value of `blsKey`. Check that there is an entry `validatorAccount` in the validators data substore with store key equals to `validatorAddress` and `validatorAccount.blsKey` equals to `blsKey`.
 
-
-#### Block Verification
-
-As part of the verification of a block `b`, the following checks are applied. If the checks fail the block is discarded and has no further effect. This logic is _not_ called during the block creation process.
-
-* Check that `b.header.generatorAddress` has a length of 20 bytes.
-* Check that the block generator is eligible to generate in this block slot. The block generator is then checked by comparing the address in the generator list with the generator address in the block header:
-
-
-```python
-slotNumber = getSlotNumber(b.header.timestamp) % generatorList.addresses.length
-generatorAddress = generatorList.addresses[slotNumber]
-check that generatorAddress equals b.header.generatorAddress
-```
-
-* Check the validity of the block signature against the generator key of the block generator:
-
-```python
-generatorKey = validatorAccount(generatorAddress).generatorKey
-check the validity of b.signature using generatorKey
-```
 
 ## Backwards Compatibility
 
