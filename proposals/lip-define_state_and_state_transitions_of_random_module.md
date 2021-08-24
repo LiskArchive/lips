@@ -71,7 +71,7 @@ The entry in the random substore is defined as follows:
 
 ##### Seed Reveal Schema
 
-```
+```java
 seedRevealSchema = {
     "type": "object",
     "properties": {
@@ -139,7 +139,7 @@ The function returns a 16-bytes value, `digest`.
 
 ##### Execution
 
-```
+```python
 H(input):
     t = SHA-256(input)
     digest = trunc(t)
@@ -162,7 +162,7 @@ This function returns `true` if `seedReveal` is valid input for the random seed 
 
 ##### Execution
 
-```
+```python
 isSeedValidInput(generatorAddress, seedReveal):
     let seedObject be an element in validatorReveals array
     let lastSeed be the seedObject with the largest seedObject.height and seedObject.generatorAddress == generatorAddress
@@ -194,7 +194,7 @@ This function returns `true` if `seedReveal` was correctly revealed, otherwise, 
 
 It is specified as:
 
-```
+```python
 isSeedRevealValid(generatorAddress, seedReveal):
     let seedObject be an element in validatorReveals array
     let lastSeed be the seedObject with the largest seedObject.height and seedObject.generatorAddress == generatorAddress
@@ -222,7 +222,7 @@ This function is used to return the random seed as a 32-bytes value.
 
 It is specified as:
 
-```
+```python
 getRandomBytes(height, numberOfSeeds):
     randomSeed = H(height + numberOfSeeds)
     let currentSeeds be an array with every seedObject element in validatorReveals so that height <= seedObject.height <= height + numberOfSeeds 
