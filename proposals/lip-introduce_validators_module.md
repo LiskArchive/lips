@@ -4,6 +4,7 @@ Title: Introduce validators module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
         Rishi Mittal <rishi.mittal@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-validators-module
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
@@ -47,11 +48,11 @@ The validators module store maintains an account for each validator registered i
 ### Block Slots
 
 In the Lisk protocol, time is divided into intervals of fixed length. 
-These intervals are called a _block slots_ and at most one block can be added to the blockchain during each slot. 
+These intervals are called _block slots_ and at most one block can be added to the blockchain during each slot. 
 The length of a block slot is a constant called _block time_.
-The validator module provides the functions to convert timestamp to block slots and viceversa.
+The validator module provides the functions to calculate the block slot given the timestamp and viceversa.
 Furthermore, it maintains the _generator list_, an array of addresses corresponding to the accounts that are eligible to generate a block in the current round. 
-Each entry of the generator list corresponds to a block slot.
+Each entry of the generator list is assigned to a block slot.
 
 ## Specification
 
@@ -71,7 +72,7 @@ We define the following constants:
 |`STORE_PREFIX_BLS_KEYS` | bytes | 0x8000 | Store prefix of the registered BLS keys substore.|
 |`STORE_PREFIX_GENESIS_DATA` | bytes | 0xc000 | Store prefix of the genesis data substore.|
 |`INVALID_BLS_KEY` | bytes | 48 bytes all set to 0x00 | An invalid BLS key, used as a placeholder before a valid BLS key is registered.|
-|`BLOCK_TIME` | integer | Block time (in seconds) set in the chain configuration. |
+|`BLOCK_TIME` | integer | 10 (value for the Lisk mainchain) | Block time (in seconds) set in the chain configuration. |
 
 
 ### Validators Module Store
