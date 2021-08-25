@@ -92,7 +92,7 @@ The reward for the block as a 64-bit unsigned integer.
 
 ##### Execution
 
-```
+```python
 getBlockReward(blockHeader):
     if isValidSeedReveal(blockHeader.generatorAddress, blockHeader.seedReveal) == false:
         return 0
@@ -127,7 +127,7 @@ The default reward of the block as a 64-bit unsigned integer.
 
 After a block `b` is executed, the `mint` function exposed by the [token module][tokenLIP] to assign the reward to the block generator as:
 
-```
+```python
 blockReward = getBlockReward(b.header)
 mint(b.header.generatorAddress, TOKEN_ID_REWARD, blockReward)
 ```
