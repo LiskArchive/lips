@@ -2,6 +2,7 @@
 LIP: <LIP number>
 Title: Properties, serialization, and initial values of interoperability module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/properties-serialization-and-initial-values-of-interoperability-module
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
@@ -85,7 +86,7 @@ This rule guarantees that users do not send funds to inactive sidechains and tha
 
 ### Life Cycle of a Sidechain
 
-The life cycle of a sidechain can be split into 3 parts, corresponding to the 3 [values of the account status property](#List-of-Account-status-Values): ''registered'', ''active'', and ''terminated''. 
+The life cycle of a sidechain can be split into 3 parts, corresponding to the 3 values of the account status property: ''registered'', ''active'', and ''terminated''. 
 
 A sidechain registers on the mainchain with a [sidechain registration command][registration-LIP]. This command creates the sidechain account on mainchain, with initial status set to ''registered''. Thereafter, the mainchain account is created on a sidechain with a [mainchain registration command][registration-LIP], with initial status set to ''registered''. 
 
