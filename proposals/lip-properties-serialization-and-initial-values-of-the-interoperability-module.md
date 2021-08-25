@@ -556,10 +556,10 @@ A boolean indicating the success of the function execution.
 
 ##### Execution
 
-```java
+```python
 appendToInboxTree(chainID, appendData):
     account(chainID).inbox.size += 1
-    //update appendPath and root. 
+    # Update appendPath and root. 
     let inboxTree be the underlying Merkle tree of account(chainID).inbox
     inboxTree.append(appendData)
     inbox.root = inboxTree.root
@@ -587,10 +587,10 @@ A boolean indicating the success of the function execution.
 
 ##### Execution
 
-```java
+```python
 appendToOutboxTree(chainID, appendData):
     account(chainID).outbox.size += 1
-    //update appendPath and root.
+    # Update appendPath and root.
     let outboxTree be the underlying Merkle tree of account(chainID).outbox 
     outboxTree.append(appenData)
     outbox.root = outboxTree.root
@@ -619,7 +619,7 @@ A boolean indicating the success of the function execution.
 ##### Execution
 
 
-```java
+```python
 addToOutbox(chainID, CCM)
     CCM.index = account(chainID).outbox.size
     serializedMessage = byte array corresponding to the serialized CCM according to the schema in "Cross-chain Messages" LIP
@@ -647,12 +647,12 @@ A boolean indicating whether the partner chain respects the liveness condition.
 
 ##### Execution
 
-```java
+```python
 isLive(chainID, timestamp):
-   //check if chain has been already terminated
+   # Check if chain has been already terminated
    if the terminated chain substore contains an entry with store key equal to chainID:
       return False 
-   //check liveness condition
+   # Check liveness condition
    if timestamp - chainAccount(chainID).lastCertifiedTimestamp > LIVENESS_LIMIT:
       return False
 
@@ -674,7 +674,7 @@ The chain ID of the partner chain.
 
 ##### Execution
 
-```java
+```python
 getPartnerChainID(chainID):
    if ownChainAccount.ID == MAINCHAIN_ID:
       return chainID
@@ -713,10 +713,10 @@ A boolean indicating the success of the function execution.
 ##### Execution
 
 
-```java
+```python
 terminateChain(chainID):
     chainAccount(chainID).status = CHAIN_TERMINATED 
-    //spawn a channel terminated cross-chain message 
+    # Spawn a channel terminated cross-chain message 
     CTM = createCrossChainMessage(
         MODULE_ID_INTEROPERABILITY,
         COMMAND_ID_CHANNEL_TERMINATED,
@@ -727,10 +727,10 @@ terminateChain(chainID):
 
     chainAccount(chainID).outbox.appendPath = []
 
-    //remove outbox root from state tree
+    # Remove outbox root from state tree
     remove the entry with store key equal to chainID from the outbox root substore
 
-    //create terminated chain account
+    # Create terminated chain account
     terminatedChain = {stateRoot: chainAccount(chainID).lastCertifiedStateRoot}
     create an entry in the terminated chain substore with store key equal to chainID and store value equal to the serialization of terminatedChain
     
@@ -773,7 +773,7 @@ A boolean indicating the success of the function execution.
 ##### Execution
 
 
-```java
+```python
 send(timestamp, moduleID, crossChainCommandID, receivingChainID, fee, feeAddress, parameters):
     partnerChainID = getPartnerChainID(receivingChainID)
 
@@ -783,7 +783,7 @@ send(timestamp, moduleID, crossChainCommandID, receivingChainID, fee, feeAddress
     if not account(partnerChainID).status == CHAIN_ACTIVE:
         return False
 
-    //create cross-chain message
+    # Create cross-chain message
     CCM = createCrossChainMessage(
         moduleID, 
         crossChainCommandID, 
@@ -818,9 +818,9 @@ A boolean indicating the success of the function execution.
 
 ##### Execution
 
-```java
+```python
 error(CCM, errorCode):
-    // error codes from 0 to 63 (included) are reserved to the interoperability module
+    # Error codes from 0 to 63 (included) are reserved to the interoperability module
     if 0 <= errorCode < 64:
         return False
 
