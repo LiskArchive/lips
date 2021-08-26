@@ -28,7 +28,7 @@ For this purpose, we specify the reward module, which will make it easier to cus
 
 The reward module induces specific logic after the application of a block:
 
-* After applying the block, a certain quantity of the native token of the blockchain is minted and assigned to the block generator. The exact amount assigned to the block generator, i.e., the reward, is calculated depending of the rules of the [random module][randomLIP] and the [BFT module][BFTLIP].
+* After applying the block, a certain quantity of the native token of the blockchain is minted and assigned to the block generator. The exact amount assigned to the block generator, i.e., the reward, is calculated depending on the rules of the [random module][randomLIP] and the [BFT module][BFTLIP].
 
 ## Specification
 
