@@ -2,6 +2,7 @@
 LIP: <LIP number>
 Title: Introduce Interoperability module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
+        Mitsuaki Uchimoto <mitsuaki.uchimoto@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/properties-serialization-and-initial-values-of-interoperability-module
 Type: Standards Track
 Created: <YYYY-MM-DD>
@@ -47,7 +48,7 @@ The sidechain registration command is used to register a sidechain on the Lisk m
 
 #### [Mainchain Registration Command][registration-LIP]
 
-The mainchain registration command is used to register the Lisk mainchain on a sidechain. When this command is processed, a new account for the mainchain is created in the sidechain state under the interoperability database. The properties of the account are specified [below](#Initialization-of-the-Interoperability-Account). In particular, the account is initialized with an empty inbox and outbox, while the initial validators set is given in the command parameters. The name and network ID of the mainchain are global protocol constants in the whole ecosystem.
+The mainchain registration command is used to register the Lisk mainchain on a sidechain. When this command is processed, a new account for the mainchain is created in the sidechain state under the interoperability store. The properties of the account are specified [below](#Initialization-of-the-Interoperability-Account). In particular, the account is initialized with an empty inbox and outbox, while the initial validators set is given in the command parameters. The name and network ID of the mainchain are global protocol constants in the whole ecosystem.
 
 This command also initializes another data structure in the interoperability store, containing some information about the sidechain itself. In particular, it sets the sidechain name and chain ID to the ones that have been previously registered on the mainchain via the sidechain registration command.
 
@@ -339,9 +340,9 @@ chainAccountSchema = {
                     "dataType": "uint64",
                     "fieldNumber": 3
                 },
-                "required": ["keys", "weights", "certificateThreshold"],      
-                "fieldNumber": 12
-            }
+            },
+            "required": ["keys", "weights", "certificateThreshold"],      
+            "fieldNumber": 12
         },
     },
     "required": [
