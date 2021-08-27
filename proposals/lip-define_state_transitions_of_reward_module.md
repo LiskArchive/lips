@@ -1,6 +1,6 @@
 ```
 LIP: <LIP number>
-Title:  Define state transitions of reward module
+Title:  Define state transitions of Reward module
 Authors: Iker Alustiza <iker@lightcurve.io>
          Mehmet Egemen Albayrak <mehmet.albayrak@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/define-state-transitions-of-reward-module
@@ -12,7 +12,7 @@ Requires: Random Module LIP, BFT module LIP, and Token Module LIP.
 
 ## Abstract
 
-The reward module provides the base reward system for a blockchain developed with the Lisk SDK. 
+The Reward module provides the base reward system for a blockchain developed with the Lisk SDK. 
 In this LIP, we specify the protocol logic that this module injects during the block lifecycle as well as the functions that can be called from off-chain services.
 
 ## Copyright
@@ -22,17 +22,17 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal][creative].
 ## Motivation
 
 The goal of this LIP is to modularize the rewards assignment logic when a new block is generated.
-For this purpose, we specify the reward module, which will make it easier to customize this logic and replace it if necessary. 
+For this purpose, we specify the Reward module, which will make it easier to customize this logic and replace it if necessary. 
 
 ## Rationale
 
-The reward module induces specific logic after the application of a block:
+The Reward module induces specific logic after the application of a block:
 
 * After applying the block, a certain quantity of the native token of the blockchain is minted and assigned to the block generator. The exact amount assigned to the block generator, i.e., the reward, is calculated depending on the rules of the [random module][randomLIP] and the [BFT module][BFTLIP].
 
 ## Specification
 
-In this section, we specify the protocol logic in the lifecycle of a block injected by the reward module as well as the functions that can be called from off-chain services.
+In this section, we specify the protocol logic in the lifecycle of a block injected by the Reward module as well as the functions that can be called from off-chain services.
 This module does not contain commands, and has an empty state.
 It depends on the token, BFT, and random modules.
 
@@ -46,12 +46,12 @@ It depends on the token, BFT, and random modules.
 
 ### Token for rewards
 
-The reward module triggers the minting of rewards in the fungible token identified by the value of `TOKEN_ID_REWARD`, which denotes a token ID. 
-The value of `TOKEN_ID_REWARD` is set according to the initial configuration of the reward module. 
+The Reward module triggers the minting of rewards in the fungible token identified by the value of `TOKEN_ID_REWARD`, which denotes a token ID. 
+The value of `TOKEN_ID_REWARD` is set according to the initial configuration of the Reward module. 
 
 ### Reward Brackets
 
-As part of the reward module configuration, the module has to define certain reward brackets, i.e., the values of the default block reward depending on the height of the block. 
+As part of the Reward module configuration, the module has to define certain reward brackets, i.e., the values of the default block reward depending on the height of the block. 
 For this LIP, we assume the reward brackets are given by the function `getDefaultRewardAtHeight(height)`, which returns a 64-bit unsigned integer value, the default block reward, given the block height `height` as input.
 
 ### Lisk Mainchain Configuration
@@ -76,7 +76,7 @@ This corresponds to default rewards of 5 LSK, 4 LSK, 3 LSK, 2 LSK, and 1 LSK res
 
 ### Internal Functions
 
-The reward module has the following internal function.
+The Reward module has the following internal function.
 
 #### getBlockReward
 
@@ -107,7 +107,7 @@ Here, `/` represents integer division, `isValidSeedReveal` is the function expos
 
 ### Endpoints for Off-Chain Services
 
-The reward module exposes the following functions for off-chain services.
+The Reward module exposes the following functions for off-chain services.
 
 #### getDefaultRewardAtHeight
 
@@ -137,7 +137,7 @@ In the case of the Lisk mainchain, `TOKEN_ID_REWARD = TOKEN_ID_LSK_MAINCHAIN`.
 
 ## Backwards Compatibility
 
-This LIP defines the interface for the reward module but does not introduce any change to the protocol, hence it is a backward compatible change.
+This LIP defines the interface for the Reward module but does not introduce any change to the protocol, hence it is a backward compatible change.
 
 [creative]: https://creativecommons.org/publicdomain/zero/1.0/
 [randomLIP]: https://research.lisk.com/t/define-state-and-state-transitions-of-random-module/311
