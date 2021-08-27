@@ -209,6 +209,12 @@ sidechainRegParams = {
       },
       "initValidators":{
          "type":"object",
+         "fieldNumber":3,
+         "required":[
+             "keys",
+             "weights",
+             "certificateThreshold"
+         ],
          "properties":{
             "keys":{
                "type":"array",
@@ -227,13 +233,7 @@ sidechainRegParams = {
             "certificateThreshold":{
                "dataType":"uint64",
                "fieldNumber":3
-            },
-            "required":[
-               "keys",
-               "weights",
-               "certificateThreshold"
-            ],
-            "fieldNumber":3
+            }
          }
       }
    },
@@ -340,6 +340,12 @@ mainchainRegParams = {
       },
       "mainchainValidators":{
          "type":"object",
+	 "fieldNumber":3,
+         "required":[
+             "keys",
+             "weights",
+             "certificateThreshold"
+         ],
          "properties":{
             "keys":{
                "type":"array",
@@ -359,12 +365,6 @@ mainchainRegParams = {
                "dataType":"uint64",
                "fieldNumber":3
             },
-            "required":[
-               "keys",
-               "weights",
-               "certificateThreshold"
-            ],
-            "fieldNumber":3
          }
       },
       "signature":{
@@ -423,6 +423,12 @@ The set of validity rules to validate `trs.params` are:
               },
               "mainchainValidators":{
                  "type":"object",
+                 "fieldNumber":3,
+                 "required":[
+                     "keys",
+                     "weights",
+                     "certificateThreshold"
+                 ],
                  "properties":{
                     "keys":{
                        "type":"array",
@@ -442,12 +448,6 @@ The set of validity rules to validate `trs.params` are:
                        "dataType":"uint64",
                        "fieldNumber":3
                     },
-                    "required":[
-                       "keys",
-                       "weights",
-                       "certificateThreshold"
-                    ],
-                    "fieldNumber":3
                  }
               }
            },
