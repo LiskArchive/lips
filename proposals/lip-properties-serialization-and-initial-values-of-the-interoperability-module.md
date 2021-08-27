@@ -1,6 +1,6 @@
 ```
 LIP: <LIP number>
-Title: Properties, serialization, and initial values of interoperability module
+Title: Introduce Interoperability module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/properties-serialization-and-initial-values-of-interoperability-module
 Type: Standards Track
@@ -11,7 +11,7 @@ Updated: <YYYY-MM-DD>
 
 ## Abstract
 
-The interoperability module provides basic functionalities to transmit information between interoperable chains in the Lisk ecosystem using cross-chain messages. In this LIP the properties, serialization, and initial values of this module are specified. Additionally, this LIP also provides a broad overview of the Lisk interoperability solution, motivating several design choices and presenting the new commands that are part of the interoperability module.
+The Interoperability module provides basic functionalities to transmit information between interoperable chains in the Lisk ecosystem using cross-chain messages. In this LIP the properties, serialization, and initial values of this module are specified. Additionally, this LIP also provides a broad overview of the Lisk interoperability solution, motivating several design choices and presenting the new commands that are part of the Interoperability module.
 
 
 ## Copyright
@@ -29,7 +29,7 @@ In the Lisk protocol, cross-chain transactions are special in that, after being 
 
 One of the main motivations for proposing a [certificate-based communication](https://lisk.io/blog/research/introduction-blockchain-interoperability) between chains is the ability for all chains in the ecosystem to remain state machines. This means that all information needed to validate and advance a chain to the next block is present on the chain itself.  In the Lisk interoperability solution, the only information that needs social consensus is information about the initial validators of the other chain. On the mainchain, this information is received via the sidechain registration command; on sidechains, in a similar way, via the mainchain registration command.
 
-The interoperability module provides the data structures and functionalities necessary for interoperability between chains of the Lisk ecosystem. In this LIP, we specify the properties, serialization, and initial values of the interoperability module.
+The Interoperability module provides the data structures and functionalities necessary for interoperability between chains of the Lisk ecosystem. In this LIP, we specify the properties, serialization, and initial values of the Interoperability module.
 
 
 ## Rationale
@@ -37,7 +37,7 @@ The interoperability module provides the data structures and functionalities nec
 
 ### Interoperability Commands
 
-The interoperability module stores the properties necessary to validate and process the following new commands.
+The Interoperability module stores the properties necessary to validate and process the following new commands.
 
 
 #### [Sidechain Registration Command][registration-LIP]
@@ -110,7 +110,7 @@ Each chain also includes an account storing the chain name and ID in the ecosyst
 
 <img src="lip-properties-serialization-and-initial-values-of-the-interoperability-module/store.png" width="80%">
 
-_Figure 2: A summary of the interoperability module store. The interoperability module defines 4 stores: the account store for partner chain accounts and the own chain account, the outbox store for outbox roots, and the terminated chains to allow for recovery commands. The name and network ID stores, keeping track of the names and network IDs of registered sidechains, are present only on mainchain._
+_Figure 2: A summary of the Interoperability module store. The Interoperability module defines 4 stores: the account store for partner chain accounts and the own chain account, the outbox store for outbox roots, and the terminated chains to allow for recovery commands. The name and network ID stores, keeping track of the names and network IDs of registered sidechains, are present only on mainchain._
 
 
 ### Message Forwarding and the Role of the Lisk Mainchain
@@ -130,7 +130,7 @@ Using a Merkle tree also guarantees that the number of sibling hashes that are p
 
 #### Storage of the Outbox Root
 
-The outbox root property is duplicated and additionally stored separately from all other properties of the chain account. The store prefix of the outbox root is the constant `STORE_PREFIX_OUTBOX_ROOT` and the store key is the hash of the chain ID of the partner chain. Storing the outbox root with a different store prefix allows to separate the subtree corresponding to the outbox roots from the rest of the data in the interoperability store. This choice allows for shorter inclusion proofs for the outbox root, as the other properties of the interoperability module are not needed to recalculate the state root if the outbox root is known. In particular, the inclusion proof contained in a CCU from a sidechain posted on the mainchain will contain only one hash. 
+The outbox root property is duplicated and additionally stored separately from all other properties of the chain account. The store prefix of the outbox root is the constant `STORE_PREFIX_OUTBOX_ROOT` and the store key is the hash of the chain ID of the partner chain. Storing the outbox root with a different store prefix allows to separate the subtree corresponding to the outbox roots from the rest of the data in the interoperability store. This choice allows for shorter inclusion proofs for the outbox root, as the other properties of the Interoperability module are not needed to recalculate the state root if the outbox root is known. In particular, the inclusion proof contained in a CCU from a sidechain posted on the mainchain will contain only one hash. 
 
 
 ### Storage of Auxiliary Data
@@ -140,7 +140,7 @@ In order to process sidechain registration commands more efficiently, it is conv
 
 ## Specification
 
-In this section, we specify the substores that are part of the interoperability module store and the functions exposed to other modules. The interoperability module has module ID `MODULE_ID_INTEROPERABILITY` (see the [table below](#Notation-and-Constants)).
+In this section, we specify the substores that are part of the Interoperability module store and the functions exposed to other modules. The Interoperability module has module ID `MODULE_ID_INTEROPERABILITY` (see the [table below](#Notation-and-Constants)).
 
 
 ### Notation and Constants
@@ -150,7 +150,7 @@ We define the following constants:
 | Name          | Type    | Value       | Description |
 | ------------- |---------| ------------| ------------|
 | **Interoperability Constants** ||||
-| `MODULE_ID_INTEROPERABILITY` | uint32 | 64 |ID of the interoperability module.|
+| `MODULE_ID_INTEROPERABILITY` | uint32 | 64 |ID of the Interoperability module.|
 | `MAINCHAIN_ID`               | uint32  | 1  | Chain ID of the Lisk mainchain.|
 | `MAINCHAIN_NAME`             | string | "lisk-mainchain" | Name of the Lisk mainchain.|
 | `MAINCHAIN_NETWORK_ID`       | bytes  | TBD | Network identifier of the Lisk mainchain.|
@@ -739,7 +739,7 @@ terminateChain(chainID):
 
 ### Commands
 
-The the interoperability module has the following commands:
+The the Interoperability module has the following commands:
 
 * [Sidechain registration command][registration-LIP]
 * [Mainchain registration command][registration-LIP]
@@ -820,7 +820,7 @@ A boolean indicating the success of the function execution.
 
 ```python
 error(CCM, errorCode):
-    # Error codes from 0 to 63 (included) are reserved to the interoperability module
+    # Error codes from 0 to 63 (included) are reserved to the Interoperability module
     if 0 <= errorCode < 64:
         return False
 
@@ -851,7 +851,7 @@ The own chain account.
 
 ## Backwards Compatibility
 
-This proposal, together with [LIP "Chain registration"][registration-LIP], [LIP "Cross-chain messages"][CCM-LIP], [LIP "Introduce cross-chain update transactions"][CCU-LIP], and [LIP "Sidechain recovery transactions"][recovery-LIP], is part of the interoperability module. 
+This proposal, together with [LIP "Chain registration"][registration-LIP], [LIP "Cross-chain messages"][CCM-LIP], [LIP "Introduce cross-chain update transactions"][CCU-LIP], and [LIP "Sidechain recovery transactions"][recovery-LIP], is part of the Interoperability module. 
 Chains adding this module will need to do so with a hard fork.
 
 
