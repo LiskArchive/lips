@@ -1,6 +1,6 @@
 ```
 LIP: <LIP number>
-Title: Introduce validators module
+Title: Introduce Validators module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
         Rishi Mittal <rishi.mittal@lightcurve.io>
@@ -14,7 +14,7 @@ Requires: LIP 0040
 
 ## Abstract
 
-The validators module is responsible for validating the eligibility of a validator for generating a block and the block signature. Furthermore, it maintains information about the registered validators in its module store and provides the generator list. In this LIP, we specify the properties of the validators module, along with their serialization and default values. Furthermore, we specify the state transitions logic defined within this module, i.e. the protocol logic injected during the block processing and the functions that can be called from other modules or off-chain services.
+The Validators module is responsible for validating the eligibility of a validator for generating a block and the block signature. Furthermore, it maintains information about the registered validators in its module store and provides the generator list. In this LIP, we specify the properties of the Validators module, along with their serialization and default values. Furthermore, we specify the state transitions logic defined within this module, i.e. the protocol logic injected during the block processing and the functions that can be called from other modules or off-chain services.
 
 
 ## Copyright
@@ -24,11 +24,11 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-Validators in Lisk DPoS and Lisk PoA chains share many common properties, like the generator and BLS keys. It is therefore desirable to handle these properties and their associated logic in a single module, the validators module.
+Validators in Lisk DPoS and Lisk PoA chains share many common properties, like the generator and BLS keys. It is therefore desirable to handle these properties and their associated logic in a single module, the Validators module.
 
-The validators module handles parts of the block validation. In particular, it verifies that a validator is eligible for generating a block in a certain block slot and the validity of the block signature. Furthermore, it maintains the generator and BLS keys of all registered validators in its store and exposes functions to register new keys during a validator registration, to update the generator key, and to get the list of current validators. 
+The Validators module handles parts of the block validation. In particular, it verifies that a validator is eligible for generating a block in a certain block slot and the validity of the block signature. Furthermore, it maintains the generator and BLS keys of all registered validators in its store and exposes functions to register new keys during a validator registration, to update the generator key, and to get the list of current validators. 
 
-In this LIP we specify the properties, serialization, and initialization of the validators module, as well as the protocol logic processed during a block processing and the functions exposed to other modules and to off-chain services.
+In this LIP we specify the properties, serialization, and initialization of the Validators module, as well as the protocol logic processed during a block processing and the functions exposed to other modules and to off-chain services.
 
 
 ## Rationale
@@ -43,7 +43,7 @@ To mitigate this risk, we propose to add an extra key pair to a validator accoun
 
 ### Ensuring Uniqueness of validator BLS Keys
 
-The validators module store maintains an account for each validator registered in the chain. In particular, it stores the [BLS key](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md) associated with the validator, used to sign commits. BLS keys have to be unique across the chain, i.e. two validators are not allowed to register the same BLS key. To easily check whether a BLS key has been previously registered, we use a _registered BLS keys substore_, to store all the registered validator BLS keys. Store keys are set to the BLS key and the corresponding store value to the address of the validator that registered the key. This allows to check for the existence of a certain BLS key in constant time.
+The Validators module store maintains an account for each validator registered in the chain. In particular, it stores the [BLS key](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md) associated with the validator, used to sign commits. BLS keys have to be unique across the chain, i.e. two validators are not allowed to register the same BLS key. To easily check whether a BLS key has been previously registered, we use a _registered BLS keys substore_, to store all the registered validator BLS keys. Store keys are set to the BLS key and the corresponding store value to the address of the validator that registered the key. This allows to check for the existence of a certain BLS key in constant time.
 
 ### Block Slots
 
@@ -56,7 +56,7 @@ Each entry of the generator list is assigned to a block slot.
 
 ## Specification
 
-In this section, we specify the substores that are part of the validators module store and the protocol logic called during the block processing. The validators module has module ID `MODULE_ID_VALIDATORS` (see the [table below](#notation-and-constants)).
+In this section, we specify the substores that are part of the Validators module store and the protocol logic called during the block processing. The Validators module has module ID `MODULE_ID_VALIDATORS` (see the [table below](#notation-and-constants)).
 
 
 ### Notation and Constants
@@ -66,7 +66,7 @@ We define the following constants:
 
 | Name          | Type    | Value       | Description |
 | ------------- |---------| ------------| ------------|
-|`MODULE_ID_VALIDATORS` | uint32 | TBD | ID of the validators module.|
+|`MODULE_ID_VALIDATORS` | uint32 | TBD | ID of the Validators module.|
 |`STORE_PREFIX_VALIDATORS_DATA` | bytes | 0x0000 | Store prefix of the validators data substore.|
 |`STORE_PREFIX_GENERATOR_LIST` | bytes | 0x4000 | Store prefix of the generator list substore.|
 |`STORE_PREFIX_BLS_KEYS` | bytes | 0x8000 | Store prefix of the registered BLS keys substore.|
