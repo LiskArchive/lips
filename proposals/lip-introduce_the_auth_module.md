@@ -1,6 +1,6 @@
 ```
 LIP: <LIP number>
-Title: Introduce auth module
+Title: Introduce Auth module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Ishan Tiwari <ishan.tiwari@lightcurve.io> 
 Discussions-To: https://research.lisk.com/t/introduce-auth-module
@@ -13,7 +13,7 @@ Requires: LIP 0040
 
 ## Abstract
 
-The auth module is responsible for handling and verifying nonces and for transaction signature validation, including transactions from multisignature accounts. In this LIP, we specify the properties of the auth module, along with their serialization and default values. Furthermore, we specify the state transitions logic defined within this module, i.e. the commands, the protocol logic injected during the block lifecycle, and the functions that can be called from other modules or off-chain services.
+The Auth module is responsible for handling and verifying nonces and for transaction signature validation, including transactions from multisignature accounts. In this LIP, we specify the properties of the Auth module, along with their serialization and default values. Furthermore, we specify the state transitions logic defined within this module, i.e. the commands, the protocol logic injected during the block lifecycle, and the functions that can be called from other modules or off-chain services.
 
 
 ## Copyright
@@ -25,7 +25,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 In the Lisk protocol, some verification steps are common to all transactions. In particular, to validate a transaction it is necessary to validate the [signatures](https://lisk.com/documentation/lisk-sdk/protocol/accounts.html#keys) and the [nonce](https://lisk.com/documentation/lisk-sdk/protocol/accounts.html#nonce). These validation steps are handled by the authentication (auth) module. 
 
-In this LIP we specify the properties, serialization, and default values of the auth module, as well as the protocol logic processed during a block lifecycle, the commands, and the functions exposed to other modules and to off-chain services.
+In this LIP we specify the properties, serialization, and default values of the Auth module, as well as the protocol logic processed during a block lifecycle, the commands, and the functions exposed to other modules and to off-chain services.
 
 
 ## Rationale
@@ -35,7 +35,7 @@ Validating a transaction requires reading the state to get the nonce and possibl
 
 ## Specification
 
-In this section, we specify the substores that are part of the auth module store, the commands, and the protocol logic called during the block lifecycle. The auth module has module ID `MODULE_ID_AUTH` (see the [table below](#constants)).
+In this section, we specify the substores that are part of the Auth module store, the commands, and the protocol logic called during the block lifecycle. The Auth module has module ID `MODULE_ID_AUTH` (see the [table below](#constants)).
 
 
 ### Constants
@@ -44,7 +44,7 @@ We define the following constants:
 
 | Name          | Type    | Value       | Description |
 | ------------- |---------| ------------| ------------|
-|`MODULE_ID_AUTH` | uint32 | TBD | ID of the auth module.|
+|`MODULE_ID_AUTH` | uint32 | TBD | ID of the Auth module.|
 |`STORE_PREFIX_AUTH` | bytes | 0x0000 | Store prefix of the auth data substore.|
 
 
@@ -232,4 +232,4 @@ authAccount(senderAddress).nonce += 1
 
 ## Backwards Compatibility
 
-This LIP defines a new storage interface for the auth module, which in turn will become part of the state tree and will be authenticated by the state root. An existing chain including the auth module will need to perform a hardfork.
+This LIP defines a new storage interface for the Auth module, which in turn will become part of the state tree and will be authenticated by the state root. An existing chain including the Auth module will need to perform a hardfork.
