@@ -299,6 +299,10 @@ blockHeaderAssetRandomModule = {
 This LIP defines a new store interface for the Random module, which in turn will become part of the state tree and will be authenticated by the state root. 
 As such, it will induce a hardfork.
 
+## Reference Implementation
+
+TBA
+
 [creative]: https://creativecommons.org/publicdomain/zero/1.0/
 [randomSeeds]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md#random-seeds-computation
 [LIP22]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md#validating-new-block-header-property
