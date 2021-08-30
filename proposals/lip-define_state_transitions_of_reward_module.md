@@ -139,6 +139,10 @@ In the case of the Lisk mainchain, `TOKEN_ID_REWARD = TOKEN_ID_LSK_MAINCHAIN`.
 
 This LIP defines the interface for the Reward module but does not introduce any change to the protocol, hence it is a backward compatible change.
 
+## Reference Implementation
+
+TBA
+
 [creative]: https://creativecommons.org/publicdomain/zero/1.0/
 [randomLIP]: https://research.lisk.com/t/define-state-and-state-transitions-of-random-module/311
 [BFTLIP]: https://research.lisk.com
