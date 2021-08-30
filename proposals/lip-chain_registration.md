@@ -492,6 +492,10 @@ Then:
 This proposal, together with [Properties, serialization, and initial values of the interoperability module LIP][interopLIP], [Cross-chain updates LIP][ccuLIP], [Cross-chain messages LIP][ccmLIP], and [Sidechain recovery transactions LIP][recoveryLIP], is part of the interoperability module. 
 Chains adding this module will need to do so with a hardfork.
 
+## Reference Implementation
+
+TBA
+
 [creative]: https://creativecommons.org/publicdomain/zero/1.0/
 [interopLIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290#motivation-3
 [delegateTrs]: https://lisk.io/documentation/lisk-sdk/protocol/transactions.html#delegate
