@@ -55,7 +55,7 @@ The Random module has module ID `MODULE_ID_RANDOM` (see the table below). It is 
 | `MODULE_ID_RANDOM `      | uint32   | TBD       | ID of the Random module |
 | `STORE_PREFIX_RANDOM`     | bytes   | `0x0000`  | Prefix of the random substore |
 | **Config parameters**     |    |  mainchain value      |  |
-| `MAX_LENGTH_REVEALS_MAINCHAIN` | uint32 | 206 | Maximum length of the `validatorReveals` array |
+| `MAX_LENGTH_VALIDATOR_REVEALS` | uint32 | 206 | Maximum length of the `validatorReveals` array |
 
 ### Random Module Store
 
@@ -267,7 +267,7 @@ After a block `b` is executed, the following logic is applied:
 
 * While the size of the `validatorReveals` array is larger than `MAX_LENGTH_VALIDATOR_REVEALS`, delete the element of `validatorReveals` array with the smallest value of `height`.
     * By construction this should be the first element of the `validatorReveals` array. 
-    * The value of the `MAX_LENGTH_VALIDATOR_REVEALS` constant is given in the initial configuration of the Random module. It should be set as twice the maximum length of the chains validator set. For Lisk mainchain, `MAX_LENGTH_VALIDATOR_REVEALS = MAX_LENGTH_REVEALS_MAINCHAIN`.
+    * The value of the `MAX_LENGTH_VALIDATOR_REVEALS` constant is given in the initial configuration of the Random module. It should be set as twice the maximum length of the chains validator set.
 * Add a new element to the `validatorReveals` array with the following content:
     * `seedReveal = blockAssetObject.seedReveal` 
     * `generatorAddress = b.header.generatorAddress` 
