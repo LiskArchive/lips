@@ -47,13 +47,15 @@ In this section, we specify the substores that are part of the Random module sto
 
 The Random module has module ID `MODULE_ID_RANDOM` (see the table below). It is a module with no dependencies.
 
-### Constants
+### Constants and config parameters
 
 | **Name**                 | **Type** | **Value** | **Description** |
 |--------------------------|----------|-----------|-----------------|
+| **Constants**     |    |        |  |
 | `MODULE_ID_RANDOM `      | uint32   | TBD       | ID of the Random module |
 | `STORE_PREFIX_RANDOM`     | bytes   | `0x0000`  | Prefix of the random substore |
-| `MAX_LENGTH_REVEALS_MAINCHAIN` | uint32 | 206 | Maximum length of the `validatorReveals` array for the Lisk Mainchain |
+| **Config parameters**     |    |  mainchain value      |  |
+| `MAX_LENGTH_REVEALS_MAINCHAIN` | uint32 | 206 | Maximum length of the `validatorReveals` array |
 
 ### Random Module Store
 
@@ -257,7 +259,7 @@ This logic is not called during the block creation process.
 Let `blockAssetBytes` be the bytes included in the block asset for the Random module:
 
 1. Let `blockAssetObject` be the deserialization of `blockAssetBytes` according to `blockHeaderAssetRandomModule` in the [Block Initialization](#block-initialization) subsection.
-2. Validate `blockAssetObject.seedReveal` as specified in the section “Validating New Block Header Property” of [LIP 0022][LIP22] (same logic as `isSeedRevealValid` function above).
+2. The property `blockAssetObject.seedReveal` has to have a length of 20 bytes.
 
 #### After Block Execution
 
@@ -286,7 +288,7 @@ blockHeaderAssetRandomModule = {
     "type": "object",
     "properties": {
         "seedReveal": {
-            "dataType": "uint64",
+            "dataType": "bytes",
             "fieldNumber": 1
         }
     },
