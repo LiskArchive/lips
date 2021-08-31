@@ -1,0 +1,591 @@
+```
+LIP:
+Title: Introduce PoA module
+Author: Iker Alustiza <iker@lightcurve.io>
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+Requires: 0038, 0040, Introduce Validators module, Introduce BFT module
+```
+
+## Abstract
+
+This LIP introduces the Lisk Proof-of-Authority (PoA) mechanism for the selection of validators, known as authorities in this context, to generate blocks. 
+In particular, this document specifies the PoA module with its module store structure and the stored key-value pairs. Furthermore, it specifies the state transitions logic defined within this module, i.e. the commands, the protocol logic injected during the block lifecycle, and the functions that can be called from other modules or off-chain services.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal][creative].
+
+## Motivation
+
+In Proof-of-Authority (PoA) blockchains only a pre-defined set of validators, called the authorities, can propose blocks and they are selected based on off-chain information such as their reputation or identity. 
+It trades the decentralization of the network (arbitrarily selected authorities) for efficiency and performance. 
+This mechanism was first proposed by [Gavin Wood in 2015][gavin].
+
+A PoA blockchain is especially attractive for small projects or blockchain applications where the project owners are expected to run the network nodes. Due to the simplicity of its validator selection algorithm, it is also suitable for applications where a high transaction per second throughput is important. That is why a self-contained PoA module seems to be a very useful feature to be added as one of the modules available for sidechain developers in the Lisk SDK. 
+
+## Rationale
+
+This LIP specifies the PoA module which defines a complete Proof-of-Authority blockchain. 
+Sidechain developers creating a sidechain with the Lisk SDK will have the out-of-the-box choice between this module or the DPoS module as the mechanism for validator selection in their sidechain. 
+
+As mentioned, the Lisk PoA module only sets the mechanism for the selection of the validators, which implies that the underlying algorithm to reach consensus for blocks of the chain is assumed to be given by the [Lisk-BFT consensus algorithm][weighted-bft-lip-link]. 
+The PoA module also assumes the same round system as [currently specified for the Lisk Mainchain][rounds]. 
+That is, the assignment of block forging slots is done in batches of consecutive blocks called rounds.
+
+Typically, PoA systems do not define any reward system. 
+However, sidechain developers may choose to have a reward system in the chain native token to incentivize the authorities. 
+In this case, the Reward module in the Lisk SDK can be used to define block rewards for PoA blockchains in the same way as for DPoS blockchains. 
+
+Moreover, the banning mechanism (as defined in [LIP 0023][lip23]) and the punishment of BFT violations (as defined in [LIP 0024][lip24] for the Lisk-BFT protocol) are not  necessary for a functional PoA blockchain.
+Hence, in this LIP they are not included in the specifications. 
+
+### Updating the Set of Authorities
+
+The current active authorities, i.e., those authorities eligible to forge blocks and participate in the Lisk-BFT consensus, are stored in the store of the PoA module together with their associated weight. It further contains a threshold property. The weights and threshold are used in the Lisk-BFT consensus algorithm and for the validity of the [update authority command](#update-authority-command).
+This command is specific to the PoA module and allows to update the mentioned parameters. 
+In particular, the update authority command allows PoA chains to increase (or decrease) the number of active authorities, to change their associated weight and the threshold.
+This is a particularly interesting feature for blockchain applications that start with a small set of validators and nodes in the network (for example, the sidechain developers themselves). 
+With the success and maturity of the application, there may be an interest in opening the project to a bigger and more decentralized set of participants. 
+The command is only valid if a threshold of active authorities approve it by adding their signature (to be aggregated) to the command parameters. 
+
+This command can set a maximum of 199 active authorities which is the maximum number of active validators in any chain built with the Lisk SDK. 
+
+### Migration from PoA to DPoS
+
+As mentioned before, the sidechain developers using the SDK may specify their blockchain application to be deployed on a PoA or DPoS chain (assuming they do not develop a custom mechanism). 
+Thus, a sidechain will be either a PoA or a DPoS blockchain and both modules cannot co-exist in the same chain. 
+However, there may be an interest for some projects that started as a PoA chain to migrate to DPoS. 
+If this is the case, the developers and the future network validators have two choices:
+
+1. After launching the project, if there is a need for a more decentralized approach: Hard-fork the chain to include the DPoS module instead of PoA. This can be easened by following a snapshot mechanism similar to the one specified in [LIP 0035][lip35].
+2. If during the development phase, it is decided that the application should start on a PoA chain and then run on a DPoS chain for the long term: The sidechain developers can define an arbitrarily long bootstrapping period for the DPoS chain in the genesis block as explained in [LIP 0034][lip34]. This bootstrapping period effectively mimics a PoA chain where there is a fixed set of validators given by the public keys in the `initDelegates` property of the block header asset. This will allow it to first have a preparatory phase of the application so it can mature sufficiently before transferring to a DPoS chain.
+
+## Specification
+
+In this section, we specify the PoA module with its module store structure and the stored key-value pairs. Furthermore, we specify the state transition logic defined within this module, i.e. the commands, the protocol logic injected during the block lifecycle, and the functions that can be called from other modules or off-chain services. The PoA module has module ID `MODULE_ID_POA` (see the table [below](#constants)).
+
+### Constants and Notation
+
+| **Name**                 | **Type** | **Value** |
+|--------------------------|----------|-----------|
+| `MODULE_ID_POA`          | uint32   | TBD |
+| `STORE_PREFIX_VALIDATOR` | bytes    | `0x8000` |
+| `STORE_PREFIX_NAME`  | bytes    | `0xc0000` |
+| `STORE_PREFIX_SNAPSHOT`     | bytes    |`0xe000` |
+| `STORE_PREFIX_CHAIN`     | bytes    |`0x0000` |
+| `COMMAND_ID_REGISTRATION_AUTHORITY`      | uint32    | 0 |
+| `COMMAND_ID_UPDATE_KEY`      | uint32    | 1 |
+| `COMMAND_ID_UPDATE_AUTHORITY`     | uint32    | 2 |
+| `MAX_LENGTH_NAME`    | uint32   | 20 |
+| `MAX_NUM_VALIDATORS`     | uint32   | 199 |
+| `MAX_UINT64`             | uint64   | 18446744073709551615 |
+| `MESSAGE_TAG_POA`        | bytes    | ASCII encoded string “LSK_POA_” |
+
+#### uint32be Function
+`uint32be(x)` returns the big endian uint32 serialization of an integer `x`, with `0 <= x < 2^32`. This serialization is always 4 bytes long.
+
+### PoA Module Store
+
+The key-value pairs in the module store are organized as in the following Figure 1.
+
+![PoA_Store|658x500](upload://5Br63eEDY2LF8fM7atx6sk6uRJ1.png)
+
+_Figure 1: The PoA module store is organized in four substores, one for the validator address, one for the names, one for the validators snapshots and the fourth to store the general chain properties._
+
+#### Validator Substore
+
+The validator names of the registered authorities are stored as distinct key-value entries in the PoA module store.
+
+##### Store Prefix, Store Keys, and Store Values
+
+* The store prefix is set to `STORE_PREFIX_VALIDATOR`.
+* Each substore key is a 20-byte value `address`, where `address` is the address of the user account registered as validator, either in the genesis block or with an [authority registration command](#authority-registration-command).
+* Each substore value is the serialization of an object following the JSON schema `validatorObjectSchema` defined below.
+
+##### JSON Schema
+
+```java
+validatorObjectSchema = {
+   "type": "object",
+   "properties": {
+      "name": {
+         "dataType": "string",
+         "fieldNumber": 1
+      }
+   },
+   "required": [
+      "name"
+   ]
+}
+```
+
+##### Properties and Default Values
+
+`name` is a string representing the validator name, with a minimum length of 1 character and a maximum length of `MAX_LENGTH_NAME` characters. Its value is set in the genesis block or with an [authority registration command](#authority-registration-command)
+
+#### Name Substore
+
+The name substore is an auxiliary store used to validate the [authority registration command](#authority-registration-command).
+
+##### Store Prefix, Store Keys, and Store Values
+
+* The store prefix is set to `STORE_PREFIX_NAME`.
+* Each substore key is a name of a validator as given in the genesis block or with an [authority registration command](#authority-registration-command), serialized as a utf-8 encoded string.
+* Each substore value is set to the address of the corresponding validator, serialized according to the JSON schema `validatorAddressSchema` below.
+
+##### JSON Schema
+
+``` java
+validatorAddressSchema = {
+   "type": "object",
+   "properties": {
+      "address": {
+         "dataType": "bytes",
+         "fieldNumber": 1
+      }
+   },
+   "required": [
+      "address"
+   ]
+}
+```
+
+##### Properties and Default Values
+
+`address` is a 20-byte array with the address of the user account registered as validator in the genesis block or with an [authority registration command](#authority-registration-command).
+
+#### Snapshot Substore
+
+This substore contains the snapshot of the active authorities for the current round, next round and in two rounds.
+
+##### Store Prefix, Store Key, and Store Value
+
+* The store prefix is set to `STORE_PREFIX_SNAPSHOT`.
+* Each store key is `uint32be(roundNumber)`, where `roundNumber` can be 0, 1 or 2 corresponding to the current round, the next round and in two rounds respectively.
+* Each store value is the serialization of an object following `snapshotStoreSchema`.
+* Notation: Let `snapshotStore(roundNumber)` be the store entry with prefix STORE_PREFIX_SNAPSHOT and key `uint32be(roundNumber)`.
+
+##### JSON Schema
+
+```java
+snapshotStoreSchema = {
+   "type": "object",
+   "properties": {
+       "addresses": {
+           "type": "array",
+           "fieldNumber": 1,
+           "items": {
+               "dataType": "bytes",
+            },                      
+        }
+        "weights": {
+           "type": "array",
+           "fieldNumber": 2,
+           "items": {
+              "dataType": "uint64",
+            },                      
+        }		    
+        "threshold": {
+            "dataType": "uint64",
+            "fieldNumber": 3,
+        },
+    },
+    "required": ["address", "weights", "threshold"]
+ }
+ ```
+
+##### Properties and Default Values
+
+The properties of this schema are as follows:
+
+  * `addresses`: An array of pairwise distinct 20-byte addresses in lexicographical order.
+It specifies the set of active validators in the chain. 
+Its initial value is set in the genesis block.
+  * `weights`: An array of positive integers of the same size as the `validatorsCurrentRound.addresses` property where each element is the weight of the corresponding validator in `validatorsCurrentRound.addresses`. 
+Its initial value is set in the genesis block.
+  * `threshold`: An integer stating the weight threshold for finality in the BFT consensus protocol.
+Its initial value is set in the genesis block.
+
+#### Chain Properties Substore
+
+This substore contains the general properties of the chain.
+
+##### Store Prefix, Store Key, and Store Value
+
+* The store prefix is set to `STORE_PREFIX_CHAIN`.
+* The store key is set to empty bytes.
+* The store value is set to the serialization of an object following `chainPropSchema` below.
+* Notation: Let `chainProperties` be the entry in the chain properties substore.
+
+##### JSON Schema
+
+```java
+chainPropSchema = {
+   "type": "object",
+   "properties": {
+      "roundEndHeight": {
+          "dataType": "uint32",
+          "fieldNumber": 1
+      },
+       "validatorsUpdateNonce": {
+           "dataType": "uint32",
+           "fieldNumber": 2
+      },
+    }
+    "required": [
+       "roundEndHeight",
+       "validatorsUpdateNonce"
+    ]
+}
+```
+
+##### Properties and Default Values
+
+The properties of this schema are as follows:
+
+*   `roundEndHeight`: An integer stating the last height of the round. 
+Its initial value is set after the execution of the genesis block.
+*   `validatorsUpdateNonce`: An integer representing the number of times that the validator set has been updated with an update auhtority command. 
+It is initialized to 0.
+
+### Commands
+
+#### Authority Registration Command
+
+This command is equivalent to the [delegate registration command][delegatedoc] in the DPoS module and has the same schema and similar validity rules. 
+The command ID of this transaction is `COMMAND_ID_REGISTRATION_AUTHORITY`.
+
+##### Parameters
+
+```java
+registrationTransactionParamsSchema = {
+  "type": "object",
+  "properties": {
+    "name": {
+      "dataType": "string",
+      "fieldNumber": 1
+    },
+    "blsKey": {
+      "dataType": "bytes",
+      "fieldNumber": 2
+    },
+    "proofOfPossession": {
+      "dataType": "bytes",
+      "fieldNumber": 3
+    },
+    "generatorKey": {
+      "dataType": "bytes",
+      "fieldNumber": 4
+    }
+  },
+  "required": ["name", "blsKey", "proofOfPossession", "generatorKey"]
+}
+```
+
+##### Verification 
+ 
+Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAND_ID_REGISTRATION_AUTHORITY` to be verified. 
+The list of verification conditions for `trs.params` is as follows:
+
+* The `trs.params.name` property has to contain only characters from the set `[a-z0-9!@$&_.]`, must not be empty and has to be at most `MAX_LENGTH_NAME` characters long.
+* Let `address` be the 20-byte address derived from `trs.senderPublicKey`. Then `address` must not already be registered as a validator. This is, the validator substore has no entry with store key `address`.
+* The value of `trs.params.name` must not already be registered as a validator name. This is, the name substore has no entry with store key `trs.params.name`.
+* `isKeyRegistered(trs.params.blsKey)` must return `true`, where the function is defined in the [Validators module][validatorsModule].
+* `PopVerify(trs.params.blsKey, trs.params.proofOfPossession)` must return `VALID`, where [`PopVerify`][bls-specs-v4-popverify] is part of the [BLS signature scheme][lip-bls-public-key-registration].
+* `tx.params.generatorKey` must have length 32.
+
+
+##### Execution 
+
+Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAND_ID_REGISTRATION_AUTHORITY` to be executed.
+Then `trs.params` implies the following execution logic:
+
+* Create an entry in the validator substore as:
+  * `storeKey`: `address`, where `address` is the address of the sender of `trs`.
+  * `storeValue`: The serialization of the object `validatorObject` following `validatorObjectSchema` with `validatorObject.name = trs.params.name`. 	
+* Create an entry in the name substore as:
+  * `storeKey`: `trs.params.name` serialized as a utf-8 encoded string. 
+  * `storeValue`: The serialization of the object `validatorAddress` following `validatorAddressSchema` with `validatorAddress.address = address` where `address` is the address of the sender of `trs`.
+* Call `registerValidatorKeys(address, trs.params.proofOfPossession, trs.params.generatorKey, trs.params.blsKey)`, where `address` is the 20-byte address derived from `trs.senderPublicKey`.
+The function `registerValidatorKeys` is defined in the [Validators module][lip-validators-module-register-validator-keys].
+
+#### Update Generator Key Command
+
+This command is used to update the generator key (from [the Validators module][validatorsModule]) for a specific authority. 
+The command ID of this transaction is `COMMAND_ID_UPDATE_KEY`.
+
+##### Parameters
+
+```java
+updateGeneratorKeyParamsSchema = {
+  "type": "object",
+  "properties": {
+    "generatorKey": {
+      "dataType": "bytes",
+      "fieldNumber": 1
+    }
+  },
+  "required": ["generatorKey"]
+}
+```
+
+##### Verification
+
+Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAND_ID_UPDATE_KEY` to be executed.
+The list of verification conditions for `trs.params` is as follows:
+
+* Let `address` be the 20-byte address derived from `trs.senderPublicKey`.
+Then the validators substore must have an entry for the store key `address`.
+* `trs.params.generatorKey` must have length 32.
+
+##### Execution
+
+Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAND_ID_UPDATE_KEY` to be executed.
+Then `trs.params` implies the following execution logic:
+
+Let `address` be the 20-byte address derived from `trs.senderPublicKey`. 
+Then, call `setValidatorGeneratorKey(address, trs.params.generatorKey)`, where `setValidatorGeneratorKey` is the function exposed by [the Validators module][validatorsModule].
+
+#### Update Authority Command
+
+The command ID for this command is `COMMAND_ID_UPDATE_AUTHORITY`.
+
+##### Parameters
+
+``` java
+updateValidatorParams = {
+   "type": "object",
+   "properties": {
+      "validatorAddresses": {
+         "type": "array",
+         "items": {
+            "dataType": "bytes"
+         },
+         "fieldNumber": 1
+      },
+      "weights": {
+         "type": "array",
+         "items": {
+            "dataType": "uint64"
+         },
+         "fieldNumber": 2
+      },
+      "threshold": {
+         "dataType": "uint64",
+         "fieldNumber": 3
+      },
+      "validatorsUpdateNonce": {
+         "dataType": "uint32",
+         "fieldNumber": 4
+      },
+      "signature": {
+         "dataType": "bytes",
+         "fieldNumber": 5
+      },
+      "aggregationBits": {
+         "dataType": "bytes",
+         "fieldNumber": 6
+      }
+   },
+   "required": [
+      "validatorAddresses",
+      "weights",
+      "threshold",
+      "validatorsUpdateNonce",
+      "signature",
+      "aggregationBits"
+   ]
+}
+
+```
+
+##### Verification 
+
+Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAND_ID_UPDATE_AUTHORITY` to be verified. 
+The list of verification conditions for `trs.params` is as follows:
+
+*   Rules for `trs.params.validatorAddresses` array:
+    *   The array must have at least 1 element and at most `MAX_NUM_VALIDATORS` elements.
+    *   The array must be ordered lexicographically.
+    *   Each element is a unique 20-byte address.
+    *   For every element `address` in the `trs.params.validatorAddresses` array, there is an entry with `storeKey == address` in the validator substore.  
+*   Rules for `trs.params.weights` array:
+    *   The array must have the same number of elements as `trs.params.validatorAddresses`.
+    *   Each element is a positive integer.
+    *   Let `totalWeight` be the sum of every element in the `trs.params.weights` array. Then `totalWeight` has to be less than or equal to `MAX_UINT64`.
+
+    Note that the elements in this array correspond one to one to the elements in the `trs.params.validatorAddresses` array in the same order.
+
+*   Rules for `trs.params.threshold` property:
+    *   The value of `trs.params.threshold` is within the following range:
+        *   Minimum value: ⌊ ⅓ × `totalWeight`⌋+ 1
+        *   Maximum value: `totalWeight`
+
+       where ⌊⋅⌋ is the floor function.
+
+*   Rules for `trs.params.validatorsUpdateNonce` property:
+    *   The value of `trs.params.validatorsUpdateNonce` has to be equal to `chainProperties.validatorsUpdateNonce`.
+*   Rules for `trs.params.aggregationBits` and `trs.params.signature` properties:
+    *   The function `verifyWeightedAggSig(keyList, tag, netID, aggregationBits, signature, m, weights, threshold)`, specified in [LIP 0038][BLS], must return VALID where:
+        *   The `keyList` property is an array containing `getValidatorAccount(address).blsKey` for every address in `snapshotStore(0).addresses` sorted in the same order, where `getValidatorAccount` is the function exposed by the [validators module][validatorsModule].  
+        *   The `tag` is equal to `MESSAGE_TAG_POA`.
+        *   The `netID` byte array corresponds to the network ID of the chain.
+        *   The `aggregationBits` argument is the byte array given in `trs.params.aggregationBits`.
+        *   The `signature` argument is the aggregate signature given in `trs.params.signature`.
+        *   The `m` argument is the output bytes of the serialization, as specified in [LIP 0027][lip27], of `trs.params.validatorAddresses`, `trs.params.weights`, `trs.params.validatorsUpdateNonce`, and `trs.params.threshold` properties according to the following schema:
+ 
+        ``` java 
+        validatorSignatureMessage = {
+            "type": "object",
+            "properties": {
+               "validatorAddresses": {
+               "type": "array",
+                  "items": {
+                      "dataType": "bytes",
+                  },
+                  "fieldNumber": 1
+               },
+               "weights": {
+                   "type": "array",
+                   "items": {
+                       "dataType": "uint64",
+            	   },
+                   "fieldNumber": 2
+               },
+               "threshold": {
+                   "dataType": "uint64",
+                   "fieldNumber": 3
+               },
+               "validatorsUpdateNonce": {
+                   "dataType": "uint32",
+                   "fieldNumber": 4
+               },
+            },
+            "required": [
+                "validatorAddresses",
+                "weights",
+                "threshold",
+                "validatorsUpdateNonce"
+            ]
+        }
+        ```
+        *   The `weights` argument is set to `snapshotStore(0).weights`.
+        *   The `threshold` argument is set to `snapshotStore(0).threshold`.
+
+##### Execution 
+
+Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAND_ID_UPDATE_AUTHORITY` to be processed. 
+Then processing `trs` has the following effect:
+
+*   The array `snapshotStore(2).addresses` is set to `trs.params.validatorAddresses`.
+*   The array `snapshotStore(2).weights` is set to `trs.params.weights`.
+*   The property `snapshotStore(2).threshold` is set to `trs.params.threshold`.
+*   The property `chainProperties.validatorsUpdateNonce` is set to `trs.params.validatorsUpdateNonce + 1`.
+
+### Internal Function
+
+#### shuffleValidatorsList
+
+A function to reorder the list of validators as specified in [LIP 0003][lip3].
+
+##### Parameters
+The function has the following input parameters in the order given below:
+
+* `validatorsList`: An array of pairwise distinct 20-byte addresses.
+* `randomSeed`: A 32-byte value representing a random seed.
+
+##### Returns
+This function returns an array of bytes with the re-ordered list of addresses.
+
+##### Execution
+The shuffling algorithm is defined in [LIP 0003][lip3].
+
+### Protocol Logic During Block Lifecycle
+
+#### After Genesis Block Execution
+
+After the genesis block `g` is executed, the following logic is executed:
+
+```python
+chainProperties.roundEndHeight = g.header.height + len(snapshotStore(0).addresses)
+
+# Pass the required chain properties to the BFT votes module
+BFTThreshold = snapshotStore(0).threshold
+
+BFTvalidators = []
+for i in range(len(snapshotStore(0).addresses)):
+    validatorObject =  {address: snapshotStore(0).addresses[i],
+		       weight: snapshotStore(0).weights[i]}
+    BFTvalidators.append(validatorObject)
+
+setBFTParameters(BFTThreshold, BFTThreshold, BFTvalidators)
+
+# Pass the list of validators to the Validators module
+setGeneratorList(snapshotStore(0).addresses)
+```
+
+where:
+
+* `setBFTParameters` is a function exposed by the [BFT module][BFTmodule].
+* `setGeneratorList`is a function exposed by the [Validators module][validatorsModule].
+
+#### After Block Execution
+
+After a block `b` is executed, the following logic is executed: 
+
+```python
+if b.header.height == chainProperties.roundEndHeight
+    
+    # Pass the required chain properties to the BFT module
+    BFTThreshold = snapshotStore(1).threshold
+    
+    BFTvalidators = []
+    for i in range(len(snapshotStore(1).addresses)):
+         validatorObject =  {address: snapshotStore(1).addresses[i],
+                             weight: snapshotStore(1).weights[i]}
+         BFTvalidators.append(validatorObject)
+	 
+    setBFTParameters(BFTThreshold, BFTThreshold, BFTvalidators)
+    
+    # Reshuffle the list of validators and pass it to the Validators module
+    roundStartHeight = chainProperties.roundEndHeight - len(snapshotStore(0).addresses) + 1
+    randomSeed = getRandomBytes(roundStartHeight, len(snapshotStore(0).addresses))
+    nextValidatorAddresses  = shuffleValidatorsList(snapshotStore(1).addresses, randomSeed)
+    setGeneratorList(nextValidatorAddresses)
+    
+    # Update the chain information for the next round   
+    snapshotStore(0) = snapshotStore(1)
+    snapshotStore(1) = snapshotStore(2)   
+    chainProperties.roundEndHeight = chainProperties.roundEndHeight + len(snapshotStore(1).addresses)
+```
+
+where:
+
+* `getRandomBytes` is a function exposed by the [Random module][randomModule].
+
+## Backwards Compatibility
+
+This LIP introduces a new module for sidechains in the Lisk ecosystem. 
+As such it does not affect any existing chain, hence it does not imply any incompatibilities.
+
+[creative]: https://creativecommons.org/publicdomain/zero/1.0/
+[gavin]: https://github.com/ethereum/guide/blob/master/poa.md
+[rounds]: https://lisk.io/documentation/lisk-sdk/protocol/consensus-algorithm.html#delegate_selection
+[lip23]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#delegate-productivity-1
+[lip24]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md
+[lip35]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0035.md
+[lip34]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md
+[lip22]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md#random-seeds-computation
+[lip3]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0003.md#specification
+[bls-specs-v4-popverify]: https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04#section-3.3.3
+[lip-bls-public-key-registration]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#public-key-registration-and-proof-of-possession
+[lip-validators-module-register-validator-keys]: https://research.lisk.com/t/introduce-validators-module/317#registervalidatorkeys-27
+[BFTmodule]: https://research.lisk.com
+[randomModule]: https://research.lisk.com/t/define-state-and-state-transitions-of-the-random-module/311
+[validatorsModule]: https://research.lisk.com/t/introduce-validators-module/317
+[weighted-bft-lip-link]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md
+[delegatedoc]: https://lisk.io/documentation/lisk-sdk/protocol/transactions.html#delegate
+[lip27]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0027.md
+[BLS]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md
