@@ -1,13 +1,13 @@
 ```
 LIP:
-Title: Chain Registration
+Title: Introduce chain registration mechanism
 Author: Iker Alustiza <iker@lightcurve.io>
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
 Discussions-To: https://research.lisk.com/t/chain-registration
-Requires: Add weights to Lisk-BFT consensus protocol, 0038, Properties, serialization, and initial values of the interoperability module, 
-          Cross-chain messages
+Requires: Add weights to Lisk-BFT consensus protocol, 0038, Introduce Interoperability module, 
+          Introduce cross-chain messages
 ```
 
 ## Abstract
@@ -31,7 +31,7 @@ This implies there should exist a standardized protocol for the Lisk mainchain t
 The first step for establishing this _cross-chain channel_ protocol is the chain registration process, which can be thought of as the creation/opening of the channel between two chains.
 This process defines the data structures, and protocol rules that every chain needs to implement in the ecosystem if they want to interoperate with another specific chain.
 
-For a general picture of the Lisk interoperability architecture, please refer to [Properties, serialization, and initial values of the interoperability module LIP][interopLIP]. 
+For a general picture of the Lisk interoperability architecture, please refer to [Introduce Interoperability module LIP][interopLIP]. 
 
 ## Rationale
 
@@ -57,7 +57,7 @@ Now it is possible to send CCMs to the sidechain and the liveness condition is e
 
 As mentioned above, when a new sidechain is registered on the mainchain via a registration command, a sidechain account is created in the Lisk mainchain state. 
 Specifically, this implies that the corresponding key-value entries for the sidechain are added to the interoperability module store (see Figure 1). 
-The values of these entries are initialized as specified in Properties, serialization, and initial values of the interoperability module LIP, concretely the `name`, `networkID`, and `initValidators` properties are computed from the sidechain registration command.
+The values of these entries are initialized as specified in Introduce Interoperability module LIP, concretely the `name`, `networkID`, and `initValidators` properties are computed from the sidechain registration command.
 
 This sidechain registration command also assigns a unique integer as the chain ID to the newly registered sidechain. 
 This chain ID integer is also part of the key of the interoperability store entries for the registered sidechain as shown in Figure 1.
@@ -269,22 +269,22 @@ That is the entry with store prefix equal to `STORE_PREFIX_NETWORK_ID` and store
 
 #### Execution
 
-When a sidechain registration command is executed, new entries for the interoperability module are created in the mainchain state (see Figure 1). 
+When a sidechain registration command is executed, new entries for the Interoperability module are created in the mainchain state (see Figure 1). 
 In particular, let `trs` be a transaction with module ID `MODULE_ID_INTEROPERABILITY` and command ID `COMMAND_ID_SIDECHAIN_REG` to be executed.
 Then:
 
 *   The chain ID of the sidechain is assigned as  `chainID = numberOfChains + 1`, where `numberOfChains` is the total number of registered chains on the Lisk mainchain (counting Lisk Mainchain). 
-*   An interoperability account store as specified in [Properties, serialization, and initial values of the interoperability module LIP][interopAccount] is created as:
+*   An interoperability account store as specified in [Introduce Interoperability module LIP][interopAccount] is created as:
     *   `storePrefix`: `STORE_PREFIX_CHAIN_DATA`
     *   `storeKey`: `uint32be(chainID)`.
-    *   `storeValue`: `interopSidechainAcc` where `interopSidechainAcc` is the interoperability account object, serialized according to the `interoperabilityAccount` schema defined in Properties, serialization, and initial values of the interoperability module LIP, and initialized as:
+    *   `storeValue`: `interopSidechainAcc` where `interopSidechainAcc` is the interoperability account object, serialized according to the `interoperabilityAccount` schema defined in Introduce Interoperability module LIP, and initialized as:
         *   The `interopSidechainAcc.name` property as stated in the `trs.params.name` property.
         *   The `interopSidechainAcc.networkID` property is calculated as the output of `SHA-256(trs.params.genesisBlockId || senderAddress)` where `||` indicates bytes concatenation and `senderAddress` is the address of the user account corresponding to the `trs.senderPublicKey` property.
         *   The content of the `interopSidechainAcc.validators` object is set as follows:
             *   The `keys` array is equal to the `trs.params.initValidators.keys` array.
             *   The `weights` array is equal to the `trs.params.initValidators.weights` array.
             *   The `certificateThreshold` property is equal to the `trs.params.initValidators.certificateThreshold` property.
-        *   The following [registration CCM][regCCM] is added to `interopSidechainAcc.outbox` by calling the `addToOutbox(chainID, registrationCCM)` logic as specified in Properties, serialization, and initial values of the interoperability module LIP:
+        *   The following [registration CCM][regCCM] is added to `interopSidechainAcc.outbox` by calling the `addToOutbox(chainID, registrationCCM)` logic as specified in Introduce Interoperability module LIP:
 
             ```java
 			registrationCCM = {
@@ -303,18 +303,18 @@ Then:
 			```
 
         *   The rest of the properties, as specified in Interoperability module LIP, are initialized to their default values.
-*   An outbox root store as specified in Properties, serialization, and initial values of the interoperability module LIP is created as:
+*   An outbox root store as specified in Introduce Interoperability module LIP is created as:
     *   `storePrefix`: `STORE_PREFIX_OUTBOX_ROOT`.
     *   `storeKey`: `uint32be(chainID)`.
-    *   `storeValue`: The property `interopSidechainAcc.outbox.root` serialized according to the `outboxRoot` schema defined in Properties, serialization, and initial values of the interoperability module LIP.
-*   A name store as specified in Properties, serialization, and initial values of the interoperability module LIP is created as:
+    *   `storeValue`: The property `interopSidechainAcc.outbox.root` serialized according to the `outboxRoot` schema defined in Introduce Interoperability module LIP.
+*   A name store as specified in Introduce Interoperability module LIP is created as:
     *   `storePrefix`: `STORE_PREFIX_REGISTERED_NAMES`.
     *   `storeKey`: `interopSidechainAcc.name` serialized as a utf-8 encoded string.
-    *   `storeValue`: `chainID `serialized according to `chainID` schema defined in Properties, serialization, and initial values of the interoperability module LIP.
-*   A network ID store as specified in Properties, serialization, and initial values of the interoperability module LIP is created as:
+    *   `storeValue`: `chainID `serialized according to `chainID` schema defined in Introduce Interoperability module LIP.
+*   A network ID store as specified in Introduce Interoperability module LIP is created as:
     *   `storePrefix`: `STORE_PREFIX_NETWORK_ID`.
     *   `storeKey`: `interopSidechainAcc.networkID `serialized as bytes.
-    *   `storeValue`: `chainID` serialized according to `chainID` schema defined in Properties, serialization, and initial values of the interoperability module LIP. 
+    *   `storeValue`: `chainID` serialized according to `chainID` schema defined in Introduce Interoperability module LIP. 
 
 ### Mainchain Registration Command 
 
@@ -461,35 +461,35 @@ The set of validity rules to validate `trs.params` are:
 
 #### Execution 
 
-When a mainchain registration command is applied, new entries of the interoperability module are created in the sidechain state for the interoperability account, outbox root and own chain stores as specified in Properties, serialization, and initial values of the interoperability module LIP. 
+When a mainchain registration command is applied, new entries of the Interoperability module are created in the sidechain state for the interoperability account, outbox root and own chain stores as specified in Introduce Interoperability module LIP. 
 In particular, let `trs` be a transaction with module ID `MODULE_ID_INTEROPERABILITY` and command ID `COMMAND_ID_MAINCHAIN_REG` to be executed.
 Then:
 
-*   An interoperability account store as specified in [Properties, serialization, and initial values of the interoperability module LIP][interopAccount] is created as:
+*   An interoperability account store as specified in [Introduce Interoperability module LIP][interopAccount] is created as:
     *   `storePrefix`: `STORE_PREFIX_CHAIN_DATA`.
     *   `storeKey`: `uint32be(MAINCHAIN_ID)`.
-    *   `storeValue`: `interopMainchainAcc` where `interopMainchainAcc `is the interoperability account object, serialized according to the `interoperabilityAccount` schema defined in Properties, serialization, and initial values of the interoperability module LIP, and initialized as:
+    *   `storeValue`: `interopMainchainAcc` where `interopMainchainAcc `is the interoperability account object, serialized according to the `interoperabilityAccount` schema defined in Introduce Interoperability module LIP, and initialized as:
         *   `interopMainchainAcc.name` = `MAINCHAIN_NAME`.
         *   `interopMainchainAcc.networkID` = `MAINCHAIN_NETWORK_ID`.
         *   The content of the `interopMainchainAcc.validators` object is set as follows:
             *   The `keys` array is equal to the `trs.params.mainchainValidators.keys` array.
             *   The `weights` array is equal to the `trs.params.mainchainValidators.weights` array.
             *   The `certificateThreshold` property is equal to the `trs.params.mainchainValidators.certificateThreshold` property.
-        *   The rest of the properties, as specified in Properties, serialization, and initial values of the interoperability module LIP, are initialized to their default values.
-*   An outbox root store as specified in Properties, serialization, and initial values of the interoperability module LIP is created as:
+        *   The rest of the properties, as specified in Introduce Interoperability module LIP, are initialized to their default values.
+*   An outbox root store as specified in Introduce Interoperability module LIP is created as:
     *   `storePrefix`: `STORE_PREFIX_OUTBOX_ROOT`.
     *   `storeKey`:  `uint32be(MAINCHAIN_ID)`.
-    *   `storeValue`: The property `interopMainchainAcc.outbox.root` serialized according to the `outboxRoot` schema defined in Properties, serialization, and initial values of the interoperability module LIP.
-*   An own chain account store as specified in Properties, serialization, and initial values of the interoperability module LIP is created as:
+    *   `storeValue`: The property `interopMainchainAcc.outbox.root` serialized according to the `outboxRoot` schema defined in Introduce Interoperability module LIP.
+*   An own chain account store as specified in Introduce Interoperability module LIP is created as:
     *   `storePrefix` : `STORE_PREFIX_CHAIN_DATA`
     *   `storeKey`: `uint32be(0)`.
-    *   `storeValue`: `ownChain` where `ownChain` is the chain account object, serialized according to the `ownChain` schema defined in Properties, serialization, and initial values of the interoperability module LIP, and initialized as:
+    *   `storeValue`: `ownChain` where `ownChain` is the chain account object, serialized according to the `ownChain` schema defined in Introduce Interoperability module LIP, and initialized as:
         *   `ownChain.ID` = `trs.params.ownChainID`.
         *   `ownChain.name` = `trs.params.ownName`.
 
 ## Backwards Compatibility
 
-This proposal, together with [Properties, serialization, and initial values of the interoperability module LIP][interopLIP], [Cross-chain updates LIP][ccuLIP], [Cross-chain messages LIP][ccmLIP], and [Sidechain recovery transactions LIP][recoveryLIP], is part of the interoperability module. 
+This proposal, together with [Introduce Interoperability module LIP][interopLIP], [Introduce cross-chain update  mechanism LIP][ccuLIP], [Introduce cross-chain messages LIP][ccmLIP], and [ntroduce sidechain recovery mechanism LIP][recoveryLIP], is part of the Interoperability module. 
 Chains adding this module will need to do so with a hardfork.
 
 ## Reference Implementation
