@@ -2,6 +2,8 @@
 LIP:
 Title: Introduce PoA module
 Author: Iker Alustiza <iker@lightcurve.io>
+        Ishan Tiwari <ishan.tiwari@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
@@ -441,11 +443,11 @@ The list of verification conditions for `trs.params` is as follows:
             "type": "object",
             "properties": {
                "validatorAddresses": {
-               "type": "array",
-                  "items": {
-                      "dataType": "bytes",
-                  },
-                  "fieldNumber": 1
+                   "type": "array",
+                   "items": {
+                       "dataType": "bytes",
+                   },
+                   "fieldNumber": 1
                },
                "weights": {
                    "type": "array",
@@ -569,6 +571,10 @@ where:
 
 This LIP introduces a new module for sidechains in the Lisk ecosystem. 
 As such it does not affect any existing chain, hence it does not imply any incompatibilities.
+
+## Reference Implementation
+
+TBA
 
 [creative]: https://creativecommons.org/publicdomain/zero/1.0/
 [gavin]: https://github.com/ethereum/guide/blob/master/poa.md
