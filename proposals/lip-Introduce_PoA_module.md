@@ -90,7 +90,7 @@ In this section, we specify the PoA module with its module store structure and t
 
 The key-value pairs in the module store are organized as in the following Figure 1.
 
-![PoA_Store|658x500](upload://5Br63eEDY2LF8fM7atx6sk6uRJ1.png)
+![PoA_Store|658x500](lip-introduce_PoA_module/PoA_Store.png)
 
 _Figure 1: The PoA module store is organized in four substores, one for the validator address, one for the names, one for the validators snapshots and the fourth to store the general chain properties._
 
