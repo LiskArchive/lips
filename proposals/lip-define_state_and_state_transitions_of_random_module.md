@@ -175,6 +175,10 @@ isSeedValidInput(generatorAddress, seedReveal):
     return false
 ```
 
+### Commands
+
+This module does not define any command.
+
 ### Protocol Logic for Other Modules
 
 The Random module exposes the following logic to other modules.
