@@ -33,7 +33,6 @@ The Reward module induces specific logic after the application of a block:
 ## Specification
 
 In this section, we specify the protocol logic in the lifecycle of a block injected by the Reward module as well as the functions that can be called from off-chain services.
-This module does not contain commands, and has an empty state.
 It depends on the token, BFT, and random modules.
 
 ### Constants
@@ -74,6 +73,14 @@ The reward brackets for the Lisk Mainchain are as follows:
 
 This corresponds to default rewards of 5 LSK, 4 LSK, 3 LSK, 2 LSK, and 1 LSK respectively.
 
+### State Store
+
+This module does not define any state store.
+
+### Commands
+
+This module does not define any command.
+
 ### Internal Functions
 
 The Reward module has the following internal function.
@@ -104,6 +111,10 @@ getBlockReward(blockHeader):
     return defaultReward
 ```
 Here, `/` represents integer division, `isValidSeedReveal` is the function exposed by the [random module][randomLIP] and `impliesMaximalPrevotes` is the function exposed by the [BFT module][BFTAPI].
+
+### Protocol Logic for Other Modules
+
+This module does not define any specific logic for other modules.
 
 ### Endpoints for Off-Chain Services
 
