@@ -175,26 +175,30 @@ This substore contains the snapshot of the active authorities for the current ro
 snapshotStoreSchema = {
    "type": "object",
    "properties": {
-       "addresses": {
-           "type": "array",
-           "fieldNumber": 1,
-           "items": {
-               "dataType": "bytes",
-            },                      
-        }
-        "weights": {
-           "type": "array",
-           "fieldNumber": 2,
-           "items": {
-              "dataType": "uint64",
-            },                      
-        }		    
+       "validators: {
+          "type": "array",
+          "fieldNumber": 1,    
+          "items": {
+              "type": "object",
+              "required": ["address", "weight"],
+              "properties": {
+	          "address": {
+                      "dataType": "bytes",
+                      "fieldNumber": 1
+                  }
+                  "weight": {
+                      "dataType": "bytes",
+                      "fieldNumber": 2
+                  }
+	      }
+	   }
+        },		    
         "threshold": {
-            "dataType": "uint64",
-            "fieldNumber": 3,
+           "dataType": "uint64",
+           "fieldNumber": 2,
         },
     },
-    "required": ["address", "weights", "threshold"]
+    "required": ["validators", "threshold"]
  }
  ```
 
@@ -202,10 +206,8 @@ snapshotStoreSchema = {
 
 The properties of this schema are as follows:
 
-  * `addresses`: An array of pairwise distinct 20-byte addresses in lexicographical order.
+  * Each element in the `validators` array corresponds to a validator and stores its address and BFT weight property. The elements in the array must be sorted lexicographically by `address` property.
 It specifies the set of active validators in the chain. 
-Its initial value is set in the genesis block.
-  * `weights`: An array of positive integers of the same size as the `validatorsCurrentRound.addresses` property where each element is the weight of the corresponding validator in `validatorsCurrentRound.addresses`. 
 Its initial value is set in the genesis block.
   * `threshold`: An integer stating the weight threshold for finality in the BFT consensus protocol.
 Its initial value is set in the genesis block.
@@ -360,40 +362,43 @@ The command ID for this command is `COMMAND_ID_UPDATE_AUTHORITY`.
 updateValidatorParams = {
    "type": "object",
    "properties": {
-      "validatorAddresses": {
-         "type": "array",
-         "items": {
-            "dataType": "bytes"
-         },
-         "fieldNumber": 1
-      },
-      "weights": {
-         "type": "array",
-         "items": {
-            "dataType": "uint64"
-         },
-         "fieldNumber": 2
+      "newValidators: {
+          "type": "array",
+          "fieldNumber": 1,    
+          "items": {
+              "type": "object",
+              "required": ["address", "weight"],
+              "properties": {
+	          "address": {
+                      "dataType": "bytes",
+                      "fieldNumber": 1
+                  }
+                  "weight": {
+                      "dataType": "bytes",
+                      "fieldNumber": 2
+                  }
+	      }
+	  }
       },
       "threshold": {
          "dataType": "uint64",
-         "fieldNumber": 3
+         "fieldNumber": 2
       },
       "validatorsUpdateNonce": {
          "dataType": "uint32",
-         "fieldNumber": 4
+         "fieldNumber": 3
       },
       "signature": {
          "dataType": "bytes",
-         "fieldNumber": 5
+         "fieldNumber": 4
       },
       "aggregationBits": {
          "dataType": "bytes",
-         "fieldNumber": 6
+         "fieldNumber": 5
       }
    },
    "required": [
-      "validatorAddresses",
-      "weights",
+      "newValidators",
       "threshold",
       "validatorsUpdateNonce",
       "signature",
@@ -408,17 +413,13 @@ updateValidatorParams = {
 Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAND_ID_UPDATE_AUTHORITY` to be verified. 
 The list of verification conditions for `trs.params` is as follows:
 
-*   Rules for `trs.params.validatorAddresses` array:
+*   Rules for `trs.params.newValidators` array:
     *   The array must have at least 1 element and at most `MAX_NUM_VALIDATORS` elements.
-    *   The array must be ordered lexicographically.
-    *   Each element is a unique 20-byte address.
-    *   For every element `address` in the `trs.params.validatorAddresses` array, there is an entry with `storeKey == address` in the validator substore.  
-*   Rules for `trs.params.weights` array:
-    *   The array must have the same number of elements as `trs.params.validatorAddresses`.
-    *   Each element is a positive integer.
-    *   Let `totalWeight` be the sum of every element in the `trs.params.weights` array. Then `totalWeight` has to be less than or equal to `MAX_UINT64`.
-
-    Note that the elements in this array correspond one to one to the elements in the `trs.params.validatorAddresses` array in the same order.
+    *   The array must be ordered lexicographically by `address` property.
+    *   The `address` property of each element is a unique 20-byte address.
+    *   For every element `validator` in the `trs.params.newValidators` array, there is an entry with `storeKey == validator.address` in the validator substore.  
+    *   The `weight` property of each element is a positive integer.
+    *   Let `totalWeight` be the sum of the `weight` property of every element in the `trs.params.newValidators` array. Then `totalWeight` has to be less than or equal to `MAX_UINT64`.
 
 *   Rules for `trs.params.threshold` property:
     *   The value of `trs.params.threshold` is within the following range:
@@ -431,49 +432,52 @@ The list of verification conditions for `trs.params` is as follows:
     *   The value of `trs.params.validatorsUpdateNonce` has to be equal to `chainProperties.validatorsUpdateNonce`.
 *   Rules for `trs.params.aggregationBits` and `trs.params.signature` properties:
     *   The function `verifyWeightedAggSig(keyList, tag, netID, aggregationBits, signature, m, weights, threshold)`, specified in [LIP 0038][BLS], must return VALID where:
-        *   The `keyList` property is an array containing `getValidatorAccount(address).blsKey` for every address in `snapshotStore(0).addresses` sorted in the same order, where `getValidatorAccount` is the function exposed by the [validators module][validatorsModule].  
+        *   The `keyList` property is an array containing `getValidatorAccount(address).blsKey` for every `address` property in `snapshotStore(0).validators` array sorted in the same order, where `getValidatorAccount` is the function exposed by the [validators module][validatorsModule].  
         *   The `tag` is equal to `MESSAGE_TAG_POA`.
         *   The `netID` byte array corresponds to the network ID of the chain.
         *   The `aggregationBits` argument is the byte array given in `trs.params.aggregationBits`.
         *   The `signature` argument is the aggregate signature given in `trs.params.signature`.
-        *   The `m` argument is the output bytes of the serialization, as specified in [LIP 0027][lip27], of `trs.params.validatorAddresses`, `trs.params.weights`, `trs.params.validatorsUpdateNonce`, and `trs.params.threshold` properties according to the following schema:
+        *   The `m` argument is the output bytes of the serialization, as specified in [LIP 0027][lip27], of `trs.params.newValidators`, `trs.params.validatorsUpdateNonce`, and `trs.params.threshold` properties according to the following schema:
  
         ``` java 
         validatorSignatureMessage = {
             "type": "object",
             "properties": {
-               "validatorAddresses": {
+               "newValidators: {
                    "type": "array",
+                   "fieldNumber": 1,    
                    "items": {
-                       "dataType": "bytes",
-                   },
-                   "fieldNumber": 1
-               },
-               "weights": {
-                   "type": "array",
-                   "items": {
-                       "dataType": "uint64",
-            	   },
-                   "fieldNumber": 2
+                       "type": "object",
+                       "required": ["address", "weight"],
+                       "properties": {
+                           "address": {
+                               "dataType": "bytes",
+                               "fieldNumber": 1
+                           }
+                           "weight": {
+                               "dataType": "bytes",
+                               "fieldNumber": 2
+                           }
+                       }
+                   }
                },
                "threshold": {
                    "dataType": "uint64",
-                   "fieldNumber": 3
+                   "fieldNumber": 2
                },
                "validatorsUpdateNonce": {
                    "dataType": "uint32",
-                   "fieldNumber": 4
+                   "fieldNumber": 3
                },
             },
             "required": [
-                "validatorAddresses",
-                "weights",
+                "newValidators",
                 "threshold",
                 "validatorsUpdateNonce"
             ]
         }
         ```
-        *   The `weights` argument is set to `snapshotStore(0).weights`.
+        *   The `weights` argument is set to the `weights` property of `snapshotStore(0).validators` array.
         *   The `threshold` argument is set to `snapshotStore(0).threshold`.
 
 ##### Execution 
@@ -481,8 +485,7 @@ The list of verification conditions for `trs.params` is as follows:
 Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAND_ID_UPDATE_AUTHORITY` to be processed. 
 Then processing `trs` has the following effect:
 
-*   The array `snapshotStore(2).addresses` is set to `trs.params.validatorAddresses`.
-*   The array `snapshotStore(2).weights` is set to `trs.params.weights`.
+*   The array `snapshotStore(2).validators` is set to `trs.params.newValidators`.
 *   The property `snapshotStore(2).threshold` is set to `trs.params.threshold`.
 *   The property `chainProperties.validatorsUpdateNonce` is set to `trs.params.validatorsUpdateNonce + 1`.
 
@@ -524,16 +527,13 @@ chainProperties.roundEndHeight = g.header.height + len(snapshotStore(0).addresse
 # Pass the required chain properties to the BFT votes module
 BFTThreshold = snapshotStore(0).threshold
 
-BFTvalidators = []
-for i in range(len(snapshotStore(0).addresses)):
-    validatorObject =  {address: snapshotStore(0).addresses[i],
-		       weight: snapshotStore(0).weights[i]}
-    BFTvalidators.append(validatorObject)
-
-setBFTParameters(BFTThreshold, BFTThreshold, BFTvalidators)
+setBFTParameters(BFTThreshold, BFTThreshold, snapshotStore(0).validators)
 
 # Pass the list of validators to the Validators module
-setGeneratorList(snapshotStore(0).addresses)
+for i in range(len(snapshotStore(0).validators)):
+    addresses =  snapshotStore(0).address[i]
+    
+setGeneratorList(addresses)
 ```
 
 where:
@@ -548,27 +548,25 @@ After a block `b` is executed, the following logic is executed:
 ```python
 if b.header.height == chainProperties.roundEndHeight
     
-    # Pass the required chain properties to the BFT module
-    BFTThreshold = snapshotStore(1).threshold
-    
-    BFTvalidators = []
-    for i in range(len(snapshotStore(1).addresses)):
-         validatorObject =  {address: snapshotStore(1).addresses[i],
-                             weight: snapshotStore(1).weights[i]}
-         BFTvalidators.append(validatorObject)
-	 
-    setBFTParameters(BFTThreshold, BFTThreshold, BFTvalidators)
+    # Pass the required chain properties to the BFT votes module
+    BFTThreshold = snapshotStore(0).threshold
+
+    setBFTParameters(BFTThreshold, BFTThreshold, snapshotStore(0).validators)
     
     # Reshuffle the list of validators and pass it to the Validators module
-    roundStartHeight = chainProperties.roundEndHeight - len(snapshotStore(0).addresses) + 1
-    randomSeed = getRandomBytes(roundStartHeight, len(snapshotStore(0).addresses))
-    nextValidatorAddresses  = shuffleValidatorsList(snapshotStore(1).addresses, randomSeed)
+    roundStartHeight = chainProperties.roundEndHeight - len(snapshotStore(0).validators) + 1
+    randomSeed = getRandomBytes(roundStartHeight, len(snapshotStore(0).validators))
+    
+    for i in range(len(snapshotStore(0).validators)):
+    addresses =  snapshotStore(0).address[i]
+    
+    nextValidatorAddresses  = shuffleValidatorsList(addresses, randomSeed)
     setGeneratorList(nextValidatorAddresses)
     
     # Update the chain information for the next round   
     snapshotStore(0) = snapshotStore(1)
     snapshotStore(1) = snapshotStore(2)   
-    chainProperties.roundEndHeight = chainProperties.roundEndHeight + len(snapshotStore(1).addresses)
+    chainProperties.roundEndHeight = chainProperties.roundEndHeight + len(snapshotStore(1).validators)
 ```
 
 where:
