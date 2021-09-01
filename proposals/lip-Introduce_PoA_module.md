@@ -504,6 +504,14 @@ This function returns an array of bytes with the re-ordered list of addresses.
 ##### Execution
 The shuffling algorithm is defined in [LIP 0003][lip3].
 
+### Protocol Logic for Other Modules
+
+This module does not define any specific logic for other modules.
+
+### Endpoints for Off-Chain Services
+
+This module does not define any endpoint for off-chain services.
+
 ### Protocol Logic During Block Lifecycle
 
 #### After Genesis Block Execution
