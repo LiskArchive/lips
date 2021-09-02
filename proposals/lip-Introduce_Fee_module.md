@@ -62,7 +62,7 @@ We define the following constants:
 | `MODULE_ID_FEE` | uint32 | 1 | Module ID of the Fee module. |
 | **Configurable Constants** ||||
 | `MIN_FEE_PER_BYTE`| uint64 | 1000 | Minimum amount of fee per byte required for transaction validity.|
-| `FEE_TOKEN_ID`    | object | `TOKEN_ID_LSK` = {<br /> `"chainID": 0`, <br /> `"localID": 0`<br />} | Token ID of the token used to pay the transaction fees. |
+| `TOKEN_ID_FEE`    | object | `TOKEN_ID_LSK` = {<br /> `"chainID": 0`, <br /> `"localID": 0`<br />} | Token ID of the token used to pay the transaction fees. |
 
 
 ### Extra Fee
@@ -119,18 +119,18 @@ minFee = MIN_FEE_PER_BYTE * size(trs)
 senderAddress is derived from trs.senderPublicKey
 generatorAddress is the address of the generator of the block including trs
 
-if FEE_TOKEN_ID.chainID == 0: # fee token is a native token 
+if TOKEN_ID_FEE.chainID == 0: # fee token is a native token 
     token.burn(senderAddress,
-               FEE_TOKEN_ID,
+               TOKEN_ID_FEE,
                minFee)
     token.transfer(senderAddress, 
                    generatorAddress, 
-                   FEE_TOKEN_ID, 
+                   TOKEN_ID_FEE, 
                    trs.fee - minFee) 
 else:
     token.transfer(senderAddress,
                    generatorAddress,
-                   FEE_TOKEN_ID,
+                   TOKEN_ID_FEE,
                    trs.fee)
 
 if any of those function fails, the transaction is invalid
