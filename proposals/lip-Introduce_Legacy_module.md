@@ -258,6 +258,11 @@ getLegacyAccount(publicKey)
 This LIP defines a new module and specifies its store, which in turn will become part of the state tree and will be authenticated by the state root. 
 As such, it will induce a hardfork.
 
+
+## Reference Implementation
+
+TBA
+
 [validator-LIP]: https://research.lisk.com/t/introduce-the-validators-module/317
 [validator-LIP-setValidatoBLSKey]: https://research.lisk.com/t/introduce-the-validators-module/317#setvalidatorblskey-38
 [token-LIP]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
