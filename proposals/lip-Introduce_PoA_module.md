@@ -524,9 +524,8 @@ After the genesis block `g` is executed, the following logic is executed:
 ```python
 chainProperties.roundEndHeight = g.header.height + len(snapshotStore(0).addresses)
 
-# Pass the required chain properties to the BFT votes module
+# Pass the required information to the BFT module
 BFTThreshold = snapshotStore(0).threshold
-
 setBFTParameters(BFTThreshold, BFTThreshold, snapshotStore(0).validators)
 
 # Pass the list of validators to the Validators module
@@ -548,10 +547,14 @@ After a block `b` is executed, the following logic is executed:
 ```python
 if b.header.height == chainProperties.roundEndHeight
     
-    # Pass the required chain properties to the BFT votes module
+    # get the last stored BFT parameters, and update them if needed
     BFTThreshold = snapshotStore(0).threshold
-
-    setBFTParameters(BFTThreshold, BFTThreshold, snapshotStore(0).validators)
+    currentBFTParameters = getBFTParameters(b.header.height)
+    if (currentBFTParameters.validators != snapshotStore(0).validators
+        or currentBFTParameters.precommitThreshold != BFT_THRESHOLD
+        or currentBFTParameters.certificateThreshold != BFT_THRESHOLD):
+        # Pass the required information to the BFT module
+        setBFTParameters(BFTThreshold, BFTThreshold, snapshotStore(0).validators)
     
     # Reshuffle the list of validators and pass it to the Validators module
     roundStartHeight = chainProperties.roundEndHeight - len(snapshotStore(0).validators) + 1
@@ -571,6 +574,7 @@ if b.header.height == chainProperties.roundEndHeight
 
 where:
 
+* `getBFTParameters` is a function exposed by the [BFT module][BFTmodule].
 * `getRandomBytes` is a function exposed by the [Random module][randomModule].
 
 ## Backwards Compatibility
