@@ -220,6 +220,11 @@ and `setValidatorBLSKey` is defined in the [Validators module][validator-LIP-set
 If this function returns false, the transaction is invalid.
 
 
+### Protocol Logic for Other Modules
+
+This module does not expose any functions.
+
+
 ### Endpoints for Off-Chain Services
 
 
