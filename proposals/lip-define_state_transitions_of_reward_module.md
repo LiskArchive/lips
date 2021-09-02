@@ -39,6 +39,7 @@ It depends on the token, BFT, and random modules.
 
 | **Name**                 | **Type** | **Value** |
 |--------------------------|----------|-----------|
+| `MODULE_ID_REWARD `      | uint32   | TBD |
 | `TOKEN_ID_REWARD`         | object   | specified as part of module configuration |
 | `TOKEN_ID_LSK_MAINCHAIN`        | object     | `{"chainID": 0, "localID": 0}` |
 | `REWARD_REDUCTION_FACTOR_BFT`    | uint32   | 4 |
