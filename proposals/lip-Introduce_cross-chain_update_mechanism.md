@@ -221,58 +221,64 @@ Both commands will use the following `params` schema:
 ```java
 crossChainUpdateTransactionParams = {
     "type": "object",
+    "required": [
+        "sendingChainID", 
+        "certificate", 
+        "validatorUpdate",
+        "inboxUpdate"
+    ],
     "properties": {
         "sendingChainID": {
-            "dataType": uint32, 
+            "dataType": "uint32",
             "fieldNumber": 1
         },
         "certificate": {
-            "dataType": bytes, 
+            "dataType": "bytes",
             "fieldNumber": 2
         },
         "validatorUpdate": {
             "type": object, 
             "fieldNumber": 3,
-            "properties":{
-                "keysUpdate": {
-                    "type": "array",
-                    "fieldNumber": 1,
-                    "items": { 
-                        "dataType": "bytes"
-                    }
-                },
-                "weightsUpdate": {
-                    "type": "array",
-                    "fieldNumber": 2,
-                    "items": { 
-                        "dataType": "uint64" 
-                    }
-                },
-                "newCertificateThreshold": {
-                    "dataType": "uint64",
-                    "fieldNumber": 3,
-                }
-            },
             "required":[
                 "keysUpdate",
                 "weightsUpdate",
                 "newCertificateThreshold"
-            ]
+            ],
+            "properties":{
+                "keysUpdate": {
+                    "type": "array",
+                    "fieldNumber": 1,
+                    "items": {"dataType": "bytes"}
+                },
+                "weightsUpdate": {
+                    "type": "array",
+                    "fieldNumber": 2,
+                    "items": {"dataType": "uint64"}
+                },
+                "newCertificateThreshold": {
+                    "dataType": "uint64",
+                    "fieldNumber": 3
+                }
+            }
         },
         "inboxUpdate": {
             "type": "object",
-            "fieldNumber": 4,
+            "fieldNumber": 4,    
+            "required": [
+                "crossChainMessages", 
+                "messageWitness", 
+                "outboxRootWitness"
+            ],
             "properties": {
                 "crossChainMessages": {
                     "type": "array",
                     "fieldNumber": 1,
-                    "items": { 
-                        "dataType": "bytes" 
-                    }
+                    "items": {"dataType": "bytes"}
                 },
                 "messageWitness": {
                     "type": "object",
                     "fieldNumber": 2,
+		    "required": ["partnerChainOutboxSize", "siblingHashes"],
                     "properties": { 
                         "partnerChainOutboxSize":{
                             "dataType": "uint64",
@@ -281,45 +287,29 @@ crossChainUpdateTransactionParams = {
                         "siblingHashes":{
                             "type": "array",
                             "fieldNumber": 2,
-                            "items": { 
-                                "dataType": "bytes" 
-                            }
+                            "items": {"dataType": "bytes"}
                         }
                     }
                 },
-                "required": ["partnerChainOutboxSize", "siblingHashes"]
-            },
-            "outboxRootWitness": {
-                "type": "object",
-                "fieldNumber": 3,
-                "properties": {
-                    "bitmap":{
-                        "dataType": "bytes",
-                        "fieldNumber": 1
-                    },
-                    "siblingHashes":{
-                        "type": "array",
-                        "fieldNumber": 2,
-                        "items": { 
-                            "dataType": "bytes" 
-                        }
+                "outboxRootWitness": {
+                    "type": "object",
+                    "fieldNumber": 3,
+                    "required": ["bitmap", "siblingHashes"],
+                    "properties": {
+                        "bitmap":{
+                            "dataType": "bytes",
+                            "fieldNumber": 1
+                        },
+                        "siblingHashes":{
+                            "type": "array",
+                            "fieldNumber": 2,
+                            "items": {"dataType": "bytes"}
+			}
                     }
-                },
-                "required": ["bitmap", "siblingHashes"]
+                }
             }
-        },    
-        "required": [
-            "crossChainMessages", 
-            "messageWitness", 
-            "outboxRootWitness"
-        ]
-    },
-    "required": [
-        "sendingChainID", 
-        "certificate", 
-        "validatorUpdate",
-        "inboxUpdate"
-    ]
+        }
+    }
 }
 ```
 
@@ -385,31 +375,27 @@ it is valid if:
     ```java
     validatorsSchema = {
         "type": "object",
-        "properties": {
-            "keys": {
-                "type": "array",
-                "fieldNumber": 1,
-                "items": { 
-                    "dataType": "bytes" 
-                }
-            },
-            "weights": {
-                "type": "array",
-                "fieldNumber": 2,
-                "items": { 
-                    "dataType": "uint64" 
-                }
-            },
-            "certificateThreshold": {
-                "dataType": uint64, 
-                "fieldNumber": 3
-            }
-        },
         "required" : [
             "keys", 
             "weights", 
             "certificateThreshold"
-        ]
+        ],
+        "properties": {
+            "keys": {
+                "type": "array",
+                "fieldNumber": 1,
+                "items": {"dataType": "bytes"}
+            },
+            "weights": {
+                "type": "array",
+                "fieldNumber": 2,
+                "items": {"dataType": "uint64"}
+            },
+            "certificateThreshold": {
+                "dataType": "uint64", 
+                "fieldNumber": 3
+            }
+        }
     }
     ```
 
