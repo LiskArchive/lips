@@ -6,6 +6,7 @@ Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
 Requires: Introduce Interoperability module
+Discussions-To: https://research.lisk.com/t/introduce-nft-module
 ```
 
 
