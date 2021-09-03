@@ -299,13 +299,13 @@ The substore contains entries with:
 ```java
 supplyStoreSchema = {
     "type": "object",
+    "required": ["totalSupply"],
     "properties": {
         "totalSupply": { 
             "dataType": "uint64",
             "fieldNumber": 1
         },
-    },
-    "required": ["totalSupply"]
+    }
 }
 ```
 The default value for this substore is `{"totalSupply": 0}` serialized using `supplyStoreSchema`. 
@@ -378,7 +378,7 @@ The state contains an entry with:
 terminatedEscrowSchema = {
     "type": "object",
     "properties": {
-        "escrowTerminated" : {
+        "escrowTerminated": {
             "dataType": "boolean",
             "fieldNumber": 1
         },
@@ -402,25 +402,31 @@ The substore contains entries with:
 ```java
 userStoreSchema = {
     "type": "object",
+    "required": ["availableBalance", "lockedBalances"],
     "properties": {
         "availableBalance": {
             "dataType": "uint64",
             "fieldNumber": 1
         },
-        "lockedBalances":{ 
+        "lockedBalances": { 
             "type": "array",
             "fieldNumber": 2, 
             "items": {
                 "type": "object",
-                "properties":{
-                    "moduleID":{"dataType":"uint32", "fieldNumber": 1},
-                    "amount"  :{"dataType": "uint64","fieldNumber": 2},
-                },
-                "required":[ "moduleID", "amount" ]
+                "required":[ "moduleID", "amount" ],
+                "properties": {
+                    "moduleID": {
+                        "dataType":"uint32", 
+                        "fieldNumber": 1
+                    },
+                    "amount": {
+                        "dataType": "uint64",
+                        "fieldNumber": 2
+                    }
+                }
             }
         }
     }
-    "required":["availableBalance", "lockedBalances"]
 }
 ```
 In the above object, `lockedBalances` is always kept ordered by ascending order of `moduleID`. 
@@ -489,10 +495,17 @@ The `params` property of token transfer transactions follows the schema `transfe
 ```java
 transferParams = {
     "type": "object",
-    "properties":  {
+    "required": [ 
+        "tokenID", 
+        "amount", 
+        "recipientAddress", 
+        "data" 
+    ],
+    "properties": {
         "tokenID": {
             "type": "object",
             "fieldNumber": 1,
+            "required": ["chainID", "localID"],
             "properties": {
                 "chainID": {
                     "dataType": "uint32",
@@ -501,9 +514,8 @@ transferParams = {
                 "localID": {
                     "dataType": "uint32",
                     "fieldNumber": 2
-                },
-            },
-            "required": ["chainID", "localID"]
+                }
+            }
         },
         "amount": {
             "dataType": "uint64",
@@ -516,14 +528,8 @@ transferParams = {
         "data": {
             "dataType": "string",
             "fieldNumber": 4 
-        },
-    },
-    "required": [ 
-        "tokenID", 
-        "amount" , 
-        "recipientAddress", 
-        "data" 
-    ]
+        }
+    }
 }
 ```
 
@@ -567,10 +573,19 @@ The `params` property of cross-chain token transfer transactions follows the sch
 ```java
 crossChainTransferParams = {
     "type": "object",
+    "required": [ 
+        "tokenID", 
+        "amount", 
+        "receivingChainID", 
+        "recipientAddress", 
+        "data", 
+        "messageFee" 
+    ],
     "properties": {
         "tokenID": {
             "type": "object",
             "fieldNumber": 1,
+            "required": ["chainID", "localID"],
             "properties": {
                 "chainID": {
                     "dataType": "uint32",
@@ -579,9 +594,8 @@ crossChainTransferParams = {
                 "localID": {
                     "dataType": "uint32",
                     "fieldNumber": 2
-                },
-            },
-            "required": ["chainID", "localID"]
+                }
+            }
         },
         "amount": {
             "dataType": "uint64",
@@ -603,15 +617,7 @@ crossChainTransferParams = {
             "dataType": "uint64",
             "fieldNumber": 6
         }
-    },
-    "required": [ 
-        "tokenID", 
-        "amount", 
-        "receivingChainID", 
-        "recipientAddress", 
-        "data", 
-        "messageFee" 
-    ]
+    }
 }
 ```
 
@@ -663,10 +669,18 @@ The `params` property of cross-chain token transfer messages follows the schema 
 ```java
 crossChainTransferMessageParams = {
     "type": "object",
-    "properties":{
+    "required": [
+        "tokenID", 
+        "amount" ,   
+        "senderAddress", 
+        "recipientAddress", 
+        "data" 
+    ],
+    "properties": {
         "tokenID": {
             "type": "object",
             "fieldNumber": 1,
+            "required": ["chainID", "localID"],
             "properties": {
                 "chainID": {
                     "dataType": "uint32",
@@ -675,9 +689,8 @@ crossChainTransferMessageParams = {
                 "localID": {
                     "dataType": "uint32",
                     "fieldNumber": 2
-                },
-            },
-            "required": ["chainID", "localID"]
+                }
+            }
         },
         "amount": {
             "dataType": "uint64",
@@ -695,14 +708,7 @@ crossChainTransferMessageParams = {
             "dataType": "string",
             "fieldNumber": 5 
         }
-    },
-    "required": [
-        "tokenID", 
-        "amount" ,   
-        "senderAddress", 
-        "recipientAddress", 
-        "data" 
-    ]
+    }
 }
 ```
 
@@ -771,10 +777,20 @@ The `params` property of cross-chain token forward messages follows the schema `
 ```java
 crossChainForwardMessageParams = {
     "type": "object",
-    "properties":{
+    "required": [
+        "tokenID",  
+        "amount" ,   
+        "senderAddress", 
+        "forwardToChainID",
+        "recipientAddress", 
+        "data",
+        "forwardedMessageFee"
+    ],
+    "properties": {
         "tokenID": {
             "type": "object",
             "fieldNumber": 1,
+            "required": ["chainID", "localID"],
             "properties": {
                 "chainID": {
                     "dataType": "uint32",
@@ -783,9 +799,8 @@ crossChainForwardMessageParams = {
                 "localID": {
                     "dataType": "uint32",
                     "fieldNumber": 2
-                },
-            },
-            "required": ["chainID", "localID"]
+                }
+            }
         },
         "amount": {
             "dataType": "uint64",
@@ -811,16 +826,7 @@ crossChainForwardMessageParams = {
             "dataType": "uint64",
             "fieldNumber": 7 
         }
-    },
-    "required": [
-        "tokenID",  
-        "amount" ,   
-        "senderAddress", 
-        "forwardToChainID",
-        "recipientAddress", 
-        "data",
-        "forwardedMessageFee"
-    ]
+    }
 }
 ```
 
