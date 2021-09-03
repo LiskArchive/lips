@@ -1268,6 +1268,12 @@ recover(terminatedChainID, moduleID, storePrefix, storeKey, storeValue):
 
 This introduces a different token handling mechanism for the whole Lisk ecosystem which requires a hard fork.
 
+
+## Reference Implementation
+
+TBA
+
+
 [base-interoperability-LIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
 [registration-LIP]: https://research.lisk.com/t/chain-registration/291
 [recovery-LIP]: https://research.lisk.com/t/sidechain-recovery-transactions/292
