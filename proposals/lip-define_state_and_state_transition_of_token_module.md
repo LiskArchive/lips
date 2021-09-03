@@ -252,7 +252,7 @@ Calling a function `fct` implemented in the [Interoperability module][base-inter
 ### Token Identification
 
 All tokens in the ecosystem are identified by a pair of non-negative integers `(chainID, localID)`, both strictly less than 2^32 . 
-The first element of the pair, `chainID`, is the chain ID of the chain that minted the token (an integer, as specified in the ["Chain Registration" LIP][registration-lip]) and 
+The first element of the pair, `chainID`, is the chain ID of the chain that minted the token (an integer, as specified in the ["Introduce chain registration mechanism" LIP][registration-lip]) and 
 the second element, `localID`, is an integer specified when the token is minted. 
 
 In this LIP, the token identifier is written as a dictionary of 2 elements `{"chainID": chainID, "localID": localID}`. 
