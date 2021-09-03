@@ -10,7 +10,7 @@ Updated: <YYYY-MM-DD>
 
 ## Abstract
 
-This LIP introduces a token module to be used in the Lisk ecosystem for minting, burning, and transferring tokens. 
+This LIP introduces a Token module to be used in the Lisk ecosystem for minting, burning, and transferring tokens. 
 This module allows any chain in the ecosystem to handle and transfer tokens in a coherent, secure, and controlled manner. 
 In this LIP, the tokens handled are fungible.
 
@@ -22,13 +22,13 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The token module is composed of a state store definition used to store tokens in the state. 
+The Token module is composed of a state store definition used to store tokens in the state. 
 To modify this store, we propose two commands: a token transfer command and a cross-chain token transfer command; 
 as well as multiple functions to be used by other modules.
 
-Interactions between custom modules and the token module should only happen following the specified functions. 
+Interactions between custom modules and the Token module should only happen following the specified functions. 
 Interacting with the token store via those functions allows sidechain developers to create custom modules and custom behavior 
-without needing to ensure and test that all rules of the token module are followed.
+without needing to ensure and test that all rules of the Token module are followed.
 
 With the proposed interoperability solution for the Lisk ecosystem, we anticipate that multiple chains will create and distribute custom tokens. 
 Those tokens can be used for a wide variety of reasons which are the choice of the sidechain developer. 
@@ -70,7 +70,7 @@ Supporting a token only implies that users of the chain can hold those tokens an
 It does not mean that the chain implements custom logic associated with those tokens. 
 
 The choice of supported tokens must abide by two rules: all chains must support their native tokens and all chains must support the LSK token. 
-The supported tokens can be specified as part of the initial configuration of the token module at the chain creation. 
+The supported tokens can be specified as part of the initial configuration of the Token module at the chain creation. 
 For example:
 
 
@@ -89,7 +89,7 @@ For this reason, the default behavior for Lisk sidechains would be to support al
 
 ### Cross-chain Token Transfer
 
-To allow cross-chain transfers of tokens, we define a specific command which makes use of the [interoperability module][base-interoperability-LIP]
+To allow cross-chain transfers of tokens, we define a specific command which makes use of the [Interoperability module][base-interoperability-LIP]
 and creates a [cross-chain message][CCM-LIP] with the relevant information. 
 When sending cross-chain tokens, it is crucial that every chain can correctly maintain escrow amounts of its native tokens across the ecosystem. 
 In this way, the total supply of a token can never be increased by a foreign chain as the native chain only accepts as many tokens from a foreign chain as have been sent to it before. 
@@ -107,8 +107,8 @@ Network delays could mean that this is only processed much later and that in the
 
 ### Protocol Logic for Other Modules
 
-The functions below are the exposed methods of the token module. 
-For the token module those functions are designed to allow a wide range of use cases while avoiding unexpected behaviors such as unwanted minting or unlocking of tokens.
+The functions below are the exposed methods of the Token module. 
+For the Token module those functions are designed to allow a wide range of use cases while avoiding unexpected behaviors such as unwanted minting or unlocking of tokens.
 
 
 #### mint
@@ -169,21 +169,21 @@ Notice that there is no protocol rule restricting different modules from unlocki
 
 #### beforeSendCCM 
 
-This function is called by the interoperability module before sending cross-chain messages. 
+This function is called by the Interoperability module before sending cross-chain messages. 
 It handles deducting the message fee from the account of the message sender. 
 It should not be called by any other module.
 
 
 #### beforeExecuteCCM 
 
-This function is called by the interoperability module before executing cross-chain messages. 
+This function is called by the Interoperability module before executing cross-chain messages. 
 It handles crediting the message fee to the account of the cross-chain update sender.
 It should not be called by any other module.
 
 
 #### recover
 
-This function is called by the interoperability module whenever [state recovery transaction][recovery-LIP] for the token module is executed.  
+This function is called by the interoperability module whenever [state recovery transaction][recovery-LIP] for the Token module is executed.  
 The amount of native tokens stored in the terminated chain can therefore be credited again to the user on the native chain.
 It should not be called by any other module.
 
@@ -191,7 +191,7 @@ It should not be called by any other module.
 #### Use of Protocol Logics by Other Modules
 
 As of writing this proposal, other modules exist in the Lisk protocol that make use of tokens.
-Those uses should be updated to call functions implemented by the token module as defined in this proposal. 
+Those uses should be updated to call functions implemented by the Token module as defined in this proposal. 
 This guarantees that those modules will not trigger potentially improper state changes. For example:
 
 *   The voting process should use the `lock` and `unlock` function to lock and unlock voted tokens.
@@ -245,7 +245,7 @@ This serialization is always 4 bytes long.
 
 #### Logic from Other Modules
 
-Calling a function `fct` implemented in the [interoperability module][base-interoperability-LIP] is represented by `interoperability.fct(required inputs)`.
+Calling a function `fct` implemented in the [Interoperability module][base-interoperability-LIP] is represented by `interoperability.fct(required inputs)`.
 
 
 ### Token Identification
@@ -271,8 +271,8 @@ This is in contrast with the LSK ID on mainchain which is `{"chainID": 0, "local
 
 #### Supported Tokens
 
-The token module contains a function used when receiving cross-chain messages to assert the support for non-native tokens. 
-It should return a boolean, depending on the configuration of the token module.
+The Token module contains a function used when receiving cross-chain messages to assert the support for non-native tokens. 
+It should return a boolean, depending on the configuration of the Token module.
 For the rest of this LIP, this function is written `tokenSupported(tokenID)`.
 It must satisfy the condition below:
 
@@ -283,12 +283,12 @@ Further, on the Lisk mainchain, the LSK token is the only supported token (no to
 
 ### Token Module Store
 
-The token store is separated in four parts, the supply substore, the escrow substore, the terminated escrow substore and the user substore. 
+The Token module store is separated in four parts, the supply substore, the escrow substore, the terminated escrow substore and the user substore. 
 
 
 #### Supply Substore
 
-The token store contains an entry dedicated to storing information about the total supply of native tokens. 
+The Token module store contains an entry dedicated to storing information about the total supply of native tokens. 
 The substore contains entries with:
 
 
@@ -313,7 +313,7 @@ The default value for this substore is `{"totalSupply": 0}` serialized using `su
 
 #### Available Local ID Substore
 
-The token store contains an entry dedicated to storing information about the available local IDs:
+The Token module store contains an entry dedicated to storing information about the available local IDs:
 
 
 *   The store prefix is set to `STORE_PREFIX_AVAILABLE_LOCAL_ID`.
@@ -337,7 +337,7 @@ The default value for this substore is `{"nextAvailableLocalID": 0}` serialized 
 
 #### Escrow Substore
 
-The token store contains an entry dedicated to storing information about native tokens which have been sent to another chain. 
+The Token module store contains an entry dedicated to storing information about native tokens which have been sent to another chain. 
 The state contains an entry with:
 
 
@@ -366,7 +366,7 @@ If any state transition would increase the `amount` property of a non-existent s
 
 ##### Terminated Escrow Substore
 
-The token store contains an entry dedicated to storing information about chains which have violated the protocol described in this LIP.
+The Token module store contains an entry dedicated to storing information about chains which have violated the protocol described in this LIP.
 The state contains an entry with:
 
 
@@ -390,7 +390,7 @@ terminatedEscrowSchema = {
 
 #### User Substore
 
-The token store contains entries dedicated to storing the balances of users for a given `address` and `tokenID`. 
+The Token module store contains entries dedicated to storing the balances of users for a given `address` and `tokenID`. 
 The substore contains entries with:
 
 
@@ -853,7 +853,7 @@ if CCM.status != CCM_STATUS_OK:
         # credit the sender with the returned tokens
         availableBalance(senderAddress, tokenID) += amount + forwardedMessageFee
     else:
-        # this should not happen, the sending chain modified the token module
+        # this should not happen, the sending chain modified the Token module
         # the message is malicious and no tokens should be credited
         terminateEscrow(sendingChainID)
     stop CCM execution
@@ -921,7 +921,7 @@ As specified in [LIP 0025](https://github.com/LiskHQ/lips/blob/master/proposals/
 
 ### Protocol Logic for Other Modules
 
-The token module provides the following methods to modify the token state. Any other modules should use those to modify the token state. 
+The Token module provides the following methods to modify the token state. Any other modules should use those to modify the token state. 
 The token state should never be modified from outside the module without using one of the proposed functions as this could result in unexpected behavior and could cause an improper state transition.
 
 In the following, we use the function
