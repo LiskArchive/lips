@@ -88,7 +88,7 @@ The index being then the unique integer associated with each art piece of this a
 
 ### Cross-chain NFT Transfer
 
-To allow cross-chain transfers of NFTs, we define a specific command which makes use of the [interoperability module][base-interoperability-LIP] and creates a [cross-chain message][CCM-LIP] with the relevant information. 
+To allow cross-chain transfers of NFTs, we define a specific command which makes use of the [Interoperability module][base-interoperability-LIP] and creates a [cross-chain message][CCM-LIP] with the relevant information. 
 When sending NFTs cross-chain, it is crucial that every chain can correctly escrow its native tokens sent to other chains. 
 In this way, a native NFT can never be created by a foreign chain and sent across the ecosystem. 
 When receiving non-native NFTs on a chain, users can query this NFT's native chain to make sure that the NFT is properly escrowed.
@@ -168,7 +168,7 @@ This function will be executed even if the NFT is locked.
 
 #### recover
 
-This function should only be called by the interoperability module to trigger the recovery of NFTs escrowed to terminated chains.
+This function should only be called by the Interoperability module to trigger the recovery of NFTs escrowed to terminated chains.
 
 ## Specification
 
@@ -223,7 +223,7 @@ In this LIP, `length(byteSequence)` returns the length in bytes of `byteSequence
 
 #### Functions from Other Modules
 
-Calling a function `fct` from the [interoperability module][base-interoperability-LIP] module is represented by `interoperability.fct(required inputs)`.
+Calling a function `fct` from the [Interoperability module][base-interoperability-LIP] is represented by `interoperability.fct(required inputs)`.
 
 
 ### NFT Module Store
