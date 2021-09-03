@@ -371,29 +371,36 @@ it is valid if:
 *   `validatorUpdate` has the correct format:
     *   `keysUpdate` is an array of unique BLS public keys, hence all elements are 48 bytes long.
     *   `weightsUpdate` is of the same length as `keysUpdate`.
-*   `certificate.validatorsHash` is obtained as the SHA-256 digest of the updated `sendingAccount.validators`, see ["Update Validators" section](#update-validators) below, serialized according to `validatorsSchema` defined in the [LIP "New Block Header and Block Asset Schema"][new-block-header-LIP] (and copied below).
+*   `certificate.validatorsHash` is obtained as the SHA-256 digest of the updated `sendingAccount.validators`, see ["Update Validators" section](#update-validators) below, serialized according to `chainAccountSchema.validators` defined in the [LIP "Introduce Interoperability module"][base-interoperability-LIP] (and copied below).
     ```java
-    validatorsSchema = {
+    validators = {
         "type": "object",
         "required" : [
-            "keys", 
-            "weights", 
+            "validators",
             "certificateThreshold"
         ],
         "properties": {
-            "keys": {
+            "validators": {
                 "type": "array",
                 "fieldNumber": 1,
-                "items": {"dataType": "bytes"}
-            },
-            "weights": {
-                "type": "array",
-                "fieldNumber": 2,
-                "items": {"dataType": "uint64"}
+                "items": {
+                    "type": "object",
+                    "required": ["key", "weight"],
+                    "properties": {
+                        "key": {
+                            "dataType": "bytes",
+                            "fieldNumber": 1
+                        },
+                        "weight": {
+                            "dataType": "uint64",
+                            "fieldNumber": 2
+                        }
+                    }
+                }
             },
             "certificateThreshold": {
-                "dataType": "uint64", 
-                "fieldNumber": 3
+                "dataType": "uint64",
+                "fieldNumber": 2
             }
         }
     }
