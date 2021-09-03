@@ -498,14 +498,30 @@ A function to reorder the list of validators as specified in [LIP 0003][lip3].
 ##### Parameters
 The function has the following input parameters in the order given below:
 
-* `validatorsList`: An array of pairwise distinct 20-byte addresses.
+* `validatorsAddresses`: An array of pairwise distinct 20-byte addresses.
 * `randomSeed`: A 32-byte value representing a random seed.
 
 ##### Returns
 This function returns an array of bytes with the re-ordered list of addresses.
 
 ##### Execution
-The shuffling algorithm is defined in [LIP 0003][lip3].
+
+```python
+shuffleValidatorsList(validatorsAddresses, randomSeed)
+    
+    validatorsList = []
+    for every address in validatorsAddresses
+        validator.address = address
+        validator.roundHash = hash(randomSeed | address)
+        push validator to validatorsList
+    
+    # Reorder the validator list in lexicographical order first by roundHash, then by address
+    for every validator1 and validator2 in validatorsList
+        (validator1.roundHash < validator2.roundHash) || 
+        ((validator1.roundHash == validator2.roundHash) && (validator1.address < validator2.address))
+    
+    return shuffledAddresses = [address for every address in validatorsList]
+```
 
 ### Protocol Logic for Other Modules
 
