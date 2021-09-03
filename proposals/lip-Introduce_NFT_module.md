@@ -239,6 +239,11 @@ The store keys and schemas for value serialization of the NFT store are set as f
     ```java
     NFTStoreSchema = {
         "type": "object",
+        "required": [
+            "owner",
+            "lockingModuleID",
+            "attributes"
+        ],
         "properties": {
             "owner": { 
                 "dataType": "bytes", 
@@ -252,12 +257,7 @@ The store keys and schemas for value serialization of the NFT store are set as f
                 "dataType": "bytes", 
                 "fieldNumber": 3 
             }
-        },
-        "required": [
-            "owner",
-            "lockingModuleID",
-            "attributes"
-        ]
+        }
     }
     ```
 
@@ -269,13 +269,13 @@ The store keys and schemas for value serialization of the NFT store are set as f
     ```java
     userStoreSchema = {
         "type": "object",
+        "required": ["exists"],
         "properties": {
             "exists": { 
                 "dataType": "boolean", 
                 "fieldNumber": 1
-            },
-        },
-        "required": ["exists"]
+            }
+        }
     }
     ```
 
@@ -287,13 +287,13 @@ The store keys and schemas for value serialization of the NFT store are set as f
     ```java
     collectionStoreSchema = {
         "type": "object",
+        "required": ["nextAvailableIndex"],
         "properties": {
             "nextAvailableIndex": { 
                 "dataType": "uint64", 
                 "fieldNumber": 1
-            },
-        },
-        "required": ["nextAvailableIndex"]
+            }
+        }
     }
     ```
     
@@ -306,13 +306,13 @@ The store keys and schemas for value serialization of the NFT store are set as f
     ```java
     availableCollectionStoreSchema = {
         "type": "object",
+        "required": ["nextAvailableCollection"],
         "properties": {
             "nextAvailableCollection": { 
                 "dataType": "uint32", 
                 "fieldNumber": 1
-            },
-        },
-        "required": ["nextAvailableCollection"]
+            }
+        }
     }
     ```
 
@@ -324,13 +324,13 @@ The store keys and schemas for value serialization of the NFT store are set as f
     ```java
     terminatedEscrowStoreSchema = {
         "type": "object",
+        "required": ["escrowTerminated"],
         "properties": {
             "escrowTerminated": { 
                 "dataType": "boolean", 
                 "fieldNumber": 1
-            },
-        },
-        "required": ["escrowTerminated"]
+            }
+        }
     }
     ```
 
@@ -507,11 +507,20 @@ The `params` property of an NFT transfer transaction follows the schema `NFTTran
 ```java
 NFTTransferParams = {
     "type": "object",
+    "required": [
+        "nftID",
+        "recipientAddress"
+    ],
     "properties": {
         "nftID": {
             "type": object,
-            "fieldNumber": 1
-            "properties":{
+            "fieldNumber": 1,
+            "required": [
+                "chainID",
+                "collection",
+                "index"
+            ],
+            "properties": {
                 "chainID": {
                     "dataType": "uint32",
                     "fieldNumber": 1
@@ -524,22 +533,13 @@ NFTTransferParams = {
                     "dataType": "uint64",
                     "fieldNumber": 3
                 }
-            },
-            "required": [
-                "chainID",
-                "collection",
-                "index"
-            ]
+            }
         },    
         "recipientAddress": {
             "dataType": "bytes",
             "fieldNumber": 2
-        },
-    },
-    "required": [
-        "nftID",
-        "recipientAddress"
-    ]
+        }
+    }
 }
 ```
 
@@ -584,11 +584,22 @@ The `params` property of a cross-chain NFT transfer transaction follows the sche
 ```java
 crossChainTransferParams = {
     "type": "object",
+    "required": [
+        "nftID",   
+        "receivingChainID", 
+        "recipientAddress", 
+        "messageFee" 
+    ],
     "properties": {
         "nftID": {
             "type": object,
-            "fieldNumber": 1
-            "properties":{
+            "fieldNumber": 1,
+            "required": [
+                "chainID",
+                "collection",
+                "index"
+            ],
+            "properties": {
                 "chainID": {
                     "dataType": "uint32",
                     "fieldNumber": 1
@@ -601,12 +612,7 @@ crossChainTransferParams = {
                     "dataType": "uint64",
                     "fieldNumber": 3
                 }
-            },
-            "required": [
-                "chainID",
-                "collection",
-                "index"
-            ]
+            }
         }, 
         "receivingChainID": {
             "dataType": "uint32",
@@ -620,13 +626,7 @@ crossChainTransferParams = {
             "dataType": "uint64",
             "fieldNumber": 4 
         }
-    },
-    "required":[
-        "nftID",   
-        "receivingChainID", 
-        "recipientAddress", 
-        "messageFee" 
-    ]
+    }
 }
 ```
 
@@ -672,11 +672,22 @@ The `params` property of cross-chain NFT transfers follows the `crossChainTransf
 ```java
 crossChainTransferMessageParams = {
     "type": "object",
+    "required": [
+        "nftID",   
+        "senderAddress"
+        "recipientAddress", 
+        "attributes" 
+    ],
     "properties": {
         "nftID": {
             "type": object,
-            "fieldNumber": 1
-            "properties":{
+            "fieldNumber": 1,
+            "required": [
+                "chainID",
+                "collection",
+                "index"
+            ],
+            "properties": {
                 "chainID": {
                     "dataType": "uint32",
                     "fieldNumber": 1
@@ -689,12 +700,7 @@ crossChainTransferMessageParams = {
                     "dataType": "uint64",
                     "fieldNumber": 3
                 }
-            },
-            "required": [
-                "chainID",
-                "collection",
-                "index"
-            ]
+            }
         }, 
         "senderAddress": {
             "dataType": "bytes",
@@ -708,13 +714,7 @@ crossChainTransferMessageParams = {
             "dataType": "bytes",
             "fieldNumber": 4 
         }
-    },
-    "required": [
-        "nftID",   
-        "senderAddress"
-        "recipientAddress", 
-        "attributes" 
-    ]
+    }
 }
 ```
 
