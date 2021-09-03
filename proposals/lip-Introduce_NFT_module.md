@@ -1054,6 +1054,12 @@ recover(terminatedChainID, moduleID, storePrefix, storeKey, storeValue):
 
 Chains adding support for the NFT module specified in this document need to do so with a hard fork. This proposal does not imply a fork for the Lisk mainchain.
 
+
+## Reference Implementation
+
+TBA
+
+
 [base-interoperability-LIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
 [registration-LIP]: https://research.lisk.com/t/chain-registration/291
 [recovery-LIP]: https://research.lisk.com/t/sidechain-recovery-transactions/292
