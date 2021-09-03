@@ -547,6 +547,11 @@ This proposal, together with [LIP "Chain registration"][registration-LIP], [LIP 
 Chains adding this module will need to do so with a hard fork.
 
 
+## Reference Implementation
+
+TBA
+
+
 ## Appendix
 
 
