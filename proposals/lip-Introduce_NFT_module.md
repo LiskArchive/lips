@@ -1050,6 +1050,11 @@ recover(terminatedChainID, moduleID, storePrefix, storeKey, storeValue):
 ```
 
 
+### Endpoints for Off-Chain Services
+
+TBA
+
+
 ## Backwards Compatibility
 
 Chains adding support for the NFT module specified in this document need to do so with a hard fork. This proposal does not imply a fork for the Lisk mainchain.
