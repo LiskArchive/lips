@@ -48,7 +48,7 @@ The module presented here contains all the basic features that are needed to inc
 ### NFT Module Store
 
 
-<img src="lip-Introduce_a_non_fungible_token_module/NFT_store.png" width="80%">
+<img src="lip-Introduce_NFT_module/NFT_store.png" width="80%">
 
 
 *Figure 1: The NFT module store is divided into 5 substores. All NFTs held by users are stored sequentially in the user substore with keys given by the user address and the NFT ID.*
