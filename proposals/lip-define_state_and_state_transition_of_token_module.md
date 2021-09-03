@@ -305,7 +305,7 @@ supplyStoreSchema = {
         "totalSupply": { 
             "dataType": "uint64",
             "fieldNumber": 1
-        },
+        }
     }
 }
 ```
@@ -324,13 +324,13 @@ The Token module store contains an entry dedicated to storing information about 
 ```java
 availableLocalIDStoreSchema = {
     "type": "object",
+    "required": ["nextAvailableLocalID"],
     "properties": {
         "nextAvailableLocalID": { 
             "dataType": "uint32",
             "fieldNumber": 1
-        },
-    },
-    "required": ["nextAvailableLocalID"]
+        }
+    }
 }
 ```
 The default value for this substore is `{"nextAvailableLocalID": 0}` serialized using `availableLocalIDStoreSchema`. 
@@ -350,13 +350,13 @@ The state contains an entry with:
 ```java
 escrowStoreSchema = {
     "type": "object",
+   "required": ["amount"],
     "properties": {
         "amount" : {
             "dataType": "uint64",
             "fieldNumber": 1
-        },
-    },
-   "required": ["amount"]
+        }
+    }
 }
 ```
 If any state transition would reduce the `amount` property of an entry to zero, 
@@ -378,13 +378,13 @@ The state contains an entry with:
 ```java
 terminatedEscrowSchema = {
     "type": "object",
+    "required": ["escrowTerminated"],
     "properties": {
         "escrowTerminated": {
             "dataType": "boolean",
             "fieldNumber": 1
-        },
-    },
-   "required": ["escrowTerminated"]
+        }
+    }
 }
 ```
 
