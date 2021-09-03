@@ -167,7 +167,7 @@ This substore contains the snapshot of the active authorities for the current ro
 * The store prefix is set to `STORE_PREFIX_SNAPSHOT`.
 * Each store key is `uint32be(roundNumber)`, where `roundNumber` can be 0, 1 or 2 corresponding to the current round, the next round and in two rounds respectively.
 * Each store value is the serialization of an object following `snapshotStoreSchema`.
-* Notation: Let `snapshotStore(roundNumber)` be the store entry with prefix STORE_PREFIX_SNAPSHOT and key `uint32be(roundNumber)`.
+* Notation: Let `snapshotStore(roundNumber)` be the store entry with prefix `STORE_PREFIX_SNAPSHOT` and key `uint32be(roundNumber)`.
 
 ##### JSON Schema
 
@@ -182,7 +182,7 @@ snapshotStoreSchema = {
               "type": "object",
               "required": ["address", "weight"],
               "properties": {
-	          "address": {
+                  "address": {
                       "dataType": "bytes",
                       "fieldNumber": 1
                   }
@@ -196,7 +196,7 @@ snapshotStoreSchema = {
         "threshold": {
            "dataType": "uint64",
            "fieldNumber": 2,
-        },
+        }
     },
     "required": ["validators", "threshold"]
  }
@@ -206,7 +206,7 @@ snapshotStoreSchema = {
 
 The properties of this schema are as follows:
 
-  * Each element in the `validators` array corresponds to a validator and stores its address and BFT weight property. The elements in the array must be sorted lexicographically by `address` property.
+  * Each element in the `validators` array corresponds to a validator and stores its address and weight property. The elements in the array must be sorted lexicographically by `address` property.
 It specifies the set of active validators in the chain. 
 Its initial value is set in the genesis block.
   * `threshold`: An integer stating the weight threshold for finality in the BFT consensus protocol.
@@ -296,7 +296,7 @@ The list of verification conditions for `trs.params` is as follows:
 * The `trs.params.name` property has to contain only characters from the set `[a-z0-9!@$&_.]`, must not be empty and has to be at most `MAX_LENGTH_NAME` characters long.
 * Let `address` be the 20-byte address derived from `trs.senderPublicKey`. Then `address` must not already be registered as a validator. This is, the validator substore has no entry with store key `address`.
 * The value of `trs.params.name` must not already be registered as a validator name. This is, the name substore has no entry with store key `trs.params.name`.
-* `isKeyRegistered(trs.params.blsKey)` must return `true`, where the function is defined in the [Validators module][validatorsModule].
+* `isKeyRegistered(trs.params.blsKey)` must return `false`, where the function is defined in the [Validators module][validatorsModule].
 * `PopVerify(trs.params.blsKey, trs.params.proofOfPossession)` must return `VALID`, where [`PopVerify`][bls-specs-v4-popverify] is part of the [BLS signature scheme][lip-bls-public-key-registration].
 * `tx.params.generatorKey` must have length 32.
 
@@ -369,7 +369,7 @@ updateValidatorParams = {
               "type": "object",
               "required": ["address", "weight"],
               "properties": {
-	          "address": {
+                  "address": {
                       "dataType": "bytes",
                       "fieldNumber": 1
                   }
@@ -477,7 +477,7 @@ The list of verification conditions for `trs.params` is as follows:
             ]
         }
         ```
-        *   The `weights` argument is set to the `weights` property of `snapshotStore(0).validators` array.
+        *   The `weights` argument is set to `[ validator.weight for validator in snapshotStore(0).validators]`.
         *   The `threshold` argument is set to `snapshotStore(0).threshold`.
 
 ##### Execution 
@@ -530,7 +530,7 @@ setBFTParameters(BFTThreshold, BFTThreshold, snapshotStore(0).validators)
 
 # Pass the list of validators to the Validators module
 for i in range(len(snapshotStore(0).validators)):
-    addresses =  snapshotStore(0).address[i]
+    addresses = snapshotStore(0).address[i]
     
 setGeneratorList(addresses)
 ```
@@ -550,6 +550,7 @@ if b.header.height == chainProperties.roundEndHeight
     # get the last stored BFT parameters, and update them if needed
     BFTThreshold = snapshotStore(0).threshold
     currentBFTParameters = getBFTParameters(b.header.height)
+    
     if (currentBFTParameters.validators != snapshotStore(0).validators
         or currentBFTParameters.precommitThreshold != BFT_THRESHOLD
         or currentBFTParameters.certificateThreshold != BFT_THRESHOLD):
@@ -561,7 +562,7 @@ if b.header.height == chainProperties.roundEndHeight
     randomSeed = getRandomBytes(roundStartHeight, len(snapshotStore(0).validators))
     
     for i in range(len(snapshotStore(0).validators)):
-    addresses =  snapshotStore(0).address[i]
+        addresses =  snapshotStore(0).address[i]
     
     nextValidatorAddresses  = shuffleValidatorsList(addresses, randomSeed)
     setGeneratorList(nextValidatorAddresses)
