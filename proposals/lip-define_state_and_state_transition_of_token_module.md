@@ -1265,6 +1265,11 @@ recover(terminatedChainID, moduleID, storePrefix, storeKey, storeValue):
 ```
 
 
+### Endpoints for Off-Chain Services
+
+TBA
+
+
 ## Backwards Compatibility
 
 This introduces a different token handling mechanism for the whole Lisk ecosystem which requires a hard fork.
