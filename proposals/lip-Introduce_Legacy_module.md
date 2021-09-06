@@ -130,7 +130,7 @@ The 8-byte legacy address corresponding to the given input.
 ```python
 getLegacyAddress(publicKey):
     hashedKey = SHA-256(publicKey)
-    firstEightBytes = 8 first bytes of hashedKey
+    firstEightBytes = first 8 bytes of hashedKey
     reversedEightBytes = firstEightBytes reversed
     return reversedEightBytes
 ```
