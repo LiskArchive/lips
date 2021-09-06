@@ -7,7 +7,7 @@ Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Discussions-To: https://research.lisk.com/t/introduce-legacy-module
+Discussions-To: https://research.lisk.com/t/introduce-legacy-module/319
 Requires: LIP 0018
 ```
 
