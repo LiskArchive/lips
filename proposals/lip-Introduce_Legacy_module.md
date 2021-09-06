@@ -178,7 +178,7 @@ When a reclaim transaction `trs` is executed, the following is done:
 
 * Delete the entry from the legacy accounts substore with store key `getLegacyAddress(trs.senderPublicKey)`.
 * Call the function `mint(newAddress, 0, trs.params.amount)`, where `newAddress` is the [20-byte address][LIP18-addressComputation] derived from `trs.senderPublicKey`. 
-  The function `mint` is defined in the [Token module][token-LIP].
+  The function `mint` is defined in the [Token module][token-LIP-mint].
 
 
 #### Register BLS Key
@@ -270,7 +270,7 @@ TBA
 
 [validator-LIP]: https://research.lisk.com/t/introduce-the-validators-module/317
 [validator-LIP-setValidatoBLSKey]: https://research.lisk.com/t/introduce-the-validators-module/317#setvalidatorblskey-38
-[token-LIP]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
+[token-LIP-mint]: https://research.lisk.com/t/define-state-and-state-transitions-of-token-module/295#mint-64
 [LIP18]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md
 [LIP18-addressComputation]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md#address-computation
 [LIP18-ReclaimTransaction]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md#reclaim-transaction
