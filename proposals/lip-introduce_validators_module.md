@@ -4,7 +4,7 @@ Title: Introduce Validators module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
         Rishi Mittal <rishi.mittal@lightcurve.io>
-Discussions-To: https://research.lisk.com/t/introduce-validators-module
+Discussions-To: https://research.lisk.com/t/introduce-validators-module/317
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
@@ -213,6 +213,9 @@ genesisDataSchema = {
 
 The genesis data substore stores the timestamp of the genesis block.
 
+### Commands
+
+The Validators module does not specify any commands.
 
 ### Protocol Logic for Other Modules
 
@@ -567,6 +570,11 @@ After the genesis block `b` is executed, the following logic is executed:
   * Let `validatorAddress` be the store key of `validatorAccount`. Check that there is an entry in the registered keys substore with store key equals to `validatorAccount.blsKey` and store value equals to the serialization of `validatorAddress`.
 * Check the validity of the registered BLS keys substore included in the genesis block. In particular, for each entry `blsKey` in the registered BLS keys substore:
   * Let `validatorAddress` be the store value of `blsKey`. Check that there is an entry `validatorAccount` in the validators data substore with store key equals to `validatorAddress` and `validatorAccount.blsKey` equals to `blsKey`.
+
+
+### Endpoints for Off-Chain Services
+
+TBD
 
 
 ## Backwards Compatibility
