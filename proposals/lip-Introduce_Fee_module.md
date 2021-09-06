@@ -81,7 +81,7 @@ The constants `MODULE_ID_INTEROPERABILITY` and `COMMAND_ID_SIDECHAIN_REG` are de
 
 ### Fee Module Store
 
-The fee module does not store information in the state.
+The Fee module does not store information in the state.
 
 
 ### Commands
