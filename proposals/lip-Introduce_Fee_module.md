@@ -6,7 +6,7 @@ Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Discussions-To: https://research.lisk.com/t/introduce-fee-module
+Discussions-To: https://research.lisk.com/t/introduce-fee-module/318
 Required: Introduce Token module
 ```
 
