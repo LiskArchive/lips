@@ -3,7 +3,7 @@ LIP: <LIP number>
 Title: Introduce Interoperability module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Mitsuaki Uchimoto <mitsuaki.uchimoto@lightcurve.io>
-Discussions-To: https://research.lisk.com/t/properties-serialization-and-initial-values-of-interoperability-module
+Discussions-To: https://research.lisk.com/t/introduce-interoperability-module/290
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
