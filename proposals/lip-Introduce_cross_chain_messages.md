@@ -37,7 +37,7 @@ This message also updates a few properties of the interoperability store to keep
 The last one, the registration message, is used when registering a chain on the Lisk mainchain. 
 The message serves as a guarantee that the correct chain ID and network ID are used when the registration transaction is sent on the sidechain.
 
-Further motivation and rationale behind the Lisk interoperability architecture is given in the general interoperability document [Properties, serialization, and initial values of the interoperability module][base-interoperability-LIP].
+Further motivation and rationale behind the Lisk interoperability architecture is given in the general interoperability document ["Introduce Interoperability module"][base-interoperability-LIP].
 
 
 ## Rationale
@@ -55,7 +55,7 @@ In the following, we list all the properties of a cross-chain message.
 #### Sending Chain ID and Receiving Chain ID
 
 Used to identify the chains exchanging the cross-chain message. 
-On the mainchain the receiving chain ID is read to route the message to the corresponding chain outbox, as specified in [LIP "Introduce cross-chain update transactions"][CCU-LIP]. 
+On the mainchain the receiving chain ID is read to route the message to the corresponding chain outbox, as specified in [LIP "Introduce cross-chain update mechanism"][CCU-LIP]. 
 The sending chain ID is used for example if the message triggers an error and has to be sent back.
 
 
@@ -129,7 +129,7 @@ The Interoperability module exposes the <code>[send][base-interoperability-LIP-s
 ### Cross-chain Update Receipt
 
 The main role of the cross-chain update receipt is to inform chains that a cross-chain update transaction has been posted on the partner chain, by whom, the fee that was paid, and the inbox size of the partner chain. 
-This is then used on the mainchain to allow for message recovery, see [LIP "Sidechain recovery transactions"][recovery-LIP]. 
+This is then used on the mainchain to allow for message recovery, see [LIP "Introduce sidechain recovery mechanism"][recovery-LIP]. 
 This can also be used in the sidechain to compensate the cross-chain update transaction poster, also called the _relayer_. 
 The precise choice of the compensation mechanism is left to sidechain developers. 
 For example, all cross-chain transaction fees could be split between the block forger and a compensation pool. 
@@ -174,7 +174,7 @@ They are part of the Interoperability module.
 
 ### Notation and Constants
 
-The following constants are used throughout the document, multiple of those constants are shared with the other LIPs defining the Interoperability module and all of the needed constants for the interoperability module are defined in [LIP "Properties, serialization, and initial values of the interoperability module"][base-interoperability-LIP]. 
+The following constants are used throughout the document, multiple of those constants are shared with the other LIPs defining the Interoperability module and all of the needed constants for the interoperability module are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP]. 
 That LIP should be considered correct if a value stated here would be different.
 
 | Name          | Type    | Value       |
@@ -388,7 +388,7 @@ tryToForward(CCM):
    else:
       CCM is discarded and has no further effect
 ```
-The `addToOutbox` function is defined in [LIP "Properties, serialization, and initial values of the interoperability module"][base-interoperability-LIP].
+The `addToOutbox` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
 
 ### Cross-chain Commands
@@ -438,7 +438,7 @@ CCUReceiptParamsSchema = {
 
 ##### Creating Cross-chain Update Receipts
 
-A CCU receipt is created by the Interoperability module upon acting on a cross-chain update transaction as specified in [LIP "Introduce cross-chain update transactions"][CCU-LIP].
+A CCU receipt is created by the Interoperability module upon acting on a cross-chain update transaction as specified in [LIP "Introduce cross-chain update mechanism"][CCU-LIP].
 
 
 ##### Executing Cross-chain Update Receipts
@@ -537,7 +537,7 @@ registrationCCMParamsSchema = {
 
 ##### Creating Registration Message 
 
-A registration message is created by the Interoperability module when registering a sidechain on the mainchain, as specified in [LIP "Chain registration"][registration-LIP]. 
+A registration message is created by the Interoperability module when registering a sidechain on the mainchain, as specified in [LIP "Introduce chain registration mechanism"][registration-LIP]. 
 
 
 ##### Executing Registration Message
