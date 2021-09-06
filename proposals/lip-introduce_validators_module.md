@@ -572,11 +572,6 @@ After the genesis block `b` is executed, the following logic is executed:
   * Let `validatorAddress` be the store value of `blsKey`. Check that there is an entry `validatorAccount` in the validators data substore with store key equals to `validatorAddress` and `validatorAccount.blsKey` equals to `blsKey`.
 
 
-### Endpoints for Off-Chain Services
-
-TBD
-
-
 ## Backwards Compatibility
 
 This LIP defines a new module and specify its store, which in turn will become part of the state tree and will be authenticated by the state root. As such, it will induce a hardfork.
