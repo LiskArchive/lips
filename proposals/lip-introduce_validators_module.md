@@ -96,18 +96,17 @@ The key-value pairs in the module store are organized in the following substores
 
 ```java
 validatorAccountSchema = {
-  type: "object",
-  properties: {
-    generatorKey: {
-      dataType: "bytes",
-      fieldNumber: 1
+  "type": "object",
+  "required": ["generatorKey", "blsKey"],
+  "properties": {
+    "generatorKey": {
+      "dataType": "bytes",
+      "fieldNumber": 1
     },
-    blsKey: {
-      dataType: "bytes",
-      fieldNumber: 2
-    },
-  required: ["generatorKey", 
-              "blsKey"]
+    "blsKey": {
+      "dataType": "bytes",
+      "fieldNumber": 2
+    }
 }
 ```
 
@@ -136,16 +135,16 @@ The validator account holds the generator and BLS keys of a registered validator
 
 ```java
 generatorListSchema = {
-  type: "object",
-  properties: {
-    addresses: {
-      type: "array",
-      items: {
-        dataType: "bytes"
+  "type": "object",
+  "required": ["addresses"],
+  "properties": {
+    "addresses": {
+      "type": "array",
+      "items": {
+        "dataType": "bytes"
       },
-      fieldNumber: 1
-    },
-    required: ["addresses"]
+      "fieldNumber": 1
+    }
 }
 ```
 
@@ -168,13 +167,13 @@ This substore stores an array of addresses, corresponding to the ordered list of
 
 ```java
 validatorAddressSchema = {
-  type: "object",
-  properties: {
-    address: {
-      dataType: "bytes",
-      fieldNumber: 1
-    },
-    required: ["address"]
+  "type": "object",
+  "required": ["address"],
+  "properties": {
+    "address": {
+      "dataType": "bytes",
+      "fieldNumber": 1
+    }
 }
 ```
 
@@ -199,13 +198,13 @@ The registered BLS keys substore maintains all registered validator BLS keys, us
 
 ```java
 genesisDataSchema = {
-  type: "object",
-  properties: {
-    timestamp: {
-      dataType: "uint64",
-      fieldNumber: 1
-    },
-    required: ["timestamp"]
+  "type": "object",
+  "required": ["timestamp"],
+  "properties": {
+    "timestamp": {
+      "dataType": "uint64",
+      "fieldNumber": 1
+    }
 }
 ```
 
@@ -480,8 +479,62 @@ This function returns a 20 bytes address.
 
 ```python
 getGeneratorAtTimestamp(timestamp):
-    getSlotNumber(timestamp) % generatorList.addresses.length
-    return generatorList.addresses[slotNumber]
+    elapsedTime = timestamp - genesisData.timestamp
+    slotIndex = floor(elapsedTime / BLOCK_TIME) % generatorList.addresses.length
+    return generatorList.addresses[slotIndex]
+```
+
+#### getGeneratorBetweenTimestamps
+
+This function returns the address of the generators active between the two input timestamps and the number of block slots assigned to them. 
+Notice that if the input timestamps corresponds to times before the beginning of the current round, this function may not return the correct generator addresses.
+
+
+##### Parameters
+
+This function has the following input parameters in the order given below:
+
+* `startTimestamp`: An integer value corresponding to a timestamp.
+* `endTimestamp`: An integer value corresponding to a timestamp.
+
+
+##### Returns
+
+This function returns an object whose keys are generator addresses, with value corresponding to the number of block slots assigned to them in between the input timestamps.
+
+
+##### Execution
+
+```python
+getGeneratorBetweenTimestamps(startTimestamp, endTimestamp):
+    
+    if endTimestamp >= startTimestamp:
+        return invalid timestamps error
+
+    result = {}
+
+    startSlotNumber = floor((startTimestamp - genesisData.timestamp) / BLOCK_TIME)
+    endSlotNumber = floor((endTimestamp - genesisData.timestamp) / BLOCK_TIME)
+    totalSlots = endSlotNumber - startSlotNumber + 1
+
+    # Quick skip to assign directly many block slot to every generator in the list 
+    baseSlots = math.floor(totalSlots / generatorList.addresses.length)
+    if baseSlots > 0:
+        totalSlots -= baseSlots * generatorList.addresses.length
+        for generatorAddress in generatorList:
+            result[generatorAddress] = baseSlots
+
+
+    # Assign remaining slots
+    for slotNumber in range(startSlotNumber, startSlotNumber + totalSlots):
+        index = slotNumber % generatorList.addresses.length
+        generatorAddress = generatorList.addresses[slotIndex]
+        if generatorAddress in result:
+            result[generatorAddress] += 1
+        else:
+            result[generatorAddress] = 1
+
+    return result
 ```
 
 #### setGeneratorList
