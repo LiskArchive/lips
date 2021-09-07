@@ -2,10 +2,10 @@
 LIP:
 Title: Introduce cross-chain update mechanism
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-cross-chain-update-mechanism/298
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Discussions-To: https://research.lisk.com/t/introduce-cross-chain-update-mechanism/298
 Requires: Introduce cross-chain messages, Introduce Interoperability module
 ```
 
