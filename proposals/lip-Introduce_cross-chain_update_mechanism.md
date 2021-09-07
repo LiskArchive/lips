@@ -235,32 +235,42 @@ crossChainUpdateTransactionParams = {
         "certificate": {
             "dataType": "bytes",
             "fieldNumber": 2
-        },
+        },	
         "validatorsUpdate": {
             "type": object, 
             "fieldNumber": 3,
             "required":[
-                "keysUpdate",
-                "weightsUpdate",
+                "activeValidatorsUpdate",
                 "newCertificateThreshold"
             ],
             "properties":{
-                "keysUpdate": {
+	        "activeValidatorsUpdate":
                     "type": "array",
-                    "fieldNumber": 1,
-                    "items": {"dataType": "bytes"}
-                },
-                "weightsUpdate": {
-                    "type": "array",
-                    "fieldNumber": 2,
-                    "items": {"dataType": "uint64"}
+		    "fieldNumber": 1,
+		    "items": {
+		        "type": "object",
+                        "required": [
+                            "blsKey",
+                            "bftWeight"
+                        ],
+                        "properties": {
+                            "blsKey": {
+                                "dataType": "bytes",
+                                "fieldNumber": 1
+                            },
+                            "bftWeight": {
+                                "dataType": "uint64",
+                                "fieldNumber": 2
+                            }
+                        }
+                    }
                 },
                 "newCertificateThreshold": {
                     "dataType": "uint64",
-                    "fieldNumber": 3
+                    "fieldNumber": 2
                 }
             }
-        },
+        },	
         "inboxUpdate": {
             "type": "object",
             "fieldNumber": 4,    
@@ -369,8 +379,8 @@ it is valid if:
 
 *   `params` contains a non-empty `certificate`.
 *   `validatorsUpdate` has the correct format:
-    *   `keysUpdate` is an array of unique BLS public keys, hence all elements are 48 bytes long.
-    *   `weightsUpdate` is of the same length as `keysUpdate`.
+    *   for all `activeValidator` in `validatorsUpdate.activeValidators` we have that `activeValidator.blsKey` is a BLS public keys, hence are 48 bytes long.
+    *   every `activeValidator` in `validatorsUpdate.activeValidators` has a different `activeValidator.blsKey`.
 *   `certificate.validatorsHash` is obtained as the SHA-256 digest of the updated `sendingAccount.validators`, see ["Update Validators" section](#update-validators) below, serialized according to `chainAccountSchema.validators` defined in the [LIP "Introduce Interoperability module"][base-interoperability-LIP] (and copied below).
     ```java
     validators = {
@@ -530,11 +540,21 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
 
 ### Update Validators
 
-Updating `sendingAccount.validators` with respect to a given `validatorsUpdate` is done following the points below:
+Updating `sendingAccount.validators` with respect to a given `validatorsUpdate` is done following the logic below:
 
-*   Update the weight of all public keys present in `keysUpdate` with the corresponding weight specified in `weightsUpdate` (elements in `keysUpdate` array correspond to weights with the same index in `weightsUpdate`). If the key was not present in `sendingAccount.validators` before the update, it is added to it. Keys are always maintained in lexicographical order.
-*   Remove all keys which have now weight `0` from `sendingAccount.validators.keys`, and remove the corresponding `0` in `sendingAccount.validators.weights`.
-*   Set `sendingAccount.validators.threshold` = `validatorsUpdate.newCertificateThreshold`. 
+```python
+for newValidator in validatorsUpdate.activeValidators:
+    if there exist currentValidator in sendingAccount.validators.activeValidators such that
+    newValidators.blsKey == currentValidator.blsKey:
+        set currentValidator.blsKey = newValidators.bftWeight
+    else:
+        add newValidator to sendingAccount.validators.activeValidators maintaining the entries in 
+	lexicographical order of blsKeys
+
+remove any entry from sendingAccount.validators.activeValidators with bftWeight == 0
+
+set sendingAccount.validators.threshold = validatorsUpdate.newCertificateThreshold
+```
 
 
 ## Backwards Compatibility
@@ -553,30 +573,35 @@ TBA
 
 ### Computing the Validators Update
 
-When posting a CCU transaction, the validators hash given in the certificate certifies the new set of validators of the sending chain. The CCU must therefore include the difference between the validators currently stored in the chain account and the validator set authenticated by the certificate.
+When posting a CCU transaction, the validators hash given in the certificate certifies the new set of validators of the sending chain. 
+The CCU must therefore include the difference between the validators currently stored in the chain account and the validator set authenticated by the certificate.
+The required `validatorsUpdate` can be obtained by applying the function below.
+We suppose that `currentValidators` and `newValidators` follow the `validators` schema given above.
 
-```java
-getValidatorsDiff((keys, weights, threshold),
-	          (newKeys, newWeights, newCertificateThreshold)): 
+```python
+getValidatorsDiff(currentValidators, newValidators): 
 
-    keysDiff = []
-    weightDiff = []
-    for i from 0 to length(newKeys)-1:
-        if there exist j in [0,length(keys)] such that 
-        (newKeys[i],newWeights[i]) == (keys[j],weights[j]):
+    activeValidatorsUpdate = []
+
+    for newValidator in newValidators.activeValidators:
+        if there exist currentValidator in currentValidators.activeValdators such that 
+        newValidator.blsKey == currentValidator.blsKey 
+	and newValidator.bftWeight == currentValidator.bftWeight:
             continue
         else:
-            append newKeys[i] to keysDiff
-            append newWeights[i] to weightDiff
+            append newValidator to activeValidatorsUpdate
 
-    for i from 0 to length(keys)-1:	
-        if there exist j in [0,length(newKeys)] such that newKeys[j] == keys[i]:
+    for currentValidator in currentValidators:	
+        if there exist newValidators in currentValidators.activeValdators such that 
+        newValidator.blsKey == currentValidator.blsKey:
             continue
         else:
-            append keys[i] to keysDiff
-            append 0 to weightDiff
+            append {"blsKey": currentValidator.blsKey, "bftWeight": 0} to activeValidatorsUpdate
 
-return (keysDiff, weightsDiff, newCertificateThreshold)
+    return {
+        "activeValidatorsUpdate": activeValidatorsUpdate,
+        "newCertificateThreshold": newCertificateThreshold
+    }
 ```
 
 [base-interoperability-LIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
