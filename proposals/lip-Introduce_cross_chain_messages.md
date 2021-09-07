@@ -2,10 +2,10 @@
 LIP: <LIP number>
 Title: Introduce cross-chain messages
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-cross-chain-messages/299
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Discussions-To: https://research.lisk.com/t/introduce-cross-chain-messages/299
 Requires: Introduce cross-chain update mechanism
 ```
 
