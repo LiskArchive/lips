@@ -141,10 +141,10 @@ generatorListSchema = {
   "properties": {
     "addresses": {
       "type": "array",
+      "fieldNumber": 1,
       "items": {
         "dataType": "bytes"
-      },
-      "fieldNumber": 1
+      }
     }
   }
 }
@@ -522,16 +522,15 @@ getGeneratorBetweenTimestamps(startTimestamp, endTimestamp):
     totalSlots = endSlotNumber - startSlotNumber + 1
 
     # Quick skip to assign directly many block slot to every generator in the list 
-    baseSlots = math.floor(totalSlots / generatorList.addresses.length)
+    baseSlots = floor(totalSlots / generatorList.addresses.length)
     if baseSlots > 0:
         totalSlots -= baseSlots * generatorList.addresses.length
-        for generatorAddress in generatorList:
+        for generatorAddress in generatorList.addresses:
             result[generatorAddress] = baseSlots
-
 
     # Assign remaining slots
     for slotNumber in range(startSlotNumber, startSlotNumber + totalSlots):
-        index = slotNumber % generatorList.addresses.length
+        slotIndex = slotNumber % generatorList.addresses.length
         generatorAddress = generatorList.addresses[slotIndex]
         if generatorAddress in result:
             result[generatorAddress] += 1
