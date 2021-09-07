@@ -2,10 +2,11 @@
 LIP:
 Title: Introduce chain registration mechanism
 Author: Iker Alustiza <iker@lightcurve.io>
-Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
 Discussions-To: https://research.lisk.com/t/chain-registration
+Status: Draft
+Type: Standards Track
+Created: 2021-05-22
+Updated: 2021-09-07
 Requires: Add weights to Lisk-BFT consensus protocol, 0038, Introduce Interoperability module,
           Introduce cross-chain messages
 ```
