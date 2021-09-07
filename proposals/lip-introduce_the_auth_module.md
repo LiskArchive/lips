@@ -4,10 +4,11 @@ Title: Introduce Auth module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Ishan Tiwari <ishan.tiwari@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-auth-module
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: LIP 0040
+Created: 2021-07-27
+Updated: 2021-09-07
+Requires: 0040
 ```
 
 ## Abstract
