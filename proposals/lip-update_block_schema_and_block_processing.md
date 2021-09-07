@@ -155,7 +155,8 @@ This function returns a 32 bytes value or an error if the block header has an in
 
 ```python
 blockID():
-  # Check that the signature length is 64 bytes
+  # Check that the signature length is 64 bytes to ensure
+  # that we do not compute the block ID of an unsigned block
   if length(block.header.signature) != SIGNATURE_LENGTH_BYTES:
     return error
 
