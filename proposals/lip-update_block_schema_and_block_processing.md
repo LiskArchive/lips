@@ -105,6 +105,17 @@ For the rest of this proposal we define the following constants.
 Furthermore, in the following we indicate with `block` be the block under consideration and with `previousBlock` the previous block of the chain.
 Calling a function `fct` from another module `module` is represented by `module.fct`.
 
+### Validation Stages of Block, Block Assets, and Block Header
+
+During a block lifecycle, validations are performed in three different stages:
+
+- **Static validation**: When a new block is received, some initial static checks are done to ensure that the serialized object follows the general structure of a block. 
+  These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
+- **Block verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
+In particular, these checks are performed *before* the state transitions implied by the modules are processed.
+- **Result verification**: In this stage we verify the properties that require access to the state store *after* the block has been executed, i.e. they can be verified only after the state transitions implied by the block execution have been performed.
+In particular, these checks are performed *after* the state transitions implied by the modules are processed.
+
 ### Block
 
 #### JSON Schema
@@ -140,16 +151,10 @@ blockSchema = {
 
 #### Validation
 
-Blocks are validated at three different stages of their lifecycle.
+The block is validated in the [static validation stage](#validation-stages-ofblock-block-assets-and-blockheader) as follows:
 
-- **Static validation**: When a new block is received, some initial static checks are done to ensure that the serialized object follows the general structure of a block. 
-  These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
-- **Block verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
-In particular, these checks are performed *before* the state transitions implied by the modules are processed.
-- **Result verification**: In this stage we verify the properties that require access to the state store *after* the block has been executed, i.e. they can be verified only after the state transitions implied by the block execution have been performed.
-In particular, these checks are performed *after* the state transitions implied by the modules are processed.
-
-As part of the static validation checks, we check that the total size of the serialized transactions contained in the block payload is at most `MAX_PAYLOAD_SIZE_BYTES`.
+- **Static validation**:
+  - Check that the total size of the serialized transactions contained in the block payload is at most `MAX_PAYLOAD_SIZE_BYTES`.
 
 #### Block ID
 
@@ -197,7 +202,7 @@ assetSchema = {
 
 #### Validation
 
-The block assets is validated in the [static validation stage](#validation) as follows:
+The block assets is validated in the [static validation stage](#validation-stages-ofblock-block-assets-and-blockheader) as follows:
 
 - **Static validation**:
   - Check that each entry in the assets array has `moduleID` set to the ID of a module registered in the chain, while the `data` property has size at most equal to `MAX_ASSET_DATA_SIZE_BYTES`.
@@ -311,7 +316,7 @@ blockHeaderSchema = {
 
 In this section, we specify the validation for each property of the block header.
 
-The block header is validated in all three [stages of the block validation](#validation).
+The block header is validated in all three [stages of the block validation](#validation-stages-ofblock-block-assets-and-blockheader).
 
 - **Static validation**:
   - Check that the block header follows the block header schema.
@@ -515,7 +520,7 @@ This LIP results in a hard fork as nodes following the proposed protocol will re
 
 [lip-bft]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#additional-block-header-properties
 
-[lip-bft-module]: https://research.lisk.com/
+[lip-bft-module]: https://research.lisk.com/t/introduce-bft-module/321
 
 [lip-signature]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0037.md#signing-and-verifying-with-ed25519
 
