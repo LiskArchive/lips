@@ -512,7 +512,7 @@ This function returns an object whose keys are generator addresses, with value c
 ```python
 getGeneratorBetweenTimestamps(startTimestamp, endTimestamp):
     
-    if endTimestamp >= startTimestamp:
+    if endTimestamp < startTimestamp:
         return invalid timestamps error
 
     result = {}
