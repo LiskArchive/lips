@@ -2,6 +2,9 @@
 LIP: <LIP number>
 Title: Update block schema and block processing
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
+        Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
+        Rishi Mittal <rishi.mittal@lightcurve.io >
+Discussions-To: https://research.lisk.com/t/update-block-schema-and-block-processing/293
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
@@ -32,7 +35,7 @@ In general, it is desirable to have one fixed block header schema that:
 - does not need to be changed when modules are added or removed to a running blockchain,
 - is used by every blockchain in the Lisk ecosystem regardless of the modules implemented in the individual chains.
 
-Furthermore, we update the block header schema to include new properties introduced by the ["State model and state root"][lip-state-model-and-state-root] LIP, the ["Introduce BFT module"][lip-bft-module] LIP, and the ["Introduce a certificate generation mechanism"][lip-certificate-generation] LIP.
+Furthermore, we update the block header schema to include new properties introduced by the ["Define state model and state root"][lip-state-model-and-state-root] LIP, the ["Introduce BFT module"][lip-bft-module] LIP, and the ["Introduce a certificate generation mechanism"][lip-certificate-generation] LIP.
 
 Finally, this LIP specifies the validation of all block header properties in one place.
 
@@ -43,7 +46,7 @@ Finally, this LIP specifies the validation of all block header properties in one
 This LIP introduces the following new block header properties:
 
 - `stateRoot`: The root of the sparse Merkle tree that is computed from the state of the blockchain.
-  See the [State model and state root][lip-state-model-and-state-root] LIP to see why it needs to be included in a block header.
+  See the [Define state model and state root][lip-state-model-and-state-root] LIP to see why it needs to be included in a block header.
 - `assetsRoot`: The root of the Merkle tree computed from the block assets array.
 See [below](#separation-between-block-header-and-block-assets) for more details.
 - `generatorAddress`: The address of the block generator.
@@ -143,7 +146,7 @@ Blocks are validated at three different stages of their lifecycle.
   These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
 - **Block verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
 In particular, these checks are performed *before* the state transitions implied by the modules are processed.
-- **Result verification**: In this stage we verification the properties that require access to the state store *after* the block has been executed, i.e. they can be verified only after the state transitions implied by the block execution have been performed.
+- **Result verification**: In this stage we verify the properties that require access to the state store *after* the block has been executed, i.e. they can be verified only after the state transitions implied by the block execution have been performed.
 In particular, these checks are performed *after* the state transitions implied by the modules are processed.
 
 As part of the static validation checks, we check that the total size of the serialized transactions contained in the block payload is at most `MAX_PAYLOAD_SIZE_BYTES`.
