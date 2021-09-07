@@ -79,7 +79,7 @@ Moreover, the `validatorsHash` property can only be obtained after the state tra
 The reason is that the DPoS or PoA modules only set the validators for the next round after the asset of the last block of a round is processed. 
 Therefore, this property needs to be added to the block by the framework layer after the state transitions by the modules are processed.
 
-As an example, blockchains created with the Lisk SDK that implement the [random module][lip-random-module], will insert the seed reveal property in the block assets, not in the block header.
+As an example, blockchains created with the Lisk SDK that implement the [Random module][lip-random-module], will insert the seed reveal property in the block assets, not in the block header.
 
 The schema for the block assets allows each module to include its serialized data individually, which makes the inclusion of module data very flexible.
 Each module can insert a single entry in the assets.
