@@ -4,9 +4,10 @@ Title:  Define state transitions of Reward module
 Authors: Iker Alustiza <iker@lightcurve.io>
          Mehmet Egemen Albayrak <mehmet.albayrak@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/define-state-transitions-of-reward-module
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-08-03
+Updated: 2021-09-07
 Requires: Random Module LIP, BFT module LIP, and Token Module LIP.
 ```
 
