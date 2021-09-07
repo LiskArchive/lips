@@ -54,3 +54,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0040](proposals/lip-0040.md) | Define state model and state root                                                              | Alessandro Ricottone                         | Informational   | Draft         |
 | [0041](proposals/lip-0041.md) | Introduce Auth module                                                                          | Alessandro Ricottone, Ishan Tiwari           | Standards Track | Draft         |
 | [0042](proposals/lip-0042.md) | Define state transitions of Reward module                                                      | Iker Alustiza, Mehmet Egemen Albayrak        | Standards Track | Draft         |
+| [0043](proposals/lip-0043.md) | Introduce chain registration mechanism                                                         | Iker Alustiza                                | Standards Track | Draft         |
