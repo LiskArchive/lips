@@ -207,13 +207,13 @@ The outbox root substore holds the root of the outbox of each partner chain.
 ```java
 outboxRootSchema = {
     "type": "object",
+    "required": ["root"],
     "properties": {
         "root" : {
-            "dataType" : bytes,
+            "dataType" : "bytes",
             "fieldNumber": 1
         }
-    },
-    "required": ["root"]
+    }
 }
 ```
 
@@ -238,113 +238,6 @@ The chain data substore holds information about other partner chains.
 ```java
 chainAccountSchema = {
     "type": "object",
-    "properties": {
-        "inbox": {
-            "type": "object",
-            "properties": {
-                "appendPath" : {
-                    "type": "array",
-                    "items": {
-                        "dataType": "bytes"
-                    },
-                    "fieldNumber": 1
-                },
-                "size" : {
-                    "dataType" : uint64,
-                    "fieldNumber": 2
-                },
-                "root" : {
-                    "dataType" : bytes,
-                    "fieldNumber": 3
-                }
-            },
-            "required": ["appendPath", "size", "root"],
-            "fieldNumber": 1
-        },
-        "outbox": {
-            "type": "object",
-            "properties": {
-                "appendPath" : {
-                    "type": "array",
-                    "items": {
-                        "dataType": "bytes"
-                    },
-                    "fieldNumber": 1
-                },
-                "size" : {
-                    "dataType" : uint64,
-                    "fieldNumber": 2
-                },
-                "root" : {
-                    "dataType" : bytes,
-                    "fieldNumber": 3
-                }
-            },
-            "required": ["appendPath", "size", "root"],
-            "fieldNumber": 2
-        },
-        "networkID" : {
-            "dataType" : bytes,
-            "fieldNumber": 3
-        },
-        "lastCertifiedStateRoot" : {
-            "dataType" : bytes,
-            "fieldNumber": 4
-        },
-            "lastCertifiedTimestamp" : {
-            "dataType" : uint32,
-            "fieldNumber": 5
-        },
-        "lastCertifiedHeight" : {
-            "dataType" : uint32,
-            "fieldNumber": 6
-        },
-        "partnerChainOutboxRoot" : {
-            "dataType" : bytes,
-            "fieldNumber": 7
-        },
-        "partnerChainOutboxSize" : {
-            "dataType" : uint64,
-            "fieldNumber": 8
-        },
-        "partnerChainInboxSize" : {
-            "dataType" : uint64,
-            "fieldNumber": 9
-        },
-        "name" : {
-            "dataType" : string,
-            "fieldNumber": 10
-        },
-        "status" : {
-            "dataType" : uint32,
-            "fieldNumber": 11
-        },
-        "validators": {
-            "type": "object",
-            "properties": {
-                "keys": {
-                    "type": "array",
-                    "items": {
-                        "dataType": "bytes",
-                    },
-                    "fieldNumber": 1
-                },
-                "weights": {
-                    "type": "array",
-                    "items": {
-                        "dataType": "uint64",
-                    },
-                    "fieldNumber": 2
-                },
-                "certificateThreshold": {
-                    "dataType": "uint64",
-                    "fieldNumber": 3
-                },
-            },
-            "required": ["keys", "weights", "certificateThreshold"],      
-            "fieldNumber": 12
-        },
-    },
     "required": [
         "inbox",
         "outbox",
@@ -358,7 +251,118 @@ chainAccountSchema = {
         "name",
         "status",
         "validators"
-    ]
+    ],
+    "properties": {
+        "inbox": {
+            "type": "object",
+            "required": ["appendPath", "size", "root"],
+            "properties": {
+                "appendPath" : {
+                    "type": "array",
+                    "items": {
+                        "dataType": "bytes"
+                    },
+                    "fieldNumber": 1
+                },
+                "size" : {
+                    "dataType" : "uint64",
+                    "fieldNumber": 2
+                },
+                "root" : {
+                    "dataType" : "bytes",
+                    "fieldNumber": 3
+                }
+            },
+            "fieldNumber": 1
+        },
+        "outbox": {
+            "type": "object",
+            "required": ["appendPath", "size", "root"],
+            "properties": {
+                "appendPath" : {
+                    "type": "array",
+                    "items": {
+                        "dataType": "bytes"
+                    },
+                    "fieldNumber": 1
+                },
+                "size" : {
+                    "dataType" : "uint64",
+                    "fieldNumber": 2
+                },
+                "root" : {
+                    "dataType" : "bytes",
+                    "fieldNumber": 3
+                }
+            },
+            "fieldNumber": 2
+        },
+        "networkID" : {
+            "dataType" : "bytes",
+            "fieldNumber": 3
+        },
+        "lastCertifiedStateRoot" : {
+            "dataType" : "bytes",
+            "fieldNumber": 4
+        },
+            "lastCertifiedTimestamp" : {
+            "dataType" : "uint32",
+            "fieldNumber": 5
+        },
+        "lastCertifiedHeight" : {
+            "dataType" : "uint32",
+            "fieldNumber": 6
+        },
+        "partnerChainOutboxRoot" : {
+            "dataType" : "bytes",
+            "fieldNumber": 7
+        },
+        "partnerChainOutboxSize" : {
+            "dataType" : "uint64",
+            "fieldNumber": 8
+        },
+        "partnerChainInboxSize" : {
+            "dataType" : "uint64",
+            "fieldNumber": 9
+        },
+        "name" : {
+            "dataType" : "string",
+            "fieldNumber": 10
+        },
+        "status" : {
+            "dataType" : "uint32",
+            "fieldNumber": 11
+        },
+        "validators": {
+            "type": "object",
+            "required" : ["activeValidators", "certificateThreshold"],
+            "properties": {
+                "activeValidators": {
+                    "type": "array",
+                    "fieldNumber": 1,
+                    "items": {
+                        "type": "object",
+                        "required": ["blsKey", "bftWeight"],
+                        "properties": {
+                            "blsKey": {
+                                "dataType": "bytes",
+                                "fieldNumber": 1
+                            },
+                            "bftWeight": {
+                                "dataType": "uint64",
+                                "fieldNumber": 2
+                            }
+                        }
+                    }
+                },
+                "certificateThreshold": {
+                    "dataType": "uint64",
+                    "fieldNumber": 2
+                }
+            },
+            "fieldNumber": 12
+        }
+    }
 }
 ```
 
@@ -388,8 +392,9 @@ In this section, we describe the properties of a chain account and specify their
 * `name`: This property corresponds to the name of the sidechain as a string of characters. It has to be unique in the ecosystem. For the mainchain account on a sidechain, this property is initialized to the string `MAINCHAIN_NAME`. For a sidechain account on mainchain, this property is set by the sidechain registration command.
 * `status`: This property stores the current status of the partner chain account. As explained [above](#Life-Cycle-of-a-Sidechain), there are 3 possible statuses: ''active'', ''registered'', and ''terminated''. The default value of this property is `CHAIN_REGISTERED`, corresponding to the "registered" status.
 * `validators`: This property stores the set of validators eligible to sign the certificates from the partner chain. For the mainchain account on a sidechain, this property is initialized by a mainchain registration command. For a sidechain account on the mainchain, this property is set by the sidechain registration command. It is an object containing the following properties:
-  * `keys`: An array of BLS public keys. The set of public keys that are eligible to sign the next certificate.
-  * `weights`: An array of integers. Each element is the weight of the corresponding key in the `keys` array. For DPoS chains, the value of the elements of this array is usually 1, as every active validator has the same consensus weight for the signing of the next certificate.
+  * `activeValidators`: An array of objects. Each entry contains the following properties:
+    * `blsKey`: A BLS public key used to sign certificates.
+    * `bftWeight`: An integer indicating the weight of the corresponding BLS public key for signing a certificate. For DPoS chains, this value is usually 1, as every active validator has the same consensus weight for the signing of the next certificate.
   * `certificateThreshold`: An integer setting the required cumulative weight assigned to the signatures for the first certificate from the sidechain to be valid.
 
 
@@ -409,17 +414,17 @@ The name and ID of the chain are stored in the chain data substore as a regular 
 ```java
 ownChainAccountSchema = {
     "type": "object",
+    "required": ["name", "ID"],
     "properties": {
         "name" : {
-            "dataType" : string,
+            "dataType" : "string",
             "fieldNumber": 1
         },
         "ID" : {
-            "dataType" : uint32,
+            "dataType" : "uint32",
             "fieldNumber": 2
         }
-    },
-    "required": ["name", "ID"]
+    }
 }
 ```
 
@@ -453,13 +458,13 @@ On a sidechain, the own chain account is initialized as part of the mainchain re
 ```java
 terminatedChain = {
     "type": "object",
+    "required": ["stateRoot"],
     "properties": {
         "stateRoot" : {
-            "dataType" : bytes,
+            "dataType" : "bytes",
             "fieldNumber": 1
         }
-    },
-    "required": ["stateRoot"]
+    }
 }
 ```
 ##### Properties and Default values
@@ -485,13 +490,13 @@ This substore contains the names of all chains in the ecosystem. It is present o
 ```java
 chainIDSchema = {
     "type": "object",
+    "required": ["ID"],
     "properties": {
         "ID" : {
-            "dataType" : uint32,
+            "dataType" : "uint32",
             "fieldNumber": 1
         }
-    },
-    "required": ["ID"]
+    }
 }
 ```
 ##### Properties and Default values
@@ -518,13 +523,13 @@ This substore contains the network IDs of all chains in the ecosystem. It is pre
 ```java
 chainIDSchema = {
     "type": "object",
+    "required": ["ID"],
     "properties": {
         "ID" : {
-            "dataType" : uint32,
+            "dataType" : "uint32",
             "fieldNumber": 1
         }
-    },
-    "required": ["ID"]
+    }
 }
 ```
 ##### Properties and Default values
