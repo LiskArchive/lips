@@ -376,22 +376,25 @@ it is valid if:
     validators = {
         "type": "object",
         "required" : [
-            "validators",
+            "activeValidators",
             "certificateThreshold"
         ],
         "properties": {
-            "validators": {
+            "activeValidators": {
                 "type": "array",
                 "fieldNumber": 1,
                 "items": {
                     "type": "object",
-                    "required": ["key", "weight"],
+                    "required": [
+                        "blsKey",
+                        "bftWeight"
+                    ],
                     "properties": {
-                        "key": {
+                        "blsKey": {
                             "dataType": "bytes",
                             "fieldNumber": 1
                         },
-                        "weight": {
+                        "bftWeight": {
                             "dataType": "uint64",
                             "fieldNumber": 2
                         }
