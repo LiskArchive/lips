@@ -50,7 +50,7 @@ It is important to note here that the validation of this signature is done with 
 This network identifier is included in the sending chain account in the interoperability store.
 
 
-#### validatorUpdate
+#### validatorsUpdate
 
 The chain account will store the public keys required to validate the certificate signature. 
 Those public keys have to be updated if the validator set changes in the chain sending the certificate. 
@@ -126,13 +126,13 @@ Create a cross-chain update transaction for a given height `h1`:
     In this case, the `messageWitness` will be empty.
 *   Compute the inclusion proof for the outbox root of the sidechain account into the mainchain state root. 
     This proof is then used to compute `inboxUpdate.outboxRootWitness`.
-*   If the `validatorsHash` property of the certificate is different from the `validatorsHash` derived from the `validators` property of the mainchain account on the sidechain, compute the required update between both sets and include it in `validatorUpdate`. 
+*   If the `validatorsHash` property of the certificate is different from the `validatorsHash` derived from the `validators` property of the mainchain account on the sidechain, compute the required update between both sets and include it in `validatorsUpdate`. 
     How to obtain this update is detailed in the [Appendix](#appendix).
 *   Post the cross-chain update transaction on the sidechain. 
 
 Relayers should post cross-chain update transactions on the sidechain when the need for it arises. 
 This can be either because some CCMs have been included in the outbox and need to be relayed, 
-or when the mainchain validator changes require the channel to be updated on the sidechain. 
+or when the mainchain validators changes require the channel to be updated on the sidechain. 
 
 The role of relayer is totally symmetric for relaying information from a sidechain to the mainchain.
 
@@ -224,7 +224,7 @@ crossChainUpdateTransactionParams = {
     "required": [
         "sendingChainID", 
         "certificate", 
-        "validatorUpdate",
+        "validatorsUpdate",
         "inboxUpdate"
     ],
     "properties": {
@@ -236,7 +236,7 @@ crossChainUpdateTransactionParams = {
             "dataType": "bytes",
             "fieldNumber": 2
         },
-        "validatorUpdate": {
+        "validatorsUpdate": {
             "type": object, 
             "fieldNumber": 3,
             "required":[
@@ -342,7 +342,7 @@ timestamp - CCU.params.certificate.timestamp < 15*24*3600
 where `timestamp` is the timestamp of the block including the CCU.
 
 
-#### Certificate and Validator Update Validity
+#### Certificate and Validators Update Validity
 
 If `params` contains a non-empty `certificate`, it is valid if:
 
@@ -364,11 +364,11 @@ If `params` contains a non-empty `certificate`, it is valid if:
 	)
 	```
 
-If `params` contains a non-empty `validatorUpdate` property (with deserialized value not equal to `{keysUpdate:[], weightsUpdate:[], newCertificateThreshold: 0}`), 
+If `params` contains a non-empty `validatorsUpdate` property (with deserialized value not equal to `{keysUpdate:[], weightsUpdate:[], newCertificateThreshold: 0}`), 
 it is valid if:
 
 *   `params` contains a non-empty `certificate`.
-*   `validatorUpdate` has the correct format:
+*   `validatorsUpdate` has the correct format:
     *   `keysUpdate` is an array of unique BLS public keys, hence all elements are 48 bytes long.
     *   `weightsUpdate` is of the same length as `keysUpdate`.
 *   `certificate.validatorsHash` is obtained as the SHA-256 digest of the updated `sendingAccount.validators`, see ["Update Validators" section](#update-validators) below, serialized according to `chainAccountSchema.validators` defined in the [LIP "Introduce Interoperability module"][base-interoperability-LIP] (and copied below).
@@ -502,7 +502,7 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
 *   For every `CCM` in `inboxUpdate.crossChainMessages` (respecting the order of the array):
     *   Call <code>[appendToInboxTree][base-interoperability-LIP-appendToInboxTree](partnerChainID, SHA-256(serializedMessage))</code> where `serializedMessage` is the serialized CCM according to the schema given in [LIP "Introduce cross-chain messages"][CCM-LIP].
     *   Process `CCM` as detailed in [LIP "Introduce cross-chain messages"][CCM-LIP-process].
-*  Update `partnerChain.validators` according to `validatorUpdate`, see ["Update Validators" section](#update-validators).
+*  Update `partnerChain.validators` according to `validatorsUpdate`, see ["Update Validators" section](#update-validators).
 *  Set `partnerChain.lastCertifiedStateRoot` to `certificate.stateRoot`.
 *  Set `partnerChain.lastCertifiedTimestamp` to `certificate.timestamp`.
 *  Set `partnerChain.lastCertifiedHeight` to `certificate.height`.
@@ -530,11 +530,11 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
 
 ### Update Validators
 
-Updating `sendingAccount.validators` with respect to a given `validatorUpdate` is done following the points below:
+Updating `sendingAccount.validators` with respect to a given `validatorsUpdate` is done following the points below:
 
 *   Update the weight of all public keys present in `keysUpdate` with the corresponding weight specified in `weightsUpdate` (elements in `keysUpdate` array correspond to weights with the same index in `weightsUpdate`). If the key was not present in `sendingAccount.validators` before the update, it is added to it. Keys are always maintained in lexicographical order.
 *   Remove all keys which have now weight `0` from `sendingAccount.validators.keys`, and remove the corresponding `0` in `sendingAccount.validators.weights`.
-*   Set `sendingAccount.validators.threshold` = `validatorUpdate.newCertificateThreshold`. 
+*   Set `sendingAccount.validators.threshold` = `validatorsUpdate.newCertificateThreshold`. 
 
 
 ## Backwards Compatibility
@@ -551,13 +551,13 @@ TBA
 ## Appendix
 
 
-### Computing the Validator Update
+### Computing the Validators Update
 
-When posting a CCU transaction, the validator root given in the certificate certifies the new set of validators of the sending chain. The CCU must therefore include the difference between the validators currently stored in the chain account and the validator set authenticated by the certificate.
+When posting a CCU transaction, the validators hash given in the certificate certifies the new set of validators of the sending chain. The CCU must therefore include the difference between the validators currently stored in the chain account and the validator set authenticated by the certificate.
 
 ```java
-getValidatorDiff((keys, weights, threshold),
-                 (newKeys, newWeights, newCertificateThreshold)): 
+getValidatorsDiff((keys, weights, threshold),
+	          (newKeys, newWeights, newCertificateThreshold)): 
 
     keysDiff = []
     weightDiff = []
