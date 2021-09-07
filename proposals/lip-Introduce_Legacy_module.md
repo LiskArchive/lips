@@ -4,10 +4,10 @@ Title: Introduce Legacy module
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
         Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
         Rishi Mittal <rishi.mittal@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-legacy-module/319
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Discussions-To: https://research.lisk.com/t/introduce-legacy-module/319
 Requires: LIP 0018
 ```
 
