@@ -255,6 +255,7 @@ chainAccountSchema = {
     "properties": {
         "inbox": {
             "type": "object",
+            "fieldNumber": 1,
             "required": ["appendPath", "size", "root"],
             "properties": {
                 "appendPath" : {
@@ -272,11 +273,11 @@ chainAccountSchema = {
                     "dataType" : "bytes",
                     "fieldNumber": 3
                 }
-            },
-            "fieldNumber": 1
+            }
         },
         "outbox": {
             "type": "object",
+            "fieldNumber": 2,
             "required": ["appendPath", "size", "root"],
             "properties": {
                 "appendPath" : {
@@ -294,8 +295,7 @@ chainAccountSchema = {
                     "dataType" : "bytes",
                     "fieldNumber": 3
                 }
-            },
-            "fieldNumber": 2
+            }
         },
         "networkID" : {
             "dataType" : "bytes",
@@ -335,6 +335,7 @@ chainAccountSchema = {
         },
         "validators": {
             "type": "object",
+            "fieldNumber": 12,
             "required" : ["activeValidators", "certificateThreshold"],
             "properties": {
                 "activeValidators": {
@@ -359,8 +360,7 @@ chainAccountSchema = {
                     "dataType": "uint64",
                     "fieldNumber": 2
                 }
-            },
-            "fieldNumber": 12
+            }
         }
     }
 }
