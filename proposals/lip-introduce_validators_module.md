@@ -107,6 +107,7 @@ validatorAccountSchema = {
       "dataType": "bytes",
       "fieldNumber": 2
     }
+  }
 }
 ```
 
@@ -145,6 +146,7 @@ generatorListSchema = {
       },
       "fieldNumber": 1
     }
+  }
 }
 ```
 
@@ -174,6 +176,7 @@ validatorAddressSchema = {
       "dataType": "bytes",
       "fieldNumber": 1
     }
+  }
 }
 ```
 
@@ -205,6 +208,7 @@ genesisDataSchema = {
       "dataType": "uint64",
       "fieldNumber": 1
     }
+  }
 }
 ```
 
