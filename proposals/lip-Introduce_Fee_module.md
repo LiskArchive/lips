@@ -3,10 +3,10 @@ LIP: <LIP number>
 Title: Introduce Fee module
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
         Mitsuaki Uchimoto <mitsuaki.uchimoto@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-fee-module/318
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Discussions-To: https://research.lisk.com/t/introduce-fee-module/318
 Required: Introduce Token module
 ```
 
