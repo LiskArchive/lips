@@ -151,7 +151,7 @@ blockSchema = {
 
 #### Validation
 
-The block is validated in the [static validation stage](#validation-stages-ofblock-block-assets-and-blockheader) as follows:
+The block is validated in the [static validation stage](#validation-stages-of-block-block-assets-and-block-header) as follows:
 
 - **Static validation**:
   - Check that the total size of the serialized transactions contained in the block payload is at most `MAX_PAYLOAD_SIZE_BYTES`.
@@ -202,7 +202,7 @@ assetSchema = {
 
 #### Validation
 
-The block assets is validated in the [static validation stage](#validation-stages-ofblock-block-assets-and-blockheader) as follows:
+The block assets is validated in the [static validation stage](#validation-stages-of-block-block-assets-and-block-header) as follows:
 
 - **Static validation**:
   - Check that each entry in the assets array has `moduleID` set to the ID of a module registered in the chain, while the `data` property has size at most equal to `MAX_ASSET_DATA_SIZE_BYTES`.
@@ -316,7 +316,7 @@ blockHeaderSchema = {
 
 In this section, we specify the validation for each property of the block header.
 
-The block header is validated in all three [stages of the block validation](#validation-stages-ofblock-block-assets-and-blockheader).
+The block header is validated in all three [stages of the block validation](#validation-stages-of-block-block-assets-and-block-header).
 
 - **Static validation**:
   - Check that the block header follows the block header schema.
