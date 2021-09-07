@@ -2,10 +2,10 @@
 LIP:
 Title: Define state and state transitions of Token module
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/define-state-and-state-transitions-of-token-module/295
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Discussions-To: https://research.lisk.com/t/define-state-and-state-transitions-of-token-module/295
 ```
 
 
