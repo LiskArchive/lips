@@ -64,7 +64,7 @@ See [below](#separation-between-block-header-and-block-assets) for more details.
 Before this proposal, the `generatorPublicKey` property of a block header was fulfilling two purposes: 1) The validator account was deduced by deriving the address from it, and 2) the block signature could be validated without any on-chain data. 
 
 Both the generator address or a public key yielding this address fulfill the first purpose. 
-On the other hand, the second point is not possible anymore without on-chain data, as the generator key is now part of the validators module store and can be updated. 
+On the other hand, the second point is not possible anymore without on-chain data, as the generator key is now part of the Validators module store and can be updated. 
 Hence, there is no further drawback in replacing the generatorPublicKey property by the generatorAddress property, while it has the advantages of reducing the size of the block header by a few bytes and skipping the address derivation step during block validation.
 
 ### Separation Between Block Header and Block Assets
