@@ -119,17 +119,17 @@ blockSchema = {
     },
     "payload": {
       "type": "array",
+      "fieldNumber": 2,
       "items": {
         "dataType": "bytes"
-      },
-      "fieldNumber": 2
+      }
     },
     "assets": {
       "type": "array",
+      "fieldNumber": 3,
       "items": {
         "dataType": "bytes"
-      },
-      "fieldNumber": 3
+      }
     }
   }
 }
