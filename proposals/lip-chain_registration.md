@@ -437,7 +437,7 @@ When a mainchain registration command is applied, new entries of the Interoperab
 
 ## Backwards Compatibility
 
-This proposal, together with [Introduce Interoperability module LIP][interopLIP], [Introduce cross-chain update  mechanism LIP][ccuLIP], [Introduce cross-chain messages LIP][ccmLIP], and [ntroduce sidechain recovery mechanism LIP][recoveryLIP], is part of the Interoperability module. Chains adding this module will need to do so with a hardfork.
+This proposal, together with [Introduce Interoperability module LIP][interopLIP], [Introduce cross-chain update  mechanism LIP][ccuLIP], [Introduce cross-chain messages LIP][ccmLIP], and [Introduce sidechain recovery mechanism LIP][recoveryLIP], is part of the Interoperability module. Chains adding this module will need to do so with a hardfork.
 
 ## Reference Implementation
 
