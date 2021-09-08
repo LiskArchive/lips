@@ -250,7 +250,8 @@ chainAccountSchema = {
         "partnerChainInboxSize",
         "name",
         "status",
-        "validators"
+        "activeValidators",
+        "certificateThreshold"
     ],
     "properties": {
         "inbox": {
@@ -333,34 +334,27 @@ chainAccountSchema = {
             "dataType" : "uint32",
             "fieldNumber": 11
         },
-        "validators": {
-            "type": "object",
+        "activeValidators": {
+            "type": "array",
             "fieldNumber": 12,
-            "required" : ["activeValidators", "certificateThreshold"],
-            "properties": {
-                "activeValidators": {
-                    "type": "array",
-                    "fieldNumber": 1,
-                    "items": {
-                        "type": "object",
-                        "required": ["blsKey", "bftWeight"],
-                        "properties": {
-                            "blsKey": {
-                                "dataType": "bytes",
-                                "fieldNumber": 1
-                            },
-                            "bftWeight": {
-                                "dataType": "uint64",
-                                "fieldNumber": 2
-                            }
-                        }
+            "items": {
+                "type": "object",
+                "required": ["blsKey", "bftWeight"],
+                "properties": {
+                    "blsKey": {
+                        "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "bftWeight": {
+                        "dataType": "uint64",
+                        "fieldNumber": 2
                     }
-                },
-                "certificateThreshold": {
-                    "dataType": "uint64",
-                    "fieldNumber": 2
                 }
             }
+        },
+        "certificateThreshold": {
+            "dataType": "uint64",
+            "fieldNumber": 13
         }
     }
 }
@@ -391,11 +385,10 @@ In this section, we describe the properties of a chain account and specify their
 * `partnerChainInboxSize`: This property corresponds to the size of the inbox tree of the partner chain, i.e. the number of cross-chain messages received and processed by the partner chain. This property is used to verify the validity of the message recovery command and it is updated by a [cross-chain update receipt message][CCM-LIP] from the partner chain. The default value of this property is 0.
 * `name`: This property corresponds to the name of the sidechain as a string of characters. It has to be unique in the ecosystem. For the mainchain account on a sidechain, this property is initialized to the string `MAINCHAIN_NAME`. For a sidechain account on mainchain, this property is set by the sidechain registration command.
 * `status`: This property stores the current status of the partner chain account. As explained [above](#Life-Cycle-of-a-Sidechain), there are 3 possible statuses: ''active'', ''registered'', and ''terminated''. The default value of this property is `CHAIN_REGISTERED`, corresponding to the "registered" status.
-* `validators`: This property stores the set of validators eligible to sign the certificates from the partner chain. For the mainchain account on a sidechain, this property is initialized by a mainchain registration command. For a sidechain account on the mainchain, this property is set by the sidechain registration command. It is an object containing the following properties:
-  * `activeValidators`: An array of objects. Each entry contains the following properties:
-    * `blsKey`: A BLS public key used to sign certificates.
-    * `bftWeight`: An integer indicating the weight of the corresponding BLS public key for signing a certificate. For DPoS chains, this value is usually 1, as every active validator has the same consensus weight for the signing of the next certificate.
-  * `certificateThreshold`: An integer setting the required cumulative weight assigned to the signatures for the first certificate from the sidechain to be valid.
+* `activeValidators`: An array of objects corresponding to the set of validators eligible to sign the certificates from the partner chain. Each entry contains the following properties:
+  * `blsKey`: The BLS public key used to sign certificates.
+  * `bftWeight`: An integer indicating the weight of the corresponding BLS public key for signing a certificate. For DPoS chains, this value is usually 1, as every active validator has the same consensus weight for the signing of the next certificate.
+* `certificateThreshold`: An integer setting the required cumulative weight assigned to the signatures for the first certificate from the sidechain to be valid. For the mainchain account on a sidechain, the `activeValidators` and `certificateThreshold` properties are initialized by the mainchain registration command. For a sidechain account on the mainchain, they are set by the sidechain registration command.
 
 
 #### Own Chain Account Data
