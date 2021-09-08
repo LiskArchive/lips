@@ -26,7 +26,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 Validators in Lisk DPoS and Lisk PoA chains share many common properties, like the generator and BLS keys. It is therefore desirable to handle these properties and their associated logic in a single module, the Validators module.
 
-The Validators module handles parts of the block validation. In particular, it verifies that a validator is eligible for generating a block in a certain block slot and the validity of the block signature. Furthermore, it maintains the generator and BLS keys of all registered validators in its store and exposes functions to register new keys during a validator registration, to update the generator key, and to get the list of current validators. 
+The Validators module handles parts of the block validation. In particular, it verifies that a validator is eligible for generating a block in a certain block slot and the validity of the block signature. Furthermore, it maintains the generator and BLS keys of all registered validators in its store and exposes functions to register new keys during a validator registration, to update the generator key, and to get the list of current validators (the generator list). 
 
 In this LIP we specify the properties, serialization, and initialization of the Validators module, as well as the protocol logic processed during a block processing and the functions exposed to other modules and to off-chain services.
 
@@ -563,9 +563,9 @@ This function checks if all elements of `generatorAddresses` have a registered v
 ### Endpoints for Off-Chain Services
 
 
-#### getAllValidators
+#### getGeneratorList
 
-This function provides the list of current validators.
+This function returns the current generator list.
 
 
 ##### Parameters
@@ -575,7 +575,12 @@ This function has no input parameter.
 
 ##### Returns
 
-The list of current validators.
+This function returns the current generator list.
+
+
+##### Execution
+
+This function returns `generatorList`. 
 
 
 #### validateBLSKey
