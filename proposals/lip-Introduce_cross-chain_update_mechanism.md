@@ -6,7 +6,9 @@ Discussions-To: https://research.lisk.com/t/introduce-cross-chain-update-mechani
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Requires: Introduce cross-chain messages, Introduce Interoperability module
+Requires: Introduce cross-chain messages, 
+          Introduce Interoperability module,
+	  Introduce a certificate generation mechanism
 ```
 
 
@@ -193,6 +195,7 @@ The following constants are used throughout the document:
 | **Interoperability Constants** |||
 | `MODULE_ID_INTEROPERABILITY` | uint32 | 64     |
 | `STORE_PREFIX_CHAIN_DATA`    | bytes  | 0x8000 |
+| `LIVENESS_LIMIT`             | uint32 | `30*24*3600` |
 | **Interoperability Command and Cross-chain Command IDs** |||
 | `COMMAND_ID_SIDECHAIN_CCU`             | uint32 | 2 |
 | `COMMAND_ID_MAINCHAIN_CCU`             | uint32 | 3 |
@@ -346,8 +349,8 @@ In the following, let `certificate` be the deserialized certificate.
 
 Furthermore, the certificate is only valid if it allows the sidechain account to remain live for a reasonable amount of time.
 This is done by checking that
-```java
-timestamp - CCU.params.certificate.timestamp < 15*24*3600
+```python
+timestamp - CCU.params.certificate.timestamp < LIVENESS_LIMIT / 2
 ```
 where `timestamp` is the timestamp of the block including the CCU.
 
@@ -361,7 +364,7 @@ If `params` contains a non-empty `certificate`, it is valid if:
 *  `certificate.height` is greater than `sendingAccount.lastCertifiedHeight`.
 *  `certificate.timestamp < timestamp`, where timestamp is the timestamp of the block including the CCU.
 *  `certificate.signature` is a valid aggregate signature for the `sendingAccount.validators` property of the cross-chain account. This is done by verifying that the function below defined in the [LIP 0038][BLS-LIP-verifyWeightedAggSig] returns `VALID`. 	
-	```java
+	```python
 	verifyWeightedAggSig( 
 	    keysList          = sendingAccount.validators.keys,  
 	    aggregationBits.  = certificate.aggregationBits,  
@@ -429,7 +432,7 @@ If `params` contains a non-empty `certificate` and an `inboxUpdate`, the validit
 *   If `inboxUpdate` contains a non-empty `messageWitness`, then update `newInboxRoot` to the output of `calculateRootFromRightWitness(newInboxSize, newInboxAppendPath, inboxUpdate.messageWitness.siblingHashes)` as specified in [LIP 0031](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md).
 *   Then validate the newly updated root against the certificate state root using the provided `outboxRootWitness`. 
     Using notation from [LIP 0039][SMT-LIP], this is done via the function `verify(queryKeys, proof, certificate.stateRoot)` with 
-    ```java
+    ```python
     queryKeys = [outboxKey],
     
     proof = {siblingHashes: outboxRootWitness.siblingHashes, 
@@ -466,10 +469,10 @@ Cross-chain update transactions posted on mainchain are transactions with
 
 Then, the following is done in the given order:
 
-*   If `partnerChain.status == CHAIN_REGISTERED`, set `partnerChain.status = CHAIN_ACTIVE`
+*   If `partnerChain.status == CHAIN_REGISTERED`, set `partnerChain.status = CHAIN_ACTIVE`.
 *   For every `CCM` in `inboxUpdate.crossChainMessages`:
     *   Validate that `params.sendingChainID == CCM.sendingChainID`.
-    *   Validate the format of `CCM` according to the function provided in [LIP "Introduce cross-chain messages"][CCM-LIP]. 
+    *   Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][CCM-LIP-validateFormat]. 
 *   Validate that the first CCM in `inboxUpdate.crossChainMessages` has `CCM.index == partnerChain.inbox.size`.
 *   Validate that all CCMs in `inboxUpdate.crossChainMessages` have increasing and sequential index property.
 *   Validate that the sum of all `CCM.fee` and all amounts for LSK cross-chain transfers is smaller or equal than the escrowed amount for the sending chain. The escrowed amount is obtained with the [token function][token-LIP] `getEscrowAmount(params.sendingChainID,0)`.
@@ -494,7 +497,7 @@ To execute cross-chain updates, the following is done:
 *   If `partnerChain.status == CHAIN_REGISTERED`, set `partnerChain.status = CHAIN_ACTIVE`.
 *   For every `CCM` in `inboxUpdate.crossChainMessages`:
     *   Validate that `ownChainID == CCM.receivingChainID`.
-    *   Validate the format of `CCM` according to the function provided in [LIP "Introduce cross-chain messages"][CCM-LIP]. 
+    *   Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][CCM-LIP-validateFormat]. 
 *   Validate that the first CCM in `inboxUpdate.crossChainMessages` has `CCM.index == partnerChain.inbox.size`.
 *   Validate that all CCMs in `inboxUpdate.crossChainMessages` have increasing and sequential index property.
 *   If one of those validation points fails:
@@ -520,10 +523,10 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
     *   `inboxUpdate.messageWitness.partnerChainOutboxSize` if `params` contains a non-empty `inboxUpdate.messageWitness`.
     *   `partnerChain.inbox.size` otherwise.
 *   Set `partnerChain.partnerChainOutboxRoot` to
-    *   `calculateRootRightWitness(inbox.size, inbox.appendPath, inboxUpdate.messageWitness.siblingHashes)` if `params` contains a non-empty `inboxUpdate.messageWitness`.
+    *   `calculateRootFromRightWitness(inbox.size, inbox.appendPath, inboxUpdate.messageWitness.siblingHashes)` if `params` contains a non-empty `inboxUpdate.messageWitness`, this function is defined in [LIP 0031][LIP-31-rightWitness].
     *   `partnerChain.inbox.root` otherwise.
 *   Append a cross-chain update receipt to the partner chain outbox by calling `addToOutobx(partnerChain, CCUR)` with
-	```java
+	```python
 	CCUR = createCrossChainMessage(
 	           moduleID = MODULE_ID_INTEROPERABILITY, 
 	           crossChainCommandID = CROSS_CHAIN_COMMAND_ID_CCU_RECEIPT, 
@@ -612,9 +615,11 @@ getValidatorsDiff(currentValidators, newValidators):
 [recovery-LIP]: https://research.lisk.com/t/sidechain-recovery-transactions/292
 [CCM-LIP]: https://research.lisk.com/t/cross-chain-messages/299
 [CCM-LIP-process]: https://research.lisk.com/t/cross-chain-messages/299#process-25
+[CCM-LIP-validateFormat]: https://research.lisk.com/t/introduce-cross-chain-messages/299#validateformat-27
 [token-LIP]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
 [certificate-generation-LIP]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/296
 [new-block-header-LIP]: https://research.lisk.com/t/new-block-header-and-block-asset-schema/293 
 [SMT-LIP]: https://research.lisk.com/t/introduce-sparse-merkle-trees/283
 [BLS-LIP]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md
 [BLS-LIP-verifyWeightedAggSig]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#aggregate-signatures-and-their-verification
+[LIP-31-rightWitness]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-d-right-witness-implementation
