@@ -15,7 +15,7 @@ Requires: Introduce cross-chain update mechanism
 This proposal introduces the cross-chain message schema, the generic message processing and the base error handling. 
 Defining a base cross-chain message allows all chains in the ecosystem to read and understand the base properties of messages.
 
-The proposal also introduces three standard messages used by the Interoperability module, the cross-chain update receipt, the channel terminated receipt and the registration message.
+The proposal also introduces four messages used by the Interoperability module, the cross-chain update receipt, the channel terminated receipt, the sidechain terminated message and the registration message.
 
 
 ## Copyright
@@ -29,13 +29,15 @@ To achieve interoperability, chains need to exchange information by sending mess
 To this end, we introduce a new message format, which we call a _cross-chain message_ and define in this proposal the base schema of cross-chain messages. 
 Specifying a unified base message schema allows all chains in the Lisk ecosystem to deserialize and read cross-chain messages. 
 
-To achieve some of its basic functionalities, the Interoperability module uses three standard messages. 
+To achieve some of its basic functionalities, the Interoperability module uses four messages. 
 The first one, the _cross-chain update receipt_, is sent back to the partner chain (the chain with which the current chain is exchanging messages) whenever a cross-chain update transaction from this chain gets included. 
 The cross-chain update receipt serves to update a few properties of the interoperability store, and in general to acknowledge the inclusion of cross-chain update transactions. 
 The second one, the _channel terminated message_, is sent to chains which have been terminated. 
 This message also updates a few properties of the interoperability store to keep them synchronized between chains. 
-The last one, the registration message, is used when registering a chain on the Lisk mainchain. 
+The third one, the _registration message_, is used when registering a chain on the Lisk mainchain. 
 The message serves as a guarantee that the correct chain ID and network ID are used when the registration transaction is sent on the sidechain.
+The last one, the _sidechain terminated message_ is created on the Lisk mainchain when a message should be routed to a terminated or inactive chain.
+This message allows other sidechains to automatically trigger the creation of the terminated sidechain account.
 
 Further motivation and rationale behind the Lisk interoperability architecture is given in the general interoperability document ["Introduce Interoperability module"][base-interoperability-LIP].
 
@@ -55,8 +57,8 @@ In the following, we list all the properties of a cross-chain message.
 #### Sending Chain ID and Receiving Chain ID
 
 Used to identify the chains exchanging the cross-chain message. 
-On the mainchain the receiving chain ID is read to route the message to the corresponding chain outbox, as specified in [LIP "Introduce cross-chain update mechanism"][CCU-LIP]. 
-The sending chain ID is used for example if the message triggers an error and has to be sent back.
+On the mainchain, the receiving chain ID is read to route the message to the corresponding chain outbox, as specified in [LIP "Introduce cross-chain update mechanism"][CCU-LIP]. 
+The sending chain ID is used, for example, if the message triggers an error and has to be sent back.
 
 
 #### Index
@@ -174,7 +176,7 @@ They are part of the Interoperability module.
 
 ### Notation and Constants
 
-The following constants are used throughout the document, multiple of those constants are shared with the other LIPs defining the Interoperability module and all of the needed constants for the interoperability module are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP]. 
+The following constants are used throughout the document, multiple of those constants are shared with the other LIPs defining the Interoperability module and all of the needed constants for the Interoperability module are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP]. 
 That LIP should be considered correct if a value stated here would be different.
 
 | Name          | Type    | Value       |
@@ -338,7 +340,7 @@ process(CCM):
 
    if CCM.receivingChainID == ownChainID:
       tryToExecute(CCM)
-   else: // CCM.receivingChainID != ownChainID
+   else:
       tryToForward(CCM)
 ```
 
@@ -408,7 +410,7 @@ The main role of the cross-chain update receipt is to inform chains that a cross
 The `params` schema for CCU receipts is:
 
 ```java
-CCUReceiptParamsSchema = {
+ccuReceiptParamsSchema = {
     "type": "object",
     "required": [
         "paidFee", 
@@ -443,15 +445,15 @@ A CCU receipt is created by the Interoperability module upon acting on a cross-c
 
 ##### Executing Cross-chain Update Receipts
 
-When a CCU receipt `CCUR` is received, the following is done:
+When a CCU receipt `ccuReceipt` is received, the following is done:
 
 ```python
-if CCUR.status != CCM_STATUS_OK 
-or account(sendingChainID).partnerChainInboxSize > CCUR.params.partnerChainInboxSize:
-    terminateChain(CCUR.sendingChainID)
-    stop the CCUR execution
+if ccuReceipt.status != CCM_STATUS_OK 
+or account(sendingChainID).partnerChainInboxSize > ccuReceipt.params.partnerChainInboxSize:
+    terminateChain(ccuReceipt.sendingChainID)
+    stop the ccuReceipt execution
 
-account(sendingChainID).partnerChainInboxSize = CCUR.params.partnerChainInboxSize
+account(sendingChainID).partnerChainInboxSize = ccuReceipt.params.partnerChainInboxSize
 ```
 The `terminateChain` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
@@ -494,7 +496,7 @@ A channel terminated message is created by the Interoperability module when [ter
 
 When a channel terminated message `CTM` is received, the following is done: 
 
-```
+```python
 account(CTM.sendingChainID).status = CHAIN_TERMINATED
 
 if account(CTM.sendingChainID).partnerChainInboxSize < CTM.params.partnerChainInboxSize 
@@ -519,7 +521,7 @@ The `params` schema for the registration CCM is:
 ```java
 registrationCCMParamsSchema = {
     "type": "object",
-    "required" : ["networkID", "name"]
+    "required" : ["networkID", "name"],
     "properties": {
         "networkID": {
             "dataType": "bytes",
@@ -574,7 +576,7 @@ The `params` schema for the sidechain terminated CCM is:
 ```java
 sidechainTerminatedCCMParamsSchema = {
     "type": "object",
-    "required" : ["chainID", "stateRoot"]
+    "required" : ["chainID", "stateRoot"],
     "properties": {
         "chainID": {
             "dataType": "uint32",
