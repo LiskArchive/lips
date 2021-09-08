@@ -388,7 +388,8 @@ In this section, we describe the properties of a chain account and specify their
 * `activeValidators`: An array of objects corresponding to the set of validators eligible to sign the certificates from the partner chain. Each entry contains the following properties:
   * `blsKey`: The BLS public key used to sign certificates.
   * `bftWeight`: An integer indicating the weight of the corresponding BLS public key for signing a certificate. For DPoS chains, this value is usually 1, as every active validator has the same consensus weight for the signing of the next certificate.
-* `certificateThreshold`: An integer setting the required cumulative weight assigned to the signatures for the first certificate from the sidechain to be valid. For the mainchain account on a sidechain, the `activeValidators` and `certificateThreshold` properties are initialized by the mainchain registration command. For a sidechain account on the mainchain, they are set by the sidechain registration command.
+* `certificateThreshold`: An integer setting the required cumulative weight needed for the certificate signature to be valid. 
+For the mainchain account on a sidechain, the `activeValidators` and `certificateThreshold` properties are initialized by the mainchain registration command. For a sidechain account on the mainchain, they are set by the sidechain registration command.
 
 
 #### Own Chain Account Data
