@@ -8,7 +8,8 @@ Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
 Requires: Introduce cross-chain messages, 
           Introduce Interoperability module,
-	  Introduce a certificate generation mechanism
+	  Introduce a certificate generation mechanism,
+	  Introduce BFT module
 ```
 
 
@@ -52,14 +53,18 @@ It is important to note here that the validation of this signature is done with 
 This network identifier is included in the sending chain account in the interoperability store.
 
 
-#### validatorsUpdate
+#### activeValidatorsUpdate
 
-The chain account will store the public keys required to validate the certificate signature. 
-Those public keys have to be updated if the validator set changes in the chain sending the certificate. 
-The difference between the old public key set and the new one is included in this property.
+The chain account stores an array containing the bls keys and bft weights required to validate the certificate signature. 
+This array has to be updated if the validator set changes in the chain sending the certificate. 
+The difference between the stored array and the new one is included in this property.
 
-This update also contains the `newCertificateThreshold` property. 
-This value is the new certificate threshold used on the sending chain to attest the validity of signed certificates.
+
+### newCertificateThreshold
+
+The chain account stores the threshold required to validate the certificate signature. 
+This certificate threshold has to be updated if its value changes in the chain sending the certificate,
+In that case, the updated value is set in the `newCertificateThreshold` property of the CCU.
 
 
 #### inboxUpdate
@@ -128,8 +133,11 @@ Create a cross-chain update transaction for a given height `h1`:
     In this case, the `messageWitness` will be empty.
 *   Compute the inclusion proof for the outbox root of the sidechain account into the mainchain state root. 
     This proof is then used to compute `inboxUpdate.outboxRootWitness`.
-*   If the `validatorsHash` property of the certificate is different from the `validatorsHash` derived from the `validators` property of the mainchain account on the sidechain, compute the required update between both sets and include it in `validatorsUpdate`. 
-    How to obtain this update is detailed in the [Appendix](#appendix).
+*   If the `validatorsHash` property of the certificate is different from the `validatorsHash` derived from the `activeValidators` and `certificateThreshold` properties of the mainchain account on the sidechain: 
+   *   Compute the required active validator update between the `activeValidators` stored in the chain account 
+       and the `activeValidators` that were used to create the `certificate.validatorsHash`.  
+       This update can be obtained by following the logic of `getActiveValidatorsDiff` as detailed in the [Appendix](#appendix).
+   *   If the `certificateThreshold` was updated, include the new value in the `newCertificateThreshold` property.
 *   Post the cross-chain update transaction on the sidechain. 
 
 Relayers should post cross-chain update transactions on the sidechain when the need for it arises. 
@@ -226,8 +234,9 @@ crossChainUpdateTransactionParams = {
     "type": "object",
     "required": [
         "sendingChainID", 
-        "certificate", 
-        "validatorsUpdate",
+        "certificate",
+	"activeValidatorsUpdate",
+	"newCertificateThreshold",
         "inboxUpdate"
     ],
     "properties": {
@@ -238,47 +247,37 @@ crossChainUpdateTransactionParams = {
         "certificate": {
             "dataType": "bytes",
             "fieldNumber": 2
-        },	
-        "validatorsUpdate": {
-            "type": object, 
+        },
+        "activeValidatorsUpdate": {
+            "type": "array",
             "fieldNumber": 3,
-            "required":[
-                "activeValidatorsUpdate",
-                "newCertificateThreshold"
-            ],
-            "properties":{
-	        "activeValidatorsUpdate":
-                    "type": "array",
-		    "fieldNumber": 1,
-		    "items": {
-		        "type": "object",
-                        "required": [
-                            "blsKey",
-                            "bftWeight"
-                        ],
-                        "properties": {
-                            "blsKey": {
-                                "dataType": "bytes",
-                                "fieldNumber": 1
-                            },
-                            "bftWeight": {
-                                "dataType": "uint64",
-                                "fieldNumber": 2
-                            }
-                        }
+            "items": {
+                "type": "object",
+                "required": [
+                    "blsKey",
+                    "bftWeight"
+                ],
+                "properties": {
+                    "blsKey": {
+                        "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "bftWeight": {
+                        "dataType": "uint64",
+                        "fieldNumber": 2
                     }
-                },
-                "newCertificateThreshold": {
-                    "dataType": "uint64",
-                    "fieldNumber": 2
                 }
             }
-        },	
+        },
+        "newCertificateThreshold": {
+                "dataType": "uint64",
+                "fieldNumber": 4
+        },
         "inboxUpdate": {
             "type": "object",
-            "fieldNumber": 4,    
+            "fieldNumber": 5,
             "required": [
-                "crossChainMessages", 
+                "crossChainMessages",
                 "messageWitness", 
                 "outboxRootWitness"
             ],
@@ -377,50 +376,15 @@ If `params` contains a non-empty `certificate`, it is valid if:
 	)
 	```
 
-If `params` contains a non-empty `validatorsUpdate` property (with deserialized value not equal to `{keysUpdate:[], weightsUpdate:[], newCertificateThreshold: 0}`), 
-it is valid if:
+If `params` contains a non-empty `activeValidatorsUpdate` property (with deserialized value not equal to `{activeValidatorsUpdate:[]}`), or a non-zero `newCertificateThreshold`, `params` is valid if:
 
 *   `params` contains a non-empty `certificate`.
-*   `validatorsUpdate` has the correct format:
-    *   for all `activeValidator` in `validatorsUpdate.activeValidators` we have that `activeValidator.blsKey` is a BLS public keys, hence are 48 bytes long.
-    *   every `activeValidator` in `validatorsUpdate.activeValidators` has a different `activeValidator.blsKey`.
-*   `certificate.validatorsHash` is obtained as the SHA-256 digest of the updated `sendingAccount.validators`, see ["Update Validators" section](#update-validators) below, serialized according to `chainAccountSchema.validators` defined in the [LIP "Introduce Interoperability module"][base-interoperability-LIP] (and copied below).
-    ```java
-    validators = {
-        "type": "object",
-        "required" : [
-            "activeValidators",
-            "certificateThreshold"
-        ],
-        "properties": {
-            "activeValidators": {
-                "type": "array",
-                "fieldNumber": 1,
-                "items": {
-                    "type": "object",
-                    "required": [
-                        "blsKey",
-                        "bftWeight"
-                    ],
-                    "properties": {
-                        "blsKey": {
-                            "dataType": "bytes",
-                            "fieldNumber": 1
-                        },
-                        "bftWeight": {
-                            "dataType": "uint64",
-                            "fieldNumber": 2
-                        }
-                    }
-                }
-            },
-            "certificateThreshold": {
-                "dataType": "uint64",
-                "fieldNumber": 2
-            }
-        }
-    }
-    ```
+*   `params.activeValidatorsUpdate` has the correct format:
+    *   for all `activeValidator` in `params.activeValidatorsUpdate` we have that `activeValidator.blsKey` is a BLS public keys, hence are 48 bytes long.
+    *   every `activeValidator` in `params.activeValidatorsUpdate` has a different `activeValidator.blsKey`.
+*   `certificate.validatorsHash == bft.computeValidatorsHash(newActiveValidators, newCertificateThreshold)` where
+    *   `newActiveValidators` is obtained as `sendingAccount.activeValidators` updated with `params.activeValidatorsUpdate`, see ["Update Validators" section](#update-validators) below.
+    *   `newCertificateThreshold` is `params.newCertificateThreshold` if it is non-zero, `sendingAccount.certificateThreshold` otherwise.
 
 
 #### InboxUpdate Validity
@@ -515,7 +479,8 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
 *   For every `CCM` in `inboxUpdate.crossChainMessages` (respecting the order of the array):
     *   Call <code>[appendToInboxTree][base-interoperability-LIP-appendToInboxTree](partnerChainID, SHA-256(serializedMessage))</code> where `serializedMessage` is the serialized CCM according to the schema given in [LIP "Introduce cross-chain messages"][CCM-LIP].
     *   Process `CCM` as detailed in [LIP "Introduce cross-chain messages"][CCM-LIP-process].
-*  Update `partnerChain.validators` according to `validatorsUpdate`, see ["Update Validators" section](#update-validators).
+*  Set `partnerChain.activeValidators = updateActiveValidaros(partnerChain.activeValidators, activeValidatorsUpdate)` as specified in the ["Update Active Validators" section](#update-active-validators).
+*  If `newCertificateThreshold != 0`, update `partnerChain.certificateThreshold` to `newCertificateThreshold`.
 *  Set `partnerChain.lastCertifiedStateRoot` to `certificate.stateRoot`.
 *  Set `partnerChain.lastCertifiedTimestamp` to `certificate.timestamp`.
 *  Set `partnerChain.lastCertifiedHeight` to `certificate.height`.
@@ -541,22 +506,23 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
 	```
 
 
-### Update Validators
+### Update Active Validators
 
-Updating `sendingAccount.validators` with respect to a given `validatorsUpdate` is done following the logic below:
+Updating `sendingAccount.activeValidators` with respect to a given `activeValidatorsUpdate` is done following the logic below:
 
 ```python
-for newValidator in validatorsUpdate.activeValidators:
-    if there exist currentValidator in sendingAccount.validators.activeValidators such that
-    newValidators.blsKey == currentValidator.blsKey:
-        set currentValidator.blsKey = newValidators.bftWeight
-    else:
-        add newValidator to sendingAccount.validators.activeValidators maintaining the entries in 
-	lexicographical order of blsKeys
+updateActiveValidaros(activeValidators, activeValidatorsUpdate)
 
-remove any entry from sendingAccount.validators.activeValidators with bftWeight == 0
+    for validator in activeValidatorsUpdate:
+        if there exist currentValidator in activeValidators such that
+        validators.blsKey == currentValidator.blsKey:
+            set currentValidator.bftWeight = validators.bftWeight
+        else:
+            add validator to activeValidators maintaining the entries in 
+            lexicographical order of blsKeys
 
-set sendingAccount.validators.threshold = validatorsUpdate.newCertificateThreshold
+    remove any entry activeValidators with bftWeight == 0
+    return activeValidators
 ```
 
 
@@ -578,11 +544,11 @@ TBA
 
 When posting a CCU transaction, the validators hash given in the certificate certifies the new set of validators of the sending chain. 
 The CCU must therefore include the difference between the validators currently stored in the chain account and the validator set authenticated by the certificate.
-The required `validatorsUpdate` can be obtained by applying the function below.
-We suppose that `currentValidators` and `newValidators` follow the `validators` schema given above.
+The required `activeValidatorsUpdate` can be obtained by applying the function below.
+We suppose that `currentValidators` and `newValidators` follow the `activeValidators` schema given .
 
 ```python
-getValidatorsDiff(currentValidators, newValidators): 
+getActiveValidatorsDiff(currentValidators, newValidators): 
 
     activeValidatorsUpdate = []
 
@@ -601,10 +567,7 @@ getValidatorsDiff(currentValidators, newValidators):
         else:
             append {"blsKey": currentValidator.blsKey, "bftWeight": 0} to activeValidatorsUpdate
 
-    return {
-        "activeValidatorsUpdate": activeValidatorsUpdate,
-        "newCertificateThreshold": newCertificateThreshold
-    }
+    return activeValidatorsUpdate
 ```
 
 [base-interoperability-LIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
