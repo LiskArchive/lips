@@ -55,7 +55,7 @@ This command also initializes another data structure in the interoperability sto
 
 #### [Cross-Chain Update Commands][CCU-LIP]
 
-<img src="lip-properties-serialization-and-initial-values-of-the-interoperability-module/ccu.png" width="80%">
+<img src="lip-introduce-interoperability-module/ccu.png" width="80%">
 
 _Figure 1: A sketch of an interoperability interaction between the Lisk mainchain and a sidechain. Information (cross-chain messages and updated state) from mainchain blocks (light blue) is collected into a cross-chain update command by the relayer, which then posts it on the sidechain._
 
@@ -109,7 +109,7 @@ Each interoperable sidechain maintains a chain account for the mainchain, while 
 
 Each chain also includes an account storing the chain name and ID in the ecosystem. This ''own chain'' account is present by default in the mainchain, while on a sidechain is created by the mainchain registration command.
 
-<img src="lip-properties-serialization-and-initial-values-of-the-interoperability-module/store.png" width="80%">
+<img src="lip-introduce-interoperability-module/store.png" width="80%">
 
 _Figure 2: A summary of the Interoperability module store. The Interoperability module defines 4 stores: the account store for partner chain accounts and the own chain account, the outbox store for outbox roots, and the terminated chains to allow for recovery commands. The name and network ID stores, keeping track of the names and network IDs of registered sidechains, are present only on mainchain._
 
