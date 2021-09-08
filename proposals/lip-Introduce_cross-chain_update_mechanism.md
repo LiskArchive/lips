@@ -60,7 +60,7 @@ This array has to be updated if the validator set changes in the chain sending t
 The difference between the stored array and the new one is included in this property.
 
 
-### newCertificateThreshold
+#### newCertificateThreshold
 
 The chain account stores the threshold required to validate the certificate signature. 
 This certificate threshold has to be updated if its value changes in the chain sending the certificate,
