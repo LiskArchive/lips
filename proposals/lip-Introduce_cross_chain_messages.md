@@ -64,7 +64,7 @@ The sending chain ID is used, for example, if the message triggers an error and 
 #### Index
 
 When a cross-chain message is created and added to the partner chain outbox, the size of the outbox at that point is added to the message in the `index` property. 
-This allows all messages to be distinct. 
+This allows all messages to be uniquely identified by the `(sendingChain, receivingChain, index)` tuple. 
 This is property is important to identify messages and to track them throughout the ecosystem.
 
 
@@ -114,7 +114,7 @@ To guarantee that all messages can be included and handled, sidechains in the Li
 
 ### Message ID
 
-As all messages emitted in the Lisk ecoystem are distinct (thanks to the `index` property), we can assign a unique ID to them.
+As all messages emitted in the Lisk ecoystem are distinct (thanks to the unicity of the `(sendingChain, receivingChain, index)` trio), we can assign a unique ID to them.
 The message ID is obtained in the same way as other IDs in the protocol, namely by hashing the serialized object.
 This assigns to each message a 32-byte value that can be used whenever the message needs to be referenced.
 
@@ -124,7 +124,7 @@ This assigns to each message a 32-byte value that can be used whenever the messa
 Tracking messages throughout the ecosystem could be a challenge, particularly if the messages are errored (and hence spawn new messages from the erroring chain).
 However, this can easily be done using the logs emitted by the CCM processing. 
 Indeed, messages which are errored and which send a response message to their sending chain, will log the ID of the return message,
-this allows UI products to display the current status of CCMs (or the status of the returned message if needed).
+allowing off-chain services to display the current status of CCMs (or the status of the returned message if needed).
 More generally, the logged records will allow users to know whether a CCM is forwarded, successfully executed, or triggers an error mechanism.
 
 
@@ -446,7 +446,7 @@ ccuReceiptParamsSchema = {
     }
 }
 ```
-*   `paidFee`: fee paid by the relayer for the cross-chain update transaction,
+*   `paidFee`: fee paid by the relayer for the cross-chain update transaction.
 *   `relayerAddress`: address of the relayer posting the cross-chain update transaction. This property must be 20 bytes long.
 *   `partnerChainInboxSize`: size of the partner chain inbox.
 
