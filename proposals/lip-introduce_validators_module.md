@@ -268,6 +268,8 @@ registerValidatorKeys(validatorAddress, proofOfPossession, generatorKey, blsKey)
     return True
 ```
 
+The function [`popVerify`][bls-specs-v4-popverify] is part of the [BLS signature scheme][lip-bls-public-key-registration].
+
 
 #### getValidatorAccount
 
@@ -616,6 +618,8 @@ validateBLSKey(proofOfPossession, blsKey):
     return True
 ```
 
+
+
 ### Block Processing
 
 
@@ -640,3 +644,5 @@ This LIP defines a new module and specify its store, which in turn will become p
 
 [DPOS-LIP]: https://research.lisk.com
 [POA-LIP]: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/
+[bls-specs-v4-popverify]: https://tools.ietf.org/html/draft-irtf-cfrg-bls-signature-04#section-3.3.3
+[lip-bls-public-key-registration]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#public-key-registration-and-proof-of-possession
