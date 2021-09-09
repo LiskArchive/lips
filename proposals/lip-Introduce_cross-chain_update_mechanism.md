@@ -63,7 +63,7 @@ The difference between the stored array and the new one is included in this prop
 #### newCertificateThreshold
 
 The chain account stores the threshold required to validate the certificate signature. 
-This certificate threshold has to be updated if its value changes in the chain sending the certificate,
+This certificate threshold has to be updated if its value changes in the chain sending the certificate.
 In that case, the updated value is set in the `newCertificateThreshold` property of the CCU.
 
 
@@ -380,7 +380,7 @@ If `params` contains a non-empty `activeValidatorsUpdate` property (with deseria
 
 *   `params` contains a non-empty `certificate`.
 *   `params.activeValidatorsUpdate` has the correct format:
-    *   for all `activeValidator` in `params.activeValidatorsUpdate` we have that `activeValidator.blsKey` is a BLS public keys, hence are 48 bytes long.
+    *   for all `activeValidator` in `params.activeValidatorsUpdate` we have that `activeValidator.blsKey` is a BLS public keys, hence it is 48 bytes long.
     *   every `activeValidator` in `params.activeValidatorsUpdate` has a different `activeValidator.blsKey`.
 *   `certificate.validatorsHash == bft.computeValidatorsHash(newActiveValidators, newCertificateThreshold)` where
     *   `newActiveValidators` is obtained as `sendingAccount.activeValidators` updated with `params.activeValidatorsUpdate`, see ["Update Validators" section](#update-validators) below.
@@ -479,7 +479,7 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
 *   For every `CCM` in `inboxUpdate.crossChainMessages` (respecting the order of the array):
     *   Call <code>[appendToInboxTree][base-interoperability-LIP-appendToInboxTree](partnerChainID, SHA-256(serializedMessage))</code> where `serializedMessage` is the serialized CCM according to the schema given in [LIP "Introduce cross-chain messages"][CCM-LIP].
     *   Process `CCM` as detailed in [LIP "Introduce cross-chain messages"][CCM-LIP-process].
-*  Set `partnerChain.activeValidators = updateActiveValidaros(partnerChain.activeValidators, activeValidatorsUpdate)` as specified in the ["Update Active Validators" section](#update-active-validators).
+*  Set `partnerChain.activeValidators = updateActiveValidators(partnerChain.activeValidators, activeValidatorsUpdate)` as specified in the ["Update Active Validators" section](#update-active-validators).
 *  If `newCertificateThreshold != 0`, update `partnerChain.certificateThreshold` to `newCertificateThreshold`.
 *  Set `partnerChain.lastCertifiedStateRoot` to `certificate.stateRoot`.
 *  Set `partnerChain.lastCertifiedTimestamp` to `certificate.timestamp`.
@@ -546,7 +546,7 @@ TBA
 When posting a CCU transaction, the validators hash given in the certificate certifies the new set of validators of the sending chain. 
 The CCU must therefore include the difference between the validators currently stored in the chain account and the validator set authenticated by the certificate.
 The required `activeValidatorsUpdate` can be obtained by applying the function below.
-We suppose that `currentValidators` and `newValidators` follow the `activeValidators` schema given .
+We suppose that `currentValidators` and `newValidators` follow the `activeValidators` schema given above.
 
 ```python
 getActiveValidatorsDiff(currentValidators, newValidators): 
