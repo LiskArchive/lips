@@ -268,7 +268,7 @@ registerValidatorKeys(validatorAddress, proofOfPossession, generatorKey, blsKey)
     return True
 ```
 
-The function [`popVerify`][bls-specs-v4-popverify] is part of the [BLS signature scheme][lip-bls-public-key-registration].
+The function [`PopVerify`][bls-specs-v4-popverify] is part of the [BLS signature scheme][lip-bls-public-key-registration].
 
 
 #### getValidatorAccount
