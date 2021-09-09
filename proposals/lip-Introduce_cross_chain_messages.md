@@ -422,7 +422,7 @@ ccuReceiptParamsSchema = {
             "dataType": "uint64",
             "fieldNumber": 1 
         },
-        "relayerPublicKey": {
+        "relayerAddress": {
             "dataType": "bytes",
             "fieldNumber": 2 
         },
@@ -434,7 +434,7 @@ ccuReceiptParamsSchema = {
 }
 ```
 *   `paidFee`: fee paid by the relayer for the cross-chain update transaction,
-*   `relayerPublicKey`: public key of the relayer posting the cross-chain update transaction,
+*   `relayerAddress`: address of the relayer posting the cross-chain update transaction. This property must be 20 bytes long.
 *   `partnerChainInboxSize`: size of the partner chain inbox.
 
 
