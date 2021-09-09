@@ -64,7 +64,8 @@ The sending chain ID is used, for example, if the message triggers an error and 
 #### Index
 
 When a cross-chain message is created and added to the partner chain outbox, the size of the outbox at that point is added to the message in the `index` property. 
-This allows all messages to be distinct and to be tracked throughout the ecosystem.
+This allows all messages to be distinct. 
+This is property is important to identify messages and to track them throughout the ecosystem.
 
 
 #### Module ID and Cross-chain Command ID
