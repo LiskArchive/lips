@@ -65,6 +65,7 @@ The difference between the stored array and the new one is included in this prop
 The chain account stores the threshold required to validate the certificate signature. 
 This certificate threshold has to be updated if its value changes in the chain sending the certificate.
 In that case, the updated value is set in the `newCertificateThreshold` property of the CCU.
+If `newCertificateThreshold` is set to `0`, it implies that the certificate threshold has not been changed in the sending chain.
 
 
 #### inboxUpdate
