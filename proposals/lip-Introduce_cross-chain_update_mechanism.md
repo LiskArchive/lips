@@ -492,7 +492,7 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
     *   `partnerChain.inbox.root` otherwise.
 *   Append a cross-chain update receipt to the partner chain outbox by calling `addToOutobx(partnerChain, CCUR)` with
 	```python
-	dervive relayerAddress from CCU.senderPublicKey
+	relayerAddress = the address derived from CCU.senderPublicKey
 	CCUR = createCrossChainMessage(
 	           moduleID = MODULE_ID_INTEROPERABILITY, 
 	           crossChainCommandID = CROSS_CHAIN_COMMAND_ID_CCU_RECEIPT, 
