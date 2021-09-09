@@ -114,7 +114,7 @@ These points guarantee that the CCMs are always forwarded to the correct chains 
 
 ### Creating and Posting Cross-chain Update Transactions
 
-The Lisk consensus mechanism is designed to create and publish certificates regularly, at least once per round. 
+The Lisk consensus mechanism is designed to create and publish certificates regularly. 
 In that regard, obtaining the information required to post a cross-chain update transaction is easy and straightforward. 
 The following is an example workflow that a relayer for a given sidechain could follow.
 
@@ -134,11 +134,10 @@ Create a cross-chain update transaction for a given height `h1`:
     In this case, the `messageWitness` will be empty.
 *   Compute the inclusion proof for the outbox root of the sidechain account into the mainchain state root. 
     This proof is then used to compute `inboxUpdate.outboxRootWitness`.
-*   If the `validatorsHash` property of the certificate is different from the `validatorsHash` derived from the `activeValidators` and `certificateThreshold` properties of the mainchain account on the sidechain: 
-   *   Compute the required active validator update between the `activeValidators` stored in the chain account 
-       and the `activeValidators` that were used to create the `certificate.validatorsHash`.  
-       This update can be obtained by following the logic of `getActiveValidatorsDiff` as detailed in the [Appendix](#appendix).
-   *   If the `certificateThreshold` was updated, include the new value in the `newCertificateThreshold` property.
+*   Compute the required update to the active validators stored in the chain account and the validators that were used to create `certificate.validatorsHash`. 
+    This update can be obtained by following the logic of `getActiveValidatorsDiff` as detailed in the [Appendix](#appendix).
+*   If the `certificateThreshold` used to create `certificate.validatorsHash` is different from the one stored in the chain account, 
+    include the new value in the `newCertificateThreshold` property.
 *   Post the cross-chain update transaction on the sidechain. 
 
 Relayers should post cross-chain update transactions on the sidechain when the need for it arises. 
