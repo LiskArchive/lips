@@ -403,7 +403,7 @@ tryToForward(CCM):
    else:
       CCM is discarded and has no further effect
 ```
-The `addToOutbox` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+The `addToOutbox`, `getPartnerChainID` and `isLive` functions are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
 
 ### Cross-chain Commands
