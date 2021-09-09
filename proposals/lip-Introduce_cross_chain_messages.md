@@ -111,11 +111,18 @@ As the mainchain payload size limit is 15 KiB, and [other properties][CCU-LIP] i
 To guarantee that all messages can be included and handled, sidechains in the Lisk ecosystem should have a payload size limit equal to or greater than 15 KiB (15 x 1024 bytes).
 
 
+### Message ID
+
+As all messages emitted in the Lisk ecoystem are distinct (thanks to the `index` property), we can assign a unique ID to them.
+The message ID is obtained in the same way as other IDs in the protocol, namely by hashing the serialized object.
+This assigns to each message a 32-byte value that can be used whenever the message needs to be referenced.
+
+
 ### Message Tracking
 
-Tracking messages throughout the ecosystem could be a challenge, particularly if the messages are errored (and hence get a new index property from the erroring chain).
+Tracking messages throughout the ecosystem could be a challenge, particularly if the messages are errored (and hence spawn new messages from the erroring chain).
 However, this can easily be done using the logs emitted by the CCM processing. 
-Indeed, messages which are errored and which have to be returned to their sending chain, will log the index of the return message,
+Indeed, messages which are errored and which send a response message to their sending chain, will log the ID of the return message,
 this allows UI products to display the current status of CCMs (or the status of the returned message if needed).
 More generally, the logged records will allow users to know whether a CCM is forwarded, successfully executed, or triggers an error mechanism.
 
@@ -291,6 +298,11 @@ crossChainMessageSchema = {
     }
 }
 ```
+
+
+### Cross-chain Message ID
+
+The ID of a message `CCM` is computed as `SHA-256(serializedCCM)` where serializedCCM is the serialization of `CCM` using `crossChainMessageSchema`.
 
 
 ### Internal Functions
