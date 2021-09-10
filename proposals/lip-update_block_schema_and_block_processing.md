@@ -462,7 +462,7 @@ verifyValidatorsHash():
 The aggregate commit contains an aggregate BLS signature of a certificate corresponding to the block at the given height. 
 It attests that all signing validators consider the corresponding block final.
 It is verified by calling the `verifyAggregateCommit` function, defined in LIP ["Introduce a certificate generation mechanism"][verifyAggregateCommit].
-The function takes the block `block` as input and returns a boolean, indicating the success of the check.
+This function takes the aggregate commit `block.header.aggregateCommit` as input and returns a boolean, indicating the success of the check.
 
 
 ##### Signature
