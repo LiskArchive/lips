@@ -15,7 +15,7 @@ Requires: Introduce cross-chain update mechanism
 This proposal introduces the cross-chain message schema, the generic message processing and the base error handling. 
 Defining a base cross-chain message allows all chains in the ecosystem to read and understand the base properties of messages.
 
-The proposal also introduces four messages used by the Interoperability module, the cross-chain update receipt, the channel terminated receipt, the sidechain terminated message and the registration message.
+The proposal also introduces four messages used by the Interoperability module, the cross-chain update receipt, the channel terminated message, the sidechain terminated message and the registration message.
 
 
 ## Copyright
@@ -427,7 +427,7 @@ ccuReceiptParamsSchema = {
     "type": "object",
     "required": [
         "paidFee", 
-        "relayerPublicKey", 
+        "relayerAddress", 
         "partnerChainInboxSize"
     ],
     "properties": {
