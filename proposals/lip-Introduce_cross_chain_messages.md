@@ -70,7 +70,7 @@ This property is important to identify messages and to track them throughout the
 
 #### Module ID and Cross-chain Command ID
 
-Once the message has reached the recipient chain, the two properties `moduleID` and `crossChainCommandID` specify which logic should be used to validate and execute the message. 
+Once the message has reached the receiving chain, the two properties `moduleID` and `crossChainCommandID` specify which logic should be used to validate and execute the message. 
 The Interoperability module handles the message in case the required logic is not available on the chain. 
 This brings the benefit that sending chains do not need to monitor all other chains in the ecosystem and the modules they support. 
 We are following an optimistic approach in which all messages will be delivered and error handling will kick in when it is needed. 
@@ -82,8 +82,8 @@ For a given module, the set of command IDs and cross-chain command IDs are allow
 
 #### Fee
 
-For all cross-chain messages, a fee paid in LSK is used to account for the transaction processing in the recipient chain.
-This fee must be transferred from the sending chain account to the recipient chain account in order to maintain the correct LSK balances on all chains in the ecosystem. 
+For all cross-chain messages, a fee paid in LSK is used to account for the transaction processing in the receiving chain.
+This fee must be transferred from the sending chain account to the receiving chain account in order to maintain the correct LSK balances on all chains in the ecosystem. 
 The [token ID][token-LIP-tokenID] for this fee is always the token ID of the LSK token and as such is not repeated in the message. 
 The LSK token is the main utility token of the Lisk ecosystem and as such is the only good candidate for paying cross-chain fees.
 
@@ -91,7 +91,7 @@ The LSK token is the main utility token of the Lisk ecosystem and as such is the
 #### Status
 
 The basic error handling for routing messages to other chains is done by the mainchain. 
-For example, in the case the recipient chain does not exist, is not active or has been terminated, the mainchain will return the message to the sending chain. 
+For example, in the case the receiving chain does not exist, is not active or has been terminated, the mainchain will return the message to the sending chain. 
 The sending chain can then revert the message and potentially refund users. 
 This design choice allows sidechains to send messages to other chains without needing to monitor the status (or even existence) of every other chain. 
 Information about the reason why the message failed and the initial message identifier are stored in the `status` property.
