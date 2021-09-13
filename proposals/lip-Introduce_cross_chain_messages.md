@@ -94,7 +94,7 @@ The basic error handling for routing messages to other chains is done by the mai
 For example, in the case the receiving chain does not exist, is not active or has been terminated, the mainchain will return the message to the sending chain. 
 The sending chain can then revert the message and potentially refund users. 
 This design choice allows sidechains to send messages to other chains without needing to monitor the status (or even existence) of every other chain. 
-Information about the reason why the message failed and the initial message identifier are stored in the `status` property.
+Information about the reason why the message failed is stored in the `status` property.
 
 The constant table lists the different status codes defined by the Interoperability module. 
 To allow for future updates or improvements of the Interoperability module, we restrict other modules from using status codes up to 63 (included). 
