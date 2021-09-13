@@ -112,14 +112,12 @@ The validator names of the registered authorities are stored as distinct key-val
 validatorObjectSchema = {
    "type": "object",
    "properties": {
-      "name": {
-         "dataType": "string",
-         "fieldNumber": 1
-      }
+       "name": {
+           "dataType": "string",
+           "fieldNumber": 1
+       }
    },
-   "required": [
-      "name"
-   ]
+   "required": ["name"]
 }
 ```
 
@@ -143,14 +141,12 @@ The name substore is an auxiliary store used to validate the [authority registra
 validatorAddressSchema = {
    "type": "object",
    "properties": {
-      "address": {
-         "dataType": "bytes",
-         "fieldNumber": 1
-      }
+       "address": {
+           "dataType": "bytes",
+           "fieldNumber": 1
+       }
    },
-   "required": [
-      "address"
-   ]
+   "required": ["address"]
 }
 ```
 
@@ -175,30 +171,30 @@ This substore contains the snapshot of the active authorities for the current ro
 snapshotStoreSchema = {
    "type": "object",
    "properties": {
-       "validators: {
-          "type": "array",
-          "fieldNumber": 1,    
-          "items": {
-              "type": "object",
-              "required": ["address", "weight"],
-              "properties": {
-                  "address": {
-                      "dataType": "bytes",
-                      "fieldNumber": 1
-                  }
-                  "weight": {
-                      "dataType": "bytes",
-                      "fieldNumber": 2
-                  }
-	      }
+       "validators": {
+           "type": "array",
+           "fieldNumber": 1,    
+           "items": {
+               "type": "object",
+               "required": ["address", "weight"],
+               "properties": {
+                   "address": {
+                       "dataType": "bytes",
+                       "fieldNumber": 1
+                   },
+                   "weight": {
+                       "dataType": "bytes",
+                       "fieldNumber": 2
+                   }
+	       }
 	   }
-        },		    
-        "threshold": {
+       },		    
+       "threshold": {
            "dataType": "uint64",
            "fieldNumber": 2,
-        }
-    },
-    "required": ["validators", "threshold"]
+       }
+   },
+   "required": ["validators", "threshold"]
  }
  ```
 
@@ -229,19 +225,16 @@ This substore contains the general properties of the chain.
 chainPropSchema = {
    "type": "object",
    "properties": {
-      "roundEndHeight": {
-          "dataType": "uint32",
-          "fieldNumber": 1
-      },
+       "roundEndHeight": {
+           "dataType": "uint32",
+           "fieldNumber": 1
+       },
        "validatorsUpdateNonce": {
            "dataType": "uint32",
            "fieldNumber": 2
-      },
-    }
-    "required": [
-       "roundEndHeight",
-       "validatorsUpdateNonce"
-    ]
+       }
+   },
+   "required": ["roundEndHeight", "validatorsUpdateNonce"]
 }
 ```
 
@@ -251,7 +244,7 @@ The properties of this schema are as follows:
 
 *   `roundEndHeight`: An integer stating the last height of the round. 
 Its initial value is set after the execution of the genesis block.
-*   `validatorsUpdateNonce`: An integer representing the number of times that the validator set has been updated with an update auhtority command. 
+*   `validatorsUpdateNonce`: An integer representing the number of times that the validator set has been updated with an update authority command. 
 It is initialized to 0.
 
 ### Commands
@@ -267,22 +260,22 @@ The command ID of this transaction is `COMMAND_ID_REGISTRATION_AUTHORITY`.
 registrationTransactionParamsSchema = {
   "type": "object",
   "properties": {
-    "name": {
-      "dataType": "string",
-      "fieldNumber": 1
-    },
-    "blsKey": {
-      "dataType": "bytes",
-      "fieldNumber": 2
-    },
-    "proofOfPossession": {
-      "dataType": "bytes",
-      "fieldNumber": 3
-    },
-    "generatorKey": {
-      "dataType": "bytes",
-      "fieldNumber": 4
-    }
+      "name": {
+          "dataType": "string",
+          "fieldNumber": 1
+      },
+      "blsKey": {
+          "dataType": "bytes",
+          "fieldNumber": 2
+      },
+      "proofOfPossession": {
+          "dataType": "bytes",
+          "fieldNumber": 3
+      },
+      "generatorKey": {
+          "dataType": "bytes",
+          "fieldNumber": 4
+      }
   },
   "required": ["name", "blsKey", "proofOfPossession", "generatorKey"]
 }
@@ -326,10 +319,10 @@ The command ID of this transaction is `COMMAND_ID_UPDATE_KEY`.
 updateGeneratorKeyParamsSchema = {
   "type": "object",
   "properties": {
-    "generatorKey": {
-      "dataType": "bytes",
-      "fieldNumber": 1
-    }
+      "generatorKey": {
+          "dataType": "bytes",
+          "fieldNumber": 1
+      }
   },
   "required": ["generatorKey"]
 }
@@ -362,47 +355,47 @@ The command ID for this command is `COMMAND_ID_UPDATE_AUTHORITY`.
 updateValidatorParams = {
    "type": "object",
    "properties": {
-      "newValidators: {
-          "type": "array",
-          "fieldNumber": 1,    
-          "items": {
-              "type": "object",
-              "required": ["address", "weight"],
-              "properties": {
-                  "address": {
-                      "dataType": "bytes",
-                      "fieldNumber": 1
-                  }
-                  "weight": {
-                      "dataType": "bytes",
-                      "fieldNumber": 2
-                  }
-	      }
-	  }
-      },
-      "threshold": {
-         "dataType": "uint64",
-         "fieldNumber": 2
-      },
-      "validatorsUpdateNonce": {
-         "dataType": "uint32",
-         "fieldNumber": 3
-      },
-      "signature": {
-         "dataType": "bytes",
-         "fieldNumber": 4
-      },
-      "aggregationBits": {
-         "dataType": "bytes",
-         "fieldNumber": 5
-      }
+       "newValidators": {
+           "type": "array",
+           "fieldNumber": 1,    
+           "items": {
+               "type": "object",
+               "required": ["address", "weight"],
+               "properties": {
+                   "address": {
+                       "dataType": "bytes",
+                       "fieldNumber": 1
+                   },
+                   "weight": {
+                       "dataType": "bytes",
+                       "fieldNumber": 2
+                   }
+	       }
+	   }
+       },
+       "threshold": {
+           "dataType": "uint64",
+           "fieldNumber": 2
+       },
+       "validatorsUpdateNonce": {
+           "dataType": "uint32",
+           "fieldNumber": 3
+       },
+       "signature": {
+           "dataType": "bytes",
+           "fieldNumber": 4
+       },
+       "aggregationBits": {
+           "dataType": "bytes",
+           "fieldNumber": 5
+       }
    },
    "required": [
-      "newValidators",
-      "threshold",
-      "validatorsUpdateNonce",
-      "signature",
-      "aggregationBits"
+       "newValidators",
+       "threshold",
+       "validatorsUpdateNonce",
+       "signature",
+       "aggregationBits"
    ]
 }
 
@@ -443,38 +436,34 @@ The list of verification conditions for `trs.params` is as follows:
         validatorSignatureMessage = {
             "type": "object",
             "properties": {
-               "newValidators: {
-                   "type": "array",
-                   "fieldNumber": 1,    
-                   "items": {
-                       "type": "object",
-                       "required": ["address", "weight"],
-                       "properties": {
-                           "address": {
-                               "dataType": "bytes",
-                               "fieldNumber": 1
-                           }
-                           "weight": {
-                               "dataType": "bytes",
-                               "fieldNumber": 2
-                           }
-                       }
-                   }
-               },
-               "threshold": {
-                   "dataType": "uint64",
-                   "fieldNumber": 2
-               },
-               "validatorsUpdateNonce": {
-                   "dataType": "uint32",
-                   "fieldNumber": 3
-               },
+                "newValidators": {
+                    "type": "array",
+                    "fieldNumber": 1,    
+                    "items": {
+                        "type": "object",
+                        "required": ["address", "weight"],
+                        "properties": {
+                            "address": {
+                                "dataType": "bytes",
+                                "fieldNumber": 1
+                            },
+                            "weight": {
+                                "dataType": "bytes",
+                                "fieldNumber": 2
+                            }
+                        }
+                    }
+                },
+                "threshold": {
+                    "dataType": "uint64",
+                    "fieldNumber": 2
+                },
+                "validatorsUpdateNonce": {
+                    "dataType": "uint32",
+                    "fieldNumber": 3
+                }
             },
-            "required": [
-                "newValidators",
-                "threshold",
-                "validatorsUpdateNonce"
-            ]
+            "required": ["newValidators", "threshold", "validatorsUpdateNonce"]
         }
         ```
         *   The `weights` argument is set to `[ validator.weight for validator in snapshotStore(0).validators]`.
@@ -510,18 +499,19 @@ This function returns an array of bytes with the re-ordered list of addresses.
 shuffleValidatorsList(validatorsAddresses, randomSeed)
     
     validatorsList = []
-    for every address in validatorsAddresses
+    for every address in validatorsAddresses:
         validator.address = address
-        validator.roundHash = hash(randomSeed | address)
+        validator.roundHash = hash(randomSeed || address)
         push validator to validatorsList
     
     # Reorder the validator list in lexicographical order first by roundHash, then by address
-    for every validator1 and validator2 in validatorsList
-        (validator1.roundHash < validator2.roundHash) || 
-        ((validator1.roundHash == validator2.roundHash) && (validator1.address < validator2.address))
+    sort validatorsList in increasing order where validator1 < validator2 if 
+    (validator1.roundHash < validator2.roundHash) || 
+    ((validator1.roundHash == validator2.roundHash) && (validator1.address < validator2.address))
     
-    return shuffledAddresses = [address for every address in validatorsList]
+    return [address for every address in validatorsList]
 ```
+where the `hash` function is SHA256 and `||` is byte concatenation.
 
 ### Protocol Logic for Other Modules
 
