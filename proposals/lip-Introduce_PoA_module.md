@@ -183,7 +183,7 @@ snapshotStoreSchema = {
                        "fieldNumber": 1
                    },
                    "weight": {
-                       "dataType": "bytes",
+                       "dataType": "uint64",
                        "fieldNumber": 2
                    }
 	       }
@@ -367,7 +367,7 @@ updateValidatorParams = {
                        "fieldNumber": 1
                    },
                    "weight": {
-                       "dataType": "bytes",
+                       "dataType": "uint64",
                        "fieldNumber": 2
                    }
 	       }
@@ -448,7 +448,7 @@ The list of verification conditions for `trs.params` is as follows:
                                 "fieldNumber": 1
                             },
                             "weight": {
-                                "dataType": "bytes",
+                                "dataType": "uint64",
                                 "fieldNumber": 2
                             }
                         }
