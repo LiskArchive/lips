@@ -61,11 +61,12 @@ On the mainchain, the receiving chain ID is read to route the message to the cor
 The sending chain ID is used, for example, if the message triggers an error and has to be sent back.
 
 
-#### Index
+#### Nonce
 
-When a cross-chain message is created and added to the partner chain outbox, the size of the outbox at that point is added to the message in the `index` property. 
-This allows all messages to be uniquely identified by the `(sendingChain, receivingChain, index)` tuple. 
-This property is important to identify messages and to track them throughout the ecosystem.
+When a cross-chain message is created and added to the partner chain outbox, the nonce of the sending chain (total number of messages that were added to outboxes so far) is added to the message in the `nonce` property. 
+This allows all messages to be uniquely identified by the `(sendingChainID, receivingChainID, nonce, status)` tuple, 
+which implies that the message ID defined below will be unique for all messages in the ecosystem.
+This feature is important to allow the message ID to be used to identify and track messages throughout the ecosystem.
 
 
 #### Module ID and Cross-chain Command ID
@@ -114,14 +115,14 @@ To guarantee that all messages can be included and handled, sidechains in the Li
 
 ### Message ID
 
-As all messages emitted in the Lisk ecoystem are distinct (thanks to the unicity of the `(sendingChain, receivingChain, index)` trio), we can assign a unique ID to them.
+As all messages emitted in the Lisk ecoystem are distinct (thanks to the unicity of the `(sendingChainID, receivingChainID, nonce, status)` tuple), we can assign a unique ID to them.
 The message ID is obtained in the same way as other IDs in the protocol, namely by hashing the serialized object.
 This assigns to each message a 32-byte value that can be used whenever the message needs to be referenced.
 
 
 ### Message Tracking
 
-Tracking messages throughout the ecosystem could be a challenge, particularly if the messages are errored (and hence spawn new messages from the erroring chain).
+Tracking messages throughout the ecosystem could be a challenge, particularly if messages are errored (and hence spawn new messages from the erroring chain).
 However, this can easily be done using the logs emitted by the CCM processing. 
 Indeed, messages which are errored and which send a response message to their sending chain, will log the ID of the return message,
 allowing off-chain services to display the current status of CCMs (or the status of the returned message if needed).
@@ -133,7 +134,8 @@ More generally, the logged records will allow users to know whether a CCM is for
 Whenever a message is created, it must be added to the outbox of the corresponding partner chain. 
 On sidechains, this logic always appends to the mainchain outbox, while on the mainchain, this logic can append to any registered sidechain outbox.
 
-The Interoperability module exposes the <code>[send][base-interoperability-LIP-sendReducer]</code> reducer which is used to check the liveness of the receiving chain, set the messages index property and append messages to the outbox of the partner chain.
+The Interoperability module exposes the <code>[send][base-interoperability-LIP-sendReducer]</code> reducer which should be used whenever other modules need to send cross-chain messages. 
+This functions also checks the liveness of the receiving chain, sets the message nonce property and appends the message to the outbox of the partner chain.
 
 
 ### Cross-chain Update Receipt
@@ -254,7 +256,7 @@ All cross-chain messages in the Lisk ecosystem use the following schema.
 crossChainMessageSchema = {
     "type": "object",
     "required": [
-        "index",  
+        "nonce",  
         "moduleID", 
         "crossChainCommandID", 
         "sendingChainID", 
@@ -264,7 +266,7 @@ crossChainMessageSchema = {
         "params"
     ],
     "properties": {
-        "index": {
+        "nonce": {
             "dataType": "uint64",
             "fieldNumber": 1 
         },
@@ -317,7 +319,7 @@ The following logic should be used to create new cross chain messages:
 createCrossChainMessage(moduleID, crossChainCommandID, receivingChainID, fee, params):
 
     return message = {
-               "index": 0,
+               "nonce": 0,
                "moduleID": moduleID,
                "crossChainCommandID": crossChainCommandID,
                "sendingChainID": chainID of the current chain,
@@ -557,16 +559,15 @@ A registration message is created by the Interoperability module when registerin
 
 ##### Executing Registration Message
 
-When a registration message `RM` is executed, the following is done: 
+When a registration message `CCM` is executed, the following is done: 
 
 ```python
 let ownName and ownChainID be the name and ID properties (respectively) of the deserialized value of account(0) 
 
-if CCM.index != 0 
-or ownChainID != CCM.receivingChainID
+if ownChainID != CCM.receivingChainID
 or ownName != CCM.params.name
 or CCM.params.networkID does not equal the chain's networkID:
-    terminateChain(RM.sendingChainID)
+    terminateChain(CCM.sendingChainID)
 ```
 The `terminateChain` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
