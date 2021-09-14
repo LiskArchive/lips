@@ -11,7 +11,7 @@ Requires: Introduce cross-chain messages,
 	  Introduce a certificate generation mechanism,
 	  Introduce BFT module
 ```
-
+o
 
 ## Abstract
 
@@ -437,8 +437,8 @@ Then, the following is done in the given order:
 *   For every `CCM` in `inboxUpdate.crossChainMessages`:
     *   Validate that `params.sendingChainID == CCM.sendingChainID`.
     *   Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][CCM-LIP-validateFormat]. 
-*   Validate that the first CCM in `inboxUpdate.crossChainMessages` has `CCM.index == partnerChain.inbox.size`.
-*   Validate that all CCMs in `inboxUpdate.crossChainMessages` have increasing and sequential index property.
+*   Validate that the first CCM in `inboxUpdate.crossChainMessages` has `CCM.nonce == partnerChain.inbox.size`.
+*   Validate that all CCMs in `inboxUpdate.crossChainMessages` have increasing and sequential nonce property.
 *   Validate that the sum of all `CCM.fee` and all amounts for LSK cross-chain transfers is smaller or equal than the escrowed amount for the sending chain. The escrowed amount is obtained with the [token function][token-LIP] `getEscrowAmount(params.sendingChainID,0)`.
 *   If one of those validation points fails:
     *   `terminateChain(partnerChainID)` as specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
@@ -462,8 +462,6 @@ To execute cross-chain updates, the following is done:
 *   For every `CCM` in `inboxUpdate.crossChainMessages`:
     *   Validate that `ownChainID == CCM.receivingChainID`.
     *   Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][CCM-LIP-validateFormat]. 
-*   Validate that the first CCM in `inboxUpdate.crossChainMessages` has `CCM.index == partnerChain.inbox.size`.
-*   Validate that all CCMs in `inboxUpdate.crossChainMessages` have increasing and sequential index property.
 *   If one of those validation points fails:
     *   `terminateChain(partnerChainID)` as specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
     *   Exit the transaction processing, the CCU has no further effect.
