@@ -11,7 +11,7 @@ Requires: Introduce cross-chain messages,
 	  Introduce a certificate generation mechanism,
 	  Introduce BFT module
 ```
-o
+
 
 ## Abstract
 
