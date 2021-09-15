@@ -107,7 +107,7 @@ Then, users can recover messages and tokens from the terminated sidechain with a
 
 Each interoperable sidechain maintains a chain account for the mainchain, while the mainchain maintains an account for each registered sidechain. Correspondingly, on a sidechain we denote with ''partner chain'' the mainchain, while on mainchain we denote with ''partner chain'' the relevant sidechain. 
 
-Each chain also includes an account storing the chain name and ID in the ecosystem. This ''own chain'' account is present by default in the mainchain, while on a sidechain is created by the mainchain registration command.
+Each chain also includes an account storing the chain name and ID in the ecosystem as well as the current chain nonce. This ''own chain'' account is present by default in the mainchain, while on a sidechain is created by the mainchain registration command.
 
 <img src="lip-introduce-interoperability-module/store.png" width="80%">
 
@@ -408,7 +408,7 @@ The name and ID of the chain are stored in the chain data substore as a regular 
 ```java
 ownChainAccountSchema = {
     "type": "object",
-    "required": ["name", "ID"],
+    "required": ["name", "ID", "nonce"],
     "properties": {
         "name" : {
             "dataType" : "string",
@@ -417,6 +417,10 @@ ownChainAccountSchema = {
         "ID" : {
             "dataType" : "uint32",
             "fieldNumber": 2
+        },
+        "nonce" : {
+            "dataType" : "uint64",
+            "fieldNumber": 3
         }
     }
 }
@@ -426,11 +430,13 @@ ownChainAccountSchema = {
 
 * `name`: The name of the sidechain registered on mainchain with the sidechain registration command.
 * `chainID`: The chain ID assigned to the sidechain on mainchain after processing the sidechain registration command. 
+* `nonce`: The chain nonce, an incremental integer indicating the total number of CCMs sent from the chain. 
 
 On manchain, the own chain account is present by default, set to an object with properties:
 
-* `name=MAINCHAIN_NAME`;
+* `name=MAINCHAIN_NAME`,
 * `ID=MAINCHAIN_ID`,
+* `nonce=0`,
 
 serialized with the JSON schema `ownChainAccountSchema`.
 
@@ -610,7 +616,7 @@ The `addToOutbox` function adds a new CCM to the outbox of a chain account.
 This function has the following input parameters in the order given below:
 
 * `chainID`: The partner chain ID.
-* `CCM`: The cross-chain message to be added.
+* `ccm`: The cross-chain message to be added.
 
 ##### Returns
 
@@ -620,9 +626,13 @@ A boolean indicating the success of the function execution.
 
 
 ```python
-addToOutbox(chainID, CCM)
-    CCM.index = account(chainID).outbox.size
-    serializedMessage = byte array corresponding to the serialized CCM according to the schema in "Cross-chain Messages" LIP
+addToOutbox(chainID, ccm)
+    # Set nonce in CCM only if sending from the chain (not if routing)
+    if ccm.sendingChainID == ownChainAccount.ID:
+        ccm.nonce = ownChainAccount.nonce
+        ownChainAccount.nonce += 1
+
+    serializedMessage = byte array corresponding to the serialized ccm according to the schema in "Cross-chain Messages" LIP
     appendToOutboxTree(chainID, SHA-256(serializedMessage))
     outboxRoot(chainID) = account(chainID).outbox.root
 
@@ -717,13 +727,13 @@ A boolean indicating the success of the function execution.
 terminateChain(chainID):
     chainAccount(chainID).status = CHAIN_TERMINATED 
     # Spawn a channel terminated cross-chain message 
-    CTM = createCrossChainMessage(
+    ctm = createCrossChainMessage(
         MODULE_ID_INTEROPERABILITY,
         COMMAND_ID_CHANNEL_TERMINATED,
         chainID,
         0,
         {partnerChainInboxSize:account(chainID).inbox.size})
-    addToOutbox(chainID, CTM)
+    addToOutbox(chainID, ctm)
 
     chainAccount(chainID).outbox.appendPath = []
 
@@ -784,19 +794,19 @@ send(timestamp, moduleID, crossChainCommandID, receivingChainID, fee, feeAddress
         return False
 
     # Create cross-chain message
-    CCM = createCrossChainMessage(
+    ccm = createCrossChainMessage(
         moduleID, 
         crossChainCommandID, 
         receivingChainID, 
         fee,
         parameters)
 
-    for each interoperable module:
-        call beforeSendCCM(feeAddress, CCM)
-        if it fails:
+    for each interoperable module mdl:
+        mdl.beforeSendCCM(feeAddress, ccm)
+        if the previous call fails:
             return False
 
-    addToOutbox(partnerChainID, CCM)
+    addToOutbox(partnerChainID, ccm)
 
     return True
 ```
@@ -809,7 +819,7 @@ The `error` function is used to add an error code to a CCM and then add it to th
 ##### Parameters
 
 This function has the following input parameters in the order given below:
-* `CCM`: The cross-chain message.
+* `ccm`: The cross-chain message.
 * `errorCode`: The error code to be added.
 
 ##### Returns
@@ -819,17 +829,17 @@ A boolean indicating the success of the function execution.
 ##### Execution
 
 ```python
-error(CCM, errorCode):
+error(ccm, errorCode):
     # Error codes from 0 to 63 (included) are reserved to the Interoperability module
     if 0 <= errorCode < 64:
         return False
 
-    CCM.status = errorCode
-    CCM.fee = 0
-    swap CCM.sendingChainID and CCM.receivingChainID
+    ccm.status = errorCode
+    ccm.fee = 0
+    swap ccm.sendingChainID and ccm.receivingChainID
 
-    partnerChainID = getPartnerChainID(CCM.receivingChainID)
-    addToOutbox(partnerChainID, CCM)
+    partnerChainID = getPartnerChainID(ccm.receivingChainID)
+    addToOutbox(partnerChainID, ccm)
 
     return True
 ```
