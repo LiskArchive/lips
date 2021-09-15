@@ -209,8 +209,8 @@ outboxRootSchema = {
     "type": "object",
     "required": ["root"],
     "properties": {
-        "root" : {
-            "dataType" : "bytes",
+        "root": {
+            "dataType": "bytes",
             "fieldNumber": 1
         }
     }
@@ -259,19 +259,19 @@ chainAccountSchema = {
             "fieldNumber": 1,
             "required": ["appendPath", "size", "root"],
             "properties": {
-                "appendPath" : {
+                "appendPath": {
                     "type": "array",
                     "items": {
                         "dataType": "bytes"
                     },
                     "fieldNumber": 1
                 },
-                "size" : {
-                    "dataType" : "uint64",
+                "size": {
+                    "dataType": "uint64",
                     "fieldNumber": 2
                 },
-                "root" : {
-                    "dataType" : "bytes",
+                "root": {
+                    "dataType": "bytes",
                     "fieldNumber": 3
                 }
             }
@@ -281,57 +281,57 @@ chainAccountSchema = {
             "fieldNumber": 2,
             "required": ["appendPath", "size", "root"],
             "properties": {
-                "appendPath" : {
+                "appendPath": {
                     "type": "array",
                     "items": {
                         "dataType": "bytes"
                     },
                     "fieldNumber": 1
                 },
-                "size" : {
-                    "dataType" : "uint64",
+                "size": {
+                    "dataType": "uint64",
                     "fieldNumber": 2
                 },
-                "root" : {
-                    "dataType" : "bytes",
+                "root": {
+                    "dataType": "bytes",
                     "fieldNumber": 3
                 }
             }
         },
-        "networkID" : {
-            "dataType" : "bytes",
+        "networkID": {
+            "dataType": "bytes",
             "fieldNumber": 3
         },
-        "lastCertifiedStateRoot" : {
-            "dataType" : "bytes",
+        "lastCertifiedStateRoot": {
+            "dataType": "bytes",
             "fieldNumber": 4
         },
-            "lastCertifiedTimestamp" : {
-            "dataType" : "uint32",
+            "lastCertifiedTimestamp": {
+            "dataType": "uint32",
             "fieldNumber": 5
         },
-        "lastCertifiedHeight" : {
-            "dataType" : "uint32",
+        "lastCertifiedHeight": {
+            "dataType": "uint32",
             "fieldNumber": 6
         },
-        "partnerChainOutboxRoot" : {
-            "dataType" : "bytes",
+        "partnerChainOutboxRoot": {
+            "dataType": "bytes",
             "fieldNumber": 7
         },
-        "partnerChainOutboxSize" : {
-            "dataType" : "uint64",
+        "partnerChainOutboxSize": {
+            "dataType": "uint64",
             "fieldNumber": 8
         },
-        "partnerChainInboxSize" : {
-            "dataType" : "uint64",
+        "partnerChainInboxSize": {
+            "dataType": "uint64",
             "fieldNumber": 9
         },
-        "name" : {
-            "dataType" : "string",
+        "name": {
+            "dataType": "string",
             "fieldNumber": 10
         },
-        "status" : {
-            "dataType" : "uint32",
+        "status": {
+            "dataType": "uint32",
             "fieldNumber": 11
         },
         "activeValidators": {
@@ -410,16 +410,16 @@ ownChainAccountSchema = {
     "type": "object",
     "required": ["name", "ID", "nonce"],
     "properties": {
-        "name" : {
-            "dataType" : "string",
+        "name": {
+            "dataType": "string",
             "fieldNumber": 1
         },
-        "ID" : {
-            "dataType" : "uint32",
+        "ID": {
+            "dataType": "uint32",
             "fieldNumber": 2
         },
-        "nonce" : {
-            "dataType" : "uint64",
+        "nonce": {
+            "dataType": "uint64",
             "fieldNumber": 3
         }
     }
@@ -460,8 +460,8 @@ terminatedChain = {
     "type": "object",
     "required": ["stateRoot"],
     "properties": {
-        "stateRoot" : {
-            "dataType" : "bytes",
+        "stateRoot": {
+            "dataType": "bytes",
             "fieldNumber": 1
         }
     }
@@ -492,8 +492,8 @@ chainIDSchema = {
     "type": "object",
     "required": ["ID"],
     "properties": {
-        "ID" : {
-            "dataType" : "uint32",
+        "ID": {
+            "dataType": "uint32",
             "fieldNumber": 1
         }
     }
@@ -525,8 +525,8 @@ chainIDSchema = {
     "type": "object",
     "required": ["ID"],
     "properties": {
-        "ID" : {
-            "dataType" : "uint32",
+        "ID": {
+            "dataType": "uint32",
             "fieldNumber": 1
         }
     }
