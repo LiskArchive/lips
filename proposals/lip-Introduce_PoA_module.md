@@ -289,9 +289,7 @@ The list of verification conditions for `trs.params` is as follows:
 * The `trs.params.name` property has to contain only characters from the set `[a-z0-9!@$&_.]`, must not be empty and has to be at most `MAX_LENGTH_NAME` characters long.
 * `tx.params.generatorKey` must have length 32.
 * `tx.params.blsKey` must have length 48.
-* `tx.params.proofOfPossession` must have length 192.
-* The function `registerValidatorKeys(address, trs.params.proofOfPossession, trs.params.generatorKey, trs.params.blsKey)` does not return `false`, where `address` is the 20-byte address derived from `trs.senderPublicKey`.
-The function `registerValidatorKeys` is defined in the [Validators module][lip-validators-module-register-validator-keys].
+* `tx.params.proofOfPossession` must have length 96.
 
 ##### Execution 
 
@@ -305,6 +303,7 @@ Then `trs.params` implies the following execution logic:
   * `storeKey`: `trs.params.name` serialized as a utf-8 encoded string. 
   * `storeValue`: The serialization of the object `validatorAddress` following `validatorAddressSchema` with `validatorAddress.address = address` where `address` is the address of the sender of `trs`.
 * Call `registerValidatorKeys(address, trs.params.proofOfPossession, trs.params.generatorKey, trs.params.blsKey)`, where `address` is the 20-byte address derived from `trs.senderPublicKey`.
+The function `registerValidatorKeys` is defined in the [Validators module][lip-validators-module-register-validator-keys].
 
 #### Update Generator Key Command
 
@@ -493,20 +492,17 @@ This function returns an array of bytes with the re-ordered list of addresses.
 ##### Execution
 
 ```python
-shuffleValidatorsList(validatorsAddresses, randomSeed)
+shuffleValidatorsList(validatorsAddresses, randomSeed):
     
-    validatorsList = []
-    for every address in validatorsAddresses:
-        validator.address = address
-        validator.roundHash = hash(randomSeed || address)
-        push validator to validatorsList
+    roundHash = {}
+    for address in validatorsAddresses:
+        roundHash[address] = hash(randomSeed || address)
     
     # Reorder the validator list in lexicographical order first by roundHash, then by address
-    sort validatorsList in increasing order where validator1 < validator2 if 
-        (validator1.roundHash < validator2.roundHash) or 
-        ((validator1.roundHash == validator2.roundHash) and (validator1.address < validator2.address))
+    shuffledValidatorAddresses = address in validatorsAddresses reordered by roundHash[address] 
+                                 ties broken lexicographically by address         
     
-    return [validator.address for validator in validatorsList]
+    return shuffledValidatorAddresses
 ```
 where `hash` is SHA256 and `||` is byte concatenation.
 
