@@ -80,9 +80,8 @@ This command is used to recover a pending message in the outbox of a terminated 
 
 ### Liveness Condition
 
-Active sidechains are required to prove their liveness to the mainchain at least once every 30 days. This is done by including a CCU on the mainchain. If a sidechain does not post a CCU within 30 days, the sidechain account is terminated.  
-
-This rule guarantees that users do not send funds to inactive sidechains and that users who have tokens in a sidechain which stops communicating with the ecosystem can recover their tokens. The same rule applies to the mainchain account on a sidechain. At least once within 30 days, a mainchain CCU has to be included in the sidechain, otherwise, the mainchain account on the sidechain is terminated.
+Active sidechains are required to prove their liveness to the mainchain at least once every 30 days. This is done by including a CCU on the mainchain. If a sidechain does not post a CCU within 30 days, the sidechain account is terminated.
+This rule guarantees that users do not send funds to inactive sidechains and that users who have tokens in a sidechain which stops communicating with the ecosystem can recover their tokens. 
 
 
 ### Life Cycle of a Sidechain
@@ -378,7 +377,7 @@ In this section, we describe the properties of a chain account and specify their
   * `size`: The current size of the tree, i.e. the number of cross-chain messages sent to the partner chain. The default value of this property is 0.
 * `networkID`: This property corresponds to the network identifier, or network ID, of the partner chain. For a sidechain account on the mainchain, it is set by the [sidechain registration command][registration-LIP]. For the mainchain account on sidechains, it is a protocol constant, set to `MAINCHAIN_NETWORK_ID`.
 * `lastCertifiedStateRoot`: The value of this property is set to the state root contained in the last CCU from the partner chain. It is used to validate the inclusion proof of the cross-chain messages contained in a CCU and to verify the validity of the token recovery command. The default value of this property is the constant `EMPTY_HASH`.
-* `lastCertifiedTimestamp`: The value of this property is set to the timestamp contained in the last CCU from the partner chain. It is used to check that the partner chain fulfills the liveness requirement (see [above](#Liveness-Condition)). The default value of this property is 0.
+* `lastCertifiedTimestamp`: The value of this property is set to the timestamp contained in the last CCU from the partner chain. On mainchain, it is used to check that the sidechain chain fulfills the liveness requirement (see [above](#Liveness-Condition)). The default value of this property is 0.
 * `lastCertifiedHeight`: The value of this property is set to the height contained in the last certificate from the partner chain. It is used to [validate a certificate][CCU-LIP] (certificates must contain block headers with increasing heights). The default value of this property is 0.
 * `partnerChainOutboxRoot`: The value of this property is set to the outbox root computed from the last CCU from the partner chain. It is used to validate the cross-chain messages contained in a future CCU when the CCU does not certify a new outbox root. The default value of this property is the constant `EMPTY_HASH`.
 * `partnerChainOutboxSize`: This property corresponds to the size of the outbox tree of the partner chain, i.e. the number of cross-chain messages sent from the partner chain. This property is updated by the [`inboxUpdate property`][CCU-LIP] contained in CCUs from the partner chain. The default value of this property is 0.
@@ -659,6 +658,9 @@ A boolean indicating whether the partner chain respects the liveness condition.
 
 ```python
 isLive(chainID, timestamp):
+   # Mainchain can not be terminated for liveness
+   if chainID == MAINCHAIN_ID:
+        return True
    # Check if chain has been already terminated
    if the terminated chain substore contains an entry with store key equal to chainID:
       return False 
