@@ -310,7 +310,7 @@ crossChainMessageSchema = {
 
 ### Cross-chain Message ID
 
-The ID of a message `CCM` is computed as `SHA-256(serializedCCM)` where serializedCCM is the serialization of `CCM` using `crossChainMessageSchema`.
+The ID of a message `ccm` is computed as `SHA-256(serializedCCM)` where serializedCCM is the serialization of `ccm` using `crossChainMessageSchema`.
 
 
 ### Internal Functions
@@ -338,13 +338,13 @@ createCrossChainMessage(moduleID, crossChainCommandID, receivingChainID, fee, pa
 
 #### validateFormat 
 
-All cross-chain messages `CCM` must have the correct format, which is checked by the following logic:
+All cross-chain messages `ccm` must have the correct format, which is checked by the following logic:
 
 ```python
-validateFormat(CCM):
-   if size(CCM) > MAX_CCM_SIZE bytes: 
+validateFormat(ccm):
+   if size(ccm) > MAX_CCM_SIZE bytes: 
       return False
-   if CCM does not follow crossChainMessageSchema: 
+   if ccm does not follow crossChainMessageSchema: 
       return False
    return True
 ```
@@ -352,33 +352,33 @@ validateFormat(CCM):
 
 #### process
 
-When processing a cross-chain message, with a valid format, `CCM`, follow the logic below:
+When processing a cross-chain message, with a valid format, `ccm`, follow the logic below:
 
 ```python
-process(CCM):
+process(ccm):
    let ownChainID be the chainID of the current chain 
 
-   if CCM.receivingChainID == ownChainID:
-      tryToExecute(CCM)
+   if ccm.receivingChainID == ownChainID:
+      tryToExecute(ccm)
    else:
-      tryToForward(CCM)
+      tryToForward(ccm)
 ```
 
 ```python
-tryToExecute(CCM):
-   if (CCM.mouleID, CCM.crossChainCommandID) is supported:
-      call the logic associated with (CCM.moduleID, CCM.crossChainCommandID) on CCM
+tryToExecute(ccm):
+   if (ccm.mouleID, ccm.crossChainCommandID) is supported:
+      call the logic associated with (ccm.moduleID, ccm.crossChainCommandID) on ccm
    else:
-      if CCM.status != CCM_STATUS_OK or CCM.fee < MIN_RETURN_FEE*size(CCM):
-         CCM is discarded and has no further effect
+      if ccm.status != CCM_STATUS_OK or ccm.fee < MIN_RETURN_FEE*size(ccm):
+         ccm is discarded and has no further effect
       elif moduleID is not supported:
-         newCCM = CCM
+         newCCM = ccm
          newCCM.fee = 0
          newCCM.status = CCM_STATUS_MODULE_NOT_SUPPORTED
          swap newCCM.receivingChainID and newCCM.sendingChainID
          process(newCCM) 
       elif crossChainCommandID is not supported:
-         newCCM = CCM
+         newCCM = ccm
          newCCM.fee = 0
          newCCM.status = CCM_STATUS_CROSS_CHAIN_COMMAND_NOT_SUPPORTED 
          swap newCCM.receivingChainID and newCCM.sendingChainID
@@ -386,29 +386,29 @@ tryToExecute(CCM):
 ```
 
 ```python
-tryToForward(CCM):
-   let partnerChainID = getPartnerChainID(CCM.receivingChainID)
+tryToForward(ccm):
+   let partnerChainID = getPartnerChainID(ccm.receivingChainID)
 
    if account(partnerChainID).status == CHAIN_ACTIVE and isLive(partnerChainID):
-      addToOutbox(partnerChainID, CCM)
-   elif CCM.status == CCM_STATUS_OK:
-      newCCM = CCM
+      addToOutbox(partnerChainID, ccm)
+   elif ccm.status == CCM_STATUS_OK:
+      newCCM = ccm
       newCCM.fee = 0
       newCCM.status = CCM_STATUS_CHANNEL_UNAVAILABLE  
       swap newCCM.receivingChainID and newCCM.sendingChainID
       process(newCCM)
       
-      STMParams = {chainID: CCM.receivingChainID,
-                  stateRoot: account(CCM.receivingChainID).lastCertifiedStateRoot}
+      STMParams = {chainID: ccm.receivingChainID,
+                  stateRoot: account(ccm.receivingChainID).lastCertifiedStateRoot}
                   serialized using sidechainTerminatedCCMParamsSchema
-      STM = createCrossChainMessage(MODULE_ID_INTEROPERABILITY, 
+      stm = createCrossChainMessage(MODULE_ID_INTEROPERABILITY, 
                                     CROSS_CHAIN_COMMAND_ID_SIDECHAIN_TERMINATED,
-                                    CCM.sendingChainID,
+                                    ccm.sendingChainID,
                                     0,
                                     STMParams)
-      addToOutbox(STM)
+      addToOutbox(stm)
    else:
-      CCM is discarded and has no further effect
+      ccm is discarded and has no further effect
 ```
 The `addToOutbox`, `getPartnerChainID` and `isLive` functions are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
@@ -514,13 +514,13 @@ A channel terminated message is created by the Interoperability module when [ter
 
 ##### Executing Channel Terminated Messages
 
-When a channel terminated message `CTM` is received, the following is done: 
+When a channel terminated message `ctm` is received, the following is done: 
 
 ```python
-account(CTM.sendingChainID).status = CHAIN_TERMINATED
+account(ctm.sendingChainID).status = CHAIN_TERMINATED
 
-if account(CTM.sendingChainID).partnerChainInboxSize < CTM.params.partnerChainInboxSize 
-    set account(CTM.sendingChainID).partnerChainInboxSize = CTM.params.partnerChainInboxSize
+if account(ctm.sendingChainID).partnerChainInboxSize < ctm.params.partnerChainInboxSize 
+    set account(ctm.sendingChainID).partnerChainInboxSize = ctm.params.partnerChainInboxSize
 ```
 
 
@@ -564,15 +564,15 @@ A registration message is created by the Interoperability module when registerin
 
 ##### Executing Registration Message
 
-When a registration message `CCM` is executed, the following is done: 
+When a registration message `ccm` is executed, the following is done: 
 
 ```python
 let ownName and ownChainID be the name and ID properties (respectively) of the deserialized value of account(0) 
 
-if ownChainID != CCM.receivingChainID
-or ownName != CCM.params.name
-or CCM.params.networkID does not equal the chain's networkID:
-    terminateChain(CCM.sendingChainID)
+if ownChainID != ccm.receivingChainID
+or ownName != ccm.params.name
+or ccm.params.networkID does not equal the chain's networkID:
+    terminateChain(ccm.sendingChainID)
 ```
 The `terminateChain` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
@@ -595,7 +595,7 @@ The `params` schema for the sidechain terminated CCM is:
 ```java
 sidechainTerminatedCCMParamsSchema = {
     "type": "object",
-    "required" : ["chainID", "stateRoot"],
+    "required": ["chainID", "stateRoot"],
     "properties": {
         "chainID": {
             "dataType": "uint32",
@@ -619,18 +619,18 @@ A sidechain terminated message is created by the Interoperability module when a 
 
 ##### Executing Sidechain Terminated Message
 
-When a sidechain terminated message `STM` is executed, the following is done: 
+When a sidechain terminated message `stm` is executed, the following is done: 
 
 ```python
 if (there exist an entry in the interoperability store with
     storePrefix = STORE_PREFIX_TERMINATED_CHAIN
-    storeKey = uint32be(STM.params.chainID)):
-    stop CCM execution
+    storeKey = uint32be(stm.params.chainID)):
+    stop stm execution
 
 create an entry in the interoperability store with
     storePrefix = STORE_PREFIX_TERMINATED_CHAIN
-    storeKey = uint32be(STM.params.chainID)
-    storeValue = {"stateRoot": STM.params.stateRoot} serialized using the terminatedChain schema.
+    storeKey = uint32be(stm.params.chainID)
+    storeValue = {"stateRoot": stm.params.stateRoot} serialized using the terminatedChain schema.
 ```
 The `terminatedChain` schema is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
