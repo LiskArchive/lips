@@ -71,12 +71,9 @@ The uniqueness of messages in the Lisk ecosystem is important for identifying me
 
 #### Module ID and Cross-chain Command ID
 
-Once the message has reached the receiving chain, the two properties `moduleID` and `crossChainCommandID` specify which logic should be used to validate and execute the message. 
-The Interoperability module handles the message in case the required logic is not available on the chain. 
-This brings the benefit that sending chains do not need to monitor all other chains in the ecosystem and the modules they support. 
-We are following an optimistic approach in which all messages will be delivered and error handling will kick in when it is needed. 
-In that regard, users should be aware that valid messages will usually not trigger a response. 
-A quick API call will guarantee that the message has been properly received and executed.
+Once the message has reached the receiving chain, the two properties `moduleID` and `crossChainCommandID` specify which logic should be used to validate and execute the message.  
+In case the required logic is not available on the chain, the Interoperability module sends a message with an error status back to the sending chain, provided the message included enough fees. 
+This brings the benefit that sending chains do not need to monitor all other chains in the ecosystem and the modules they support.
  
 For a given module, the set of command IDs and cross-chain command IDs are allowed to overlap.
 
@@ -120,13 +117,17 @@ The message ID is obtained in the same way as other IDs in the protocol, namely 
 This assigns to each message a 32-byte value that can be used whenever the message needs to be referenced.
 
 
-### Message Tracking
+### Message Tracking and Error Handling
 
 Tracking messages throughout the ecosystem could be a challenge, particularly if messages are errored (and hence spawn new messages from the erroring chain).
 However, this can easily be done using the logs emitted by the CCM processing. 
 Indeed, messages which are errored and which send a response message to their sending chain, will log the ID of the return message,
 allowing off-chain services to display the current status of CCMs (or the status of the returned message if needed).
 More generally, the logged records will allow users to know whether a CCM is forwarded, successfully executed, or triggers an error mechanism.
+
+The Interoperability module perfoms some basic validations for all messages and then forwards them to the respective module which is responsible for their validation and execution.
+During this process, no return message is spawned when a message is successfully delivered. 
+Error messages are only spawned by the Interoperability module when a message should be sent to an inactive chain, or if the receiving chain does not support the required logic.
 
 
 ### Sending Cross-chain Messages
@@ -138,7 +139,11 @@ The Interoperability module exposes the <code>[send][base-interoperability-LIP-s
 This functions also checks the liveness of the receiving chain, sets the message nonce property and appends the message to the outbox of the partner chain.
 
 
-### Cross-chain Update Receipt
+### CCMs Specified by the Interoperability Module
+
+Then Interoperability module specifies the messages described in the following subsections.
+
+#### Cross-chain Update Receipt
 
 The main role of the cross-chain update receipt is to inform chains that a cross-chain update transaction has been posted on the partner chain, by whom, the fee that was paid, and the inbox size of the partner chain. 
 This is then used on the mainchain to allow for message recovery, see [LIP "Introduce sidechain recovery mechanism"][recovery-LIP]. 
@@ -148,7 +153,7 @@ For example, all cross-chain transaction fees could be split between the block f
 Whenever a cross-chain update transaction is posted on the mainchain, the poster gets compensation from the pool.
 
 
-### Channel Terminated Message
+#### Channel Terminated Message
 
 The role of the channel terminated message is to inform chains that their channel has been terminated on the mainchain. 
 The chain receiving this message can then also close the channel to the mainchain. 
@@ -160,7 +165,7 @@ The termination message contains the last inbox size of the sidechain.
 This allows the sidechain to know exactly which messages were executed on the mainchain and which are still pending at the time of termination.
 
 
-### Registration Message
+#### Registration Message
 
 The role of the registration message is to guarantee that a channel was opened on the sidechain with the correct chain ID and network ID. 
 When a sidechain is registered on the mainchain, an ecosystem wide chain ID is attributed to this chain. 
@@ -168,7 +173,7 @@ This chain ID and the corresponding network ID are included in a cross-chain mes
 When the first cross-chain update is sent to the sidechain, the equality between the properties in the cross-chain message and the ones in the interoperability store is verified.
 
 
-### Sidechain Terminated Message
+#### Sidechain Terminated Message
 
 The role of the sidechain terminated message is to inform sidechains that another sidechain has been terminated on the mainchain and is unable to receive messages. 
 The message contains the ID of the terminated chain as well as the last certified state root of the terminated sidechain (as certified on the mainchain).
