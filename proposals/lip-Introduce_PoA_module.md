@@ -497,8 +497,7 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
     roundHash = {}
     for address in validatorsAddresses:
         roundHash[address] = hash(randomSeed || address)
-    
-    # Reorder the validator list in lexicographical order first by roundHash, then by address
+    # Reorder the validator list
     shuffledValidatorAddresses = address in validatorsAddresses reordered by roundHash[address] 
                                  ties broken lexicographically by address         
     
