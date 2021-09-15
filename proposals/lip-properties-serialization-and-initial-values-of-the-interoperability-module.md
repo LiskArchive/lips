@@ -111,7 +111,7 @@ Each chain also includes an account storing the chain name and ID in the ecosyst
 
 <img src="lip-introduce-interoperability-module/store.png" width="80%">
 
-_Figure 2: A summary of the Interoperability module store. The Interoperability module defines 4 stores: the account store for partner chain accounts and the own chain account, the outbox store for outbox roots, and the terminated chains to allow for recovery commands. The name and network ID stores, keeping track of the names and network IDs of registered sidechains, are present only on mainchain._
+_Figure 2: A summary of the Interoperability module store. The Interoperability module defines 4 stores: the outbox store for outbox roots, the account store for partner chain accounts and the own chain account, and the terminated chains to allow for recovery commands. The name and network ID stores, keeping track of the names and network IDs of registered sidechains, are present only on mainchain._
 
 
 ### Message Forwarding and the Role of the Lisk Mainchain
