@@ -169,33 +169,33 @@ This substore contains the snapshot of the active authorities for the current ro
 
 ```java
 snapshotStoreSchema = {
-   "type": "object",
-   "properties": {
-       "validators": {
-           "type": "array",
-           "fieldNumber": 1,    
-           "items": {
-               "type": "object",
-               "required": ["address", "weight"],
-               "properties": {
-                   "address": {
-                       "dataType": "bytes",
-                       "fieldNumber": 1
-                   },
-                   "weight": {
-                       "dataType": "uint64",
-                       "fieldNumber": 2
-                   }
-	       }
-	   }
-       },		    
-       "threshold": {
-           "dataType": "uint64",
-           "fieldNumber": 2,
-       }
-   },
-   "required": ["validators", "threshold"]
- }
+    "type": "object",
+    "properties": {
+        "validators": {
+            "type": "array",
+            "fieldNumber": 1,
+            "items": {
+                "type": "object",
+                "required": ["address", "weight"],
+                "properties": {
+                    "address": {
+                        "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "weight": {
+                        "dataType": "uint64",
+                        "fieldNumber": 2
+                    }
+                }
+            }
+        },
+        "threshold": {
+            "dataType": "uint64",
+            "fieldNumber": 2
+        }
+    },
+    "required": ["validators", "threshold"]
+}
  ```
 
 ##### Properties and Default Values
@@ -223,18 +223,18 @@ This substore contains the general properties of the chain.
 
 ```java
 chainPropSchema = {
-   "type": "object",
-   "properties": {
-       "roundEndHeight": {
-           "dataType": "uint32",
-           "fieldNumber": 1
-       },
-       "validatorsUpdateNonce": {
-           "dataType": "uint32",
-           "fieldNumber": 2
-       }
-   },
-   "required": ["roundEndHeight", "validatorsUpdateNonce"]
+    "type": "object",
+    "properties": {
+        "roundEndHeight": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "validatorsUpdateNonce": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        }
+    },
+    "required": ["roundEndHeight", "validatorsUpdateNonce"]
 }
 ```
 
@@ -258,26 +258,26 @@ The command ID of this transaction is `COMMAND_ID_REGISTRATION_AUTHORITY`.
 
 ```java
 registrationTransactionParamsSchema = {
-  "type": "object",
-  "properties": {
-      "name": {
-          "dataType": "string",
-          "fieldNumber": 1
-      },
-      "blsKey": {
-          "dataType": "bytes",
-          "fieldNumber": 2
-      },
-      "proofOfPossession": {
-          "dataType": "bytes",
-          "fieldNumber": 3
-      },
-      "generatorKey": {
-          "dataType": "bytes",
-          "fieldNumber": 4
-      }
-  },
-  "required": ["name", "blsKey", "proofOfPossession", "generatorKey"]
+    "type": "object",
+    "properties": {
+        "name": {
+            "dataType": "string",
+            "fieldNumber": 1
+        },
+        "blsKey": {
+            "dataType": "bytes",
+            "fieldNumber": 2
+        },
+        "proofOfPossession": {
+            "dataType": "bytes",
+            "fieldNumber": 3
+        },
+        "generatorKey": {
+            "dataType": "bytes",
+            "fieldNumber": 4
+        }
+    },
+    "required": ["name", "blsKey", "proofOfPossession", "generatorKey"]
 }
 ```
 
@@ -287,12 +287,11 @@ Let `trs` be a transaction with module ID `MODULE_ID_POA` and command ID `COMMAN
 The list of verification conditions for `trs.params` is as follows:
 
 * The `trs.params.name` property has to contain only characters from the set `[a-z0-9!@$&_.]`, must not be empty and has to be at most `MAX_LENGTH_NAME` characters long.
-* Let `address` be the 20-byte address derived from `trs.senderPublicKey`. Then `address` must not already be registered as a validator. This is, the validator substore has no entry with store key `address`.
-* The value of `trs.params.name` must not already be registered as a validator name. This is, the name substore has no entry with store key `trs.params.name`.
-* `isKeyRegistered(trs.params.blsKey)` must return `false`, where the function is defined in the [Validators module][validatorsModule].
-* `PopVerify(trs.params.blsKey, trs.params.proofOfPossession)` must return `VALID`, where [`PopVerify`][bls-specs-v4-popverify] is part of the [BLS signature scheme][lip-bls-public-key-registration].
 * `tx.params.generatorKey` must have length 32.
-
+* `tx.params.blsKey` must have length 48.
+* `tx.params.proofOfPossession` must have length 192.
+* The function `registerValidatorKeys(address, trs.params.proofOfPossession, trs.params.generatorKey, trs.params.blsKey)` does not return `false`, where `address` is the 20-byte address derived from `trs.senderPublicKey`.
+The function `registerValidatorKeys` is defined in the [Validators module][lip-validators-module-register-validator-keys].
 
 ##### Execution 
 
@@ -306,7 +305,6 @@ Then `trs.params` implies the following execution logic:
   * `storeKey`: `trs.params.name` serialized as a utf-8 encoded string. 
   * `storeValue`: The serialization of the object `validatorAddress` following `validatorAddressSchema` with `validatorAddress.address = address` where `address` is the address of the sender of `trs`.
 * Call `registerValidatorKeys(address, trs.params.proofOfPossession, trs.params.generatorKey, trs.params.blsKey)`, where `address` is the 20-byte address derived from `trs.senderPublicKey`.
-The function `registerValidatorKeys` is defined in the [Validators module][lip-validators-module-register-validator-keys].
 
 #### Update Generator Key Command
 
@@ -317,14 +315,14 @@ The command ID of this transaction is `COMMAND_ID_UPDATE_KEY`.
 
 ```java
 updateGeneratorKeyParamsSchema = {
-  "type": "object",
-  "properties": {
-      "generatorKey": {
-          "dataType": "bytes",
-          "fieldNumber": 1
-      }
-  },
-  "required": ["generatorKey"]
+    "type": "object",
+    "properties": {
+        "generatorKey": {
+            "dataType": "bytes",
+            "fieldNumber": 1
+        }
+    },
+    "required": ["generatorKey"]
 }
 ```
 
@@ -353,52 +351,51 @@ The command ID for this command is `COMMAND_ID_UPDATE_AUTHORITY`.
 
 ``` java
 updateValidatorParams = {
-   "type": "object",
-   "properties": {
-       "newValidators": {
-           "type": "array",
-           "fieldNumber": 1,    
-           "items": {
-               "type": "object",
-               "required": ["address", "weight"],
-               "properties": {
-                   "address": {
-                       "dataType": "bytes",
-                       "fieldNumber": 1
-                   },
-                   "weight": {
-                       "dataType": "uint64",
-                       "fieldNumber": 2
-                   }
-	       }
-	   }
-       },
-       "threshold": {
-           "dataType": "uint64",
-           "fieldNumber": 2
-       },
-       "validatorsUpdateNonce": {
-           "dataType": "uint32",
-           "fieldNumber": 3
-       },
-       "signature": {
-           "dataType": "bytes",
-           "fieldNumber": 4
-       },
-       "aggregationBits": {
-           "dataType": "bytes",
-           "fieldNumber": 5
-       }
-   },
-   "required": [
-       "newValidators",
-       "threshold",
-       "validatorsUpdateNonce",
-       "signature",
-       "aggregationBits"
-   ]
+    "type": "object",
+    "properties": {
+        "newValidators": {
+            "type": "array",
+            "fieldNumber": 1,
+            "items": {
+                "type": "object",
+                "required": ["address", "weight"],
+                "properties": {
+                    "address": {
+                        "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "weight": {
+                        "dataType": "uint64",
+                        "fieldNumber": 2
+                    }
+                }
+            }
+        },
+        "threshold": {
+            "dataType": "uint64",
+            "fieldNumber": 2
+        },
+        "validatorsUpdateNonce": {
+            "dataType": "uint32",
+            "fieldNumber": 3
+        },
+        "signature": {
+            "dataType": "bytes",
+            "fieldNumber": 4
+        },
+        "aggregationBits": {
+            "dataType": "bytes",
+            "fieldNumber": 5
+        }
+    },
+    "required": [
+        "newValidators",
+        "threshold",
+        "validatorsUpdateNonce",
+        "signature",
+        "aggregationBits"
+    ]
 }
-
 ```
 
 ##### Verification 
@@ -506,12 +503,12 @@ shuffleValidatorsList(validatorsAddresses, randomSeed)
     
     # Reorder the validator list in lexicographical order first by roundHash, then by address
     sort validatorsList in increasing order where validator1 < validator2 if 
-    (validator1.roundHash < validator2.roundHash) || 
-    ((validator1.roundHash == validator2.roundHash) && (validator1.address < validator2.address))
+        (validator1.roundHash < validator2.roundHash) or 
+        ((validator1.roundHash == validator2.roundHash) and (validator1.address < validator2.address))
     
-    return [address for every address in validatorsList]
+    return [validator.address for validator in validatorsList]
 ```
-where the `hash` function is SHA256 and `||` is byte concatenation.
+where `hash` is SHA256 and `||` is byte concatenation.
 
 ### Protocol Logic for Other Modules
 
