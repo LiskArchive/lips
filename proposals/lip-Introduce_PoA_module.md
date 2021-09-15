@@ -80,6 +80,7 @@ In this section, we specify the PoA module with its module store structure and t
 | `COMMAND_ID_REGISTRATION_AUTHORITY`      | uint32    | 0 |
 | `COMMAND_ID_UPDATE_KEY`      | uint32    | 1 |
 | `COMMAND_ID_UPDATE_AUTHORITY`     | uint32    | 2 |
+| `REGISTRATION_FEE`                | uint64 | - (config parameter) | 
 | `MAX_LENGTH_NAME`    | uint32   | 20 |
 | `MAX_NUM_VALIDATORS`     | uint32   | 199 |
 | `MAX_UINT64`             | uint64   | 18446744073709551615 |
@@ -254,6 +255,16 @@ It is initialized to 0.
 This command is equivalent to the [delegate registration command][delegatedoc] in the DPoS module and has the same schema and similar validity rules. 
 The command ID of this transaction is `COMMAND_ID_REGISTRATION_AUTHORITY`.
 
+##### Fee
+
+This command has an extra fee:
+
+```
+extra fee = REGISTRATION_FEE
+```
+
+where `REGISTRATION_FEE` is a constant given as a config parameter.
+
 ##### Parameters
 
 ```java
@@ -302,7 +313,7 @@ Then `trs.params` implies the following execution logic:
 * Create an entry in the name substore as:
   * `storeKey`: `trs.params.name` serialized as a utf-8 encoded string. 
   * `storeValue`: The serialization of the object `validatorAddress` following `validatorAddressSchema` with `validatorAddress.address = address` where `address` is the address of the sender of `trs`.
-* Call `registerValidatorKeys(address, trs.params.proofOfPossession, trs.params.generatorKey, trs.params.blsKey)`, where `address` is the 20-byte address derived from `trs.senderPublicKey`.
+* Call `registerValidatorKeys(address, trs.params.proofOfPossession, trs.params.generatorKey, trs.params.blsKey)`, where `address` is the 20-byte address derived from `trs.senderPublicKey`. If `registerValidatorKeys` returns `false`, the execution fails.
 The function `registerValidatorKeys` is defined in the [Validators module][lip-validators-module-register-validator-keys].
 
 #### Update Generator Key Command
@@ -421,7 +432,7 @@ The list of verification conditions for `trs.params` is as follows:
     *   The value of `trs.params.validatorsUpdateNonce` has to be equal to `chainProperties.validatorsUpdateNonce`.
 *   Rules for `trs.params.aggregationBits` and `trs.params.signature` properties:
     *   The function `verifyWeightedAggSig(keyList, tag, netID, aggregationBits, signature, m, weights, threshold)`, specified in [LIP 0038][BLS], must return VALID where:
-        *   The `keyList` property is an array containing `getValidatorAccount(address).blsKey` for every `address` property in `snapshotStore(0).validators` array sorted in the same order, where `getValidatorAccount` is the function exposed by the [validators module][validatorsModule].  
+        *   The `keyList` property is an array containing `getValidatorAccount(address).blsKey` for every `address` property in `snapshotStore(0).validators` array sorted lexicographically, where `getValidatorAccount` is the function exposed by the [validators module][validatorsModule].  
         *   The `tag` is equal to `MESSAGE_TAG_POA`.
         *   The `netID` byte array corresponds to the network ID of the chain.
         *   The `aggregationBits` argument is the byte array given in `trs.params.aggregationBits`.
@@ -462,7 +473,7 @@ The list of verification conditions for `trs.params` is as follows:
             "required": ["newValidators", "threshold", "validatorsUpdateNonce"]
         }
         ```
-        *   The `weights` argument is set to `[ validator.weight for validator in snapshotStore(0).validators]`.
+        *   The `weights` argument is set to `[ validator.weight for validator in snapshotStore(0).validators]` sorted according to `keyList`.
         *   The `threshold` argument is set to `snapshotStore(0).threshold`.
 
 ##### Execution 
@@ -497,9 +508,10 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
     roundHash = {}
     for address in validatorsAddresses:
         roundHash[address] = hash(randomSeed || address)
+
     # Reorder the validator list
-    shuffledValidatorAddresses = address in validatorsAddresses reordered by roundHash[address] 
-                                 ties broken lexicographically by address         
+    shuffledValidatorAddresses = sort validatorsAddresses where address1 < adress2 if (roundHash(address1) < roundHash(address2))
+                                 or ((roundHash(address1) == roundHash(address2)) and address1 < address2)         
     
     return shuffledValidatorAddresses
 ```
