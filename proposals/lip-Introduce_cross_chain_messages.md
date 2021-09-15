@@ -66,7 +66,7 @@ The sending chain ID is used, for example, if the message triggers an error and 
 When a cross-chain message is created and added to the partner chain outbox, the nonce of the sending chain (total number of messages that were added to outboxes so far) is added to the message in the `nonce` property. 
 This allows all messages to be uniquely identified by the `(sendingChainID, receivingChainID, nonce, status)` tuple, 
 which implies that the message ID defined below will be unique for all messages in the ecosystem.
-This feature is important to allow the message ID to be used to identify and track messages throughout the ecosystem.
+The uniqueness of messages in the Lisk ecosystem is important for identifying messages with message IDs and tracking them throughout the ecosystem.
 
 
 #### Module ID and Cross-chain Command ID
