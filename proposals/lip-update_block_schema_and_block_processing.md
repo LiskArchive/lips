@@ -24,7 +24,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The first change proposed by this LIP is to introduce a new block property, the block assets, and to update the block schema accordingly. 
+The first change proposed by this LIP is to introduce a new block property, the assets, and to update the block schema accordingly. 
 This property is an array of objects containing data injected by the modules registered in the chain during the block creation. 
 This change clarifies the general procedure by which modules insert extra data in a block.
 
