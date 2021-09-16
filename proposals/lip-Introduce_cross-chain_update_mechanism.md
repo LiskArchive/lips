@@ -173,15 +173,15 @@ If a CCM is invalid (as specified in the ["Execute Cross-chain Updates" section]
 
 #### First Cross-chain Update from a Sidechain
 
-The first cross-chain update from a given sidechain posted on mainchain has a special function. 
-It will change the chain status from `CHAIN_REGISTERED` to `CHAIN_ACTIVE`.
-This change means that the sidechain is now available to receive cross-chain messages and can interact with the mainchain.
-Additionally, the sidechain must now follow the liveness condition and regularly post cross-chain updates (at least once a month).
-If the sidechains fails to follow the liveness condition, it is terminated on the mainchain.
+The first cross-chain update containing messages from a given chain has a special function. 
+It will change the sending chain status from `CHAIN_REGISTERED` to `CHAIN_ACTIVE`.
+This change means that the receiving chain is now available to receive cross-chain messages and can interact with the sending chain.
+Additionally, once active, sidechains must now follow the liveness condition and regularly post cross-chain updates on the mainchain (at least once a month).
+If the sidechain fails to follow the liveness condition, it is terminated on the mainchain.
 
 When a sidechain is started and registered, the sidechain developers might decide to not activate the sidechain straight away (maybe to do further testing).
 It could happen then (intentionally or not) that an old block header (almost 30 days old) is submitted to the mainchain to activate the sidechain.
-This could result in the sidechain being punished for liveness failure very soon after the activation (maybe only a few minutes later). 
+This could result in the sidechain being terminated for liveness failure very soon after the activation (maybe only a few minutes later). 
 To prevent this issue (and without any significant drawbacks) the first cross-chain update to be submitted on mainchain must contain a certificate less that 15 days old.
 The sidechain has therefore at least 15 days to submit the next cross-chain update to the mainchain and start the regular posting of cross-chain updates.
 
@@ -337,16 +337,16 @@ A CCU transaction is only valid if the sending chain is not terminated and follo
 This is done by asserting the two points below:  
 
 *  `sendingChain.status != CHAIN_TERMINATED`,
-*  if `sendingChain.status == CHAIN_ACTIVE` then also validate  `isLive(sendingChainID,timestamp) == True`. 
+*  if `sendingChain.status == CHAIN_ACTIVE` then also validate  `isLive(sendingChainID, timestamp) == True`. 
    The `isLive` function is specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP], and `timestamp` is the timestamp of the block including the CCU.
 
 
 ##### Liveness Requirement for the First CCU
 
-If `sendingChain.status == CHAIN_REGISTERED`, the proposed CCU must contain a non-empty `certificate` which must follow the schema defined in  [LIP "Introduce a certificate generation mechanism"][certificate-generation-LIP]. 
+If `sendingChain.status == CHAIN_REGISTERED`, all proposed CCU must contain a non-empty `certificate` which must follow the schema defined in  [LIP "Introduce a certificate generation mechanism"][certificate-generation-LIP]. 
 In the following, let `certificate` be the deserialized certificate.
 
-Furthermore, the certificate is only valid if it allows the sidechain account to remain live for a reasonable amount of time.
+Furthermore, if the CCU also contains a non-empty `inboxUpdate`, the certificate is only valid if it allows the sidechain account to remain live for a reasonable amount of time.
 This is done by checking that
 ```python
 timestamp - CCU.params.certificate.timestamp < LIVENESS_LIMIT / 2
