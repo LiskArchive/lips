@@ -41,13 +41,13 @@ On the Lisk mainchain, the token used for transaction fees is the LSK token.
 ### Minimum Fee per Transaction
 
 As introduced in [LIP 0013][LIP-0013], all transactions must have a fee greater or equal to a minimum fee (which can be zero). 
-The minimum fee is computed from a part based on the transaction size and a part specific to the command (called _extra fee_). 
+The minimum fee is computed from a part based on the transaction size and a part specific to the command (called _extra command fee_). 
 Chains can configure their minimum fee per byte and the eventual extra fees.
 
 For example, on the Lisk mainchain, the following extra fees are defined:
 
-* `extraFee(MODULE_ID_DPOS, COMMAND_ID_DELEGATE_REGISTRATION) = 1000000000`,
-* `extraFee(MODULE_ID_INTEROPERABILITY, COMMAND_ID_SIDECHAIN_REG) = 1000000000`.
+* `extraCommandFee(MODULE_ID_DPOS, COMMAND_ID_DELEGATE_REGISTRATION) = 1000000000`,
+* `extraCommandFee(MODULE_ID_INTEROPERABILITY, COMMAND_ID_SIDECHAIN_REG) = 1000000000`.
 
 The constants `MODULE_ID_DPOS` and `COMMAND_ID_DELEGATE_REGISTRATION` are defined in [LIP "Define state and state transitions of DPoS module"][DPoS-LIP]. 
 The constants `MODULE_ID_INTEROPERABILITY` and `COMMAND_ID_SIDECHAIN_REG` are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
@@ -80,8 +80,8 @@ We define the following constants:
 ### Extra Fee
 
 The Fee module allows to specify extra fees for each command.
-This is specified in the module configuration and is written as `extraFee(moduleID, commandID)` in this LIP. 
-All `(moduleID, commandID)` pairs that do not have a specified extra fee are assumed to have `extraFee(moduleID, commandID) = 0`.
+This is specified in the module configuration and is written as `extraCommandFee(moduleID, commandID)` in this LIP. 
+All `(moduleID, commandID)` pairs that do not have a specified extra fee are assumed to have `extraCommandFee(moduleID, commandID) = 0`.
 
 
 ### Fee Module Store
@@ -108,7 +108,7 @@ During `trs` verification, the following logic is applied:
 
 ```python
 minFee = MIN_FEE_PER_BYTE * size(trs) 
-         + extraFee(trs.moduleID, trs.commandID)
+         + extraCommandFee(trs.moduleID, trs.commandID)
 if trs.fee < minFee:
      trs is invalid
 ```
@@ -120,7 +120,7 @@ Before a transaction `trs` is executed, the following logic is applied:
 
 ```python
 minFee = MIN_FEE_PER_BYTE * size(trs) 
-         + extraFee(trs.moduleID, trs.commandID)
+         + extraCommandFee(trs.moduleID, trs.commandID)
 senderAddress is derived from trs.senderPublicKey
 generatorAddress is the address of the generator of the block including trs
 
