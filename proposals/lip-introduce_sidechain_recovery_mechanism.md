@@ -150,6 +150,7 @@ When a sidechain is terminated, these recovery-service providers can recover the
 | `COMMAND_ID_MESSAGE_RECOVERY`  | uint32 | 4 |
 | `COMMAND_ID_STATE_RECOVERY` | uint32 | 5 |
 | `COMMAND_ID_INITIATE_RECOVERY`    | uint32 | 6 |
+| `CROSS_CHAIN_COMMAND_ID_TRANSFER` | uint32 | 0 |
 | **Other** |||
 | `MAINCHAIN_ID`               | uint32 | 1 |
 | LIVENESS_LIMIT               | uint32 | `30*24*3600`
@@ -244,6 +245,11 @@ for index in trs.params.idxs:
 for CCM in deserializedCCMs:
     if CCM.status != CCM_STATUS_OK:
         return false
+    if CCM.sendingChainID == MAINCHAIN_ID:
+        if CCM.moduleID != MODULE_ID_TOKEN
+            return false
+        if CCM.crossChainCommandID != CROSS_CHAIN_COMMAND_ID_TRANSFER
+            return false
 
 # check the inclusion proof against the sidechain outbox root
 proof = { size: sidechainAccount.outbox.size, 
