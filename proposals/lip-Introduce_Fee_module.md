@@ -55,7 +55,8 @@ The constants `MODULE_ID_INTEROPERABILITY` and `COMMAND_ID_SIDECHAIN_REG` are de
 
 ### Burning the Minimum Fee
 
-If the chosen fee token is a native token (with chain ID equal 0) then the minimum part of the fee is burned. 
+The minimum part of the fee should be burned, this is to avoid that validators can send transactions in the blocks they generate without cost.
+This is only possible if the chosen fee token is a native token (with chain ID equal 0).
 If the chosen fee token is not a native token (for example the LSK token on sidechains), the minimum fee per byte and the extra fees should be set to zero.
 This is the only choice that makes sense, as burning non-native tokens is not supported by the [Token module][token-LIP].
 
