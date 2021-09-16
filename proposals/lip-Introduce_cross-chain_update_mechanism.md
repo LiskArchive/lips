@@ -433,17 +433,19 @@ Cross-chain update transactions posted on mainchain are transactions with
 
 Then, the following is done in the given order:
 
-*   If `partnerChain.status == CHAIN_REGISTERED`, set `partnerChain.status = CHAIN_ACTIVE`.
 *   For every `CCM` in `inboxUpdate.crossChainMessages`:
     *   Validate that `params.sendingChainID == CCM.sendingChainID`.
     *   Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][CCM-LIP-validateFormat]. 
 *   Validate that the first CCM in `inboxUpdate.crossChainMessages` has `CCM.nonce == partnerChain.inbox.size`.
 *   Validate that all CCMs in `inboxUpdate.crossChainMessages` have increasing and sequential nonce property.
 *   Validate that the sum of all `CCM.fee` and all amounts for LSK cross-chain transfers is smaller or equal than the escrowed amount for the sending chain. The escrowed amount is obtained with the [token function][token-LIP] `getEscrowAmount(params.sendingChainID,0)`.
+*   If `partnerChain.status == CHAIN_REGISTERED` and `inboxUpdate` is non-empty:
+    *   If `partnerChain.inbox.size == 0` and the first CCM in `inboxUpdate` is a valid <code>[registration CCM][CCM-LIP-registrationMessage]</code>: set `partnerChain.status = CHAIN_ACTIVE`.
+    *   Else, this point fails.
 *   If one of those validation points fails:
     *   `terminateChain(partnerChainID)` as specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
     *   Exit the transaction processing, the CCU has no further effect. 
-*  For every `CCM` in `inboxUpdate.crossChainMessages` where `CCM.receivingChainID` corresponds to an active and live sidechain account:  
+*   For every `CCM` in `inboxUpdate.crossChainMessages` where `CCM.receivingChainID` corresponds to an active and live sidechain account:  
     *  transfer `CCM.fee` from the sending sidechain escrowed balance to the receiving sidechain escrowed balance. 
        This is done with the [token function][token-LIP] `transferEscrow(CCM.sendingChainID, CCM.receivingChainID, 0, CCM.fee)`.
 *   Continue the processing by executing all steps in the ["Common Processing" section](#common-processing).
@@ -458,10 +460,12 @@ Cross-chain update transaction posted on sidechains are transactions with
 
 To execute cross-chain updates, the following is done:
 
-*   If `partnerChain.status == CHAIN_REGISTERED`, set `partnerChain.status = CHAIN_ACTIVE`.
 *   For every `CCM` in `inboxUpdate.crossChainMessages`:
     *   Validate that `ownChainID == CCM.receivingChainID`.
     *   Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][CCM-LIP-validateFormat]. 
+*   If `partnerChain.status == CHAIN_REGISTERED` and `inboxUpdate` is non-empty:
+    *   If `partnerChain.inbox.size == 0` and the first CCM in `inboxUpdate` is a valid <code>[registration CCM][CCM-LIP-registrationMessage]</code>: set `partnerChain.status = CHAIN_ACTIVE`.
+    *   Else, this point fails.
 *   If one of those validation points fails:
     *   `terminateChain(partnerChainID)` as specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
     *   Exit the transaction processing, the CCU has no further effect.
@@ -578,6 +582,7 @@ getActiveValidatorsDiff(currentValidators, newValidators):
 [CCM-LIP]: https://research.lisk.com/t/cross-chain-messages/299
 [CCM-LIP-process]: https://research.lisk.com/t/cross-chain-messages/299#process-25
 [CCM-LIP-validateFormat]: https://research.lisk.com/t/introduce-cross-chain-messages/299#validateformat-27
+[CCM-LIP-registrationMessage]: https://research.lisk.com/t/introduce-cross-chain-messages/299#registration-message-38
 [token-LIP]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
 [certificate-generation-LIP]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/296
 [new-block-header-LIP]: https://research.lisk.com/t/new-block-header-and-block-asset-schema/293 
