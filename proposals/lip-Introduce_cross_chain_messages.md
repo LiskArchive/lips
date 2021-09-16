@@ -34,8 +34,9 @@ The first one, the _cross-chain update receipt_, is sent back to the partner cha
 The cross-chain update receipt serves to update a few properties of the interoperability store, and in general to acknowledge the inclusion of cross-chain update transactions. 
 The second one, the _channel terminated message_, is sent to chains which have been terminated. 
 This message also updates a few properties of the interoperability store to keep them synchronized between chains. 
-The third one, the _registration message_, is used when registering a chain on the Lisk mainchain. 
-The message serves as a guarantee that the correct chain ID and network ID are used when the registration transaction is sent on the sidechain.
+The third one, the _registration message_, is used when registering a chain. 
+This message activates the channel between the chains.
+Furthermore, it serves as a guarantee that the correct chain ID and network ID were used when the registration transaction was sent on the sidechain.
 The last one, the _sidechain terminated message_ is created on the Lisk mainchain when a message should be routed to a terminated or inactive chain.
 This message allows other sidechains to automatically trigger the creation of the terminated sidechain account.
 
@@ -167,10 +168,11 @@ This allows the sidechain to know exactly which messages were executed on the ma
 
 #### Registration Message
 
-The role of the registration message is to guarantee that a channel was opened on the sidechain with the correct chain ID and network ID. 
-When a sidechain is registered on the mainchain, an ecosystem wide chain ID is attributed to this chain. 
-This chain ID and the corresponding network ID are included in a cross-chain message that is appended to the sidechain outbox. 
-When the first cross-chain update is sent to the sidechain, the equality between the properties in the cross-chain message and the ones in the interoperability store is verified.
+The role of the registration message is to change the sending chain status from `CHAIN_REGISTERED` to `CHAIN_ACTIVE`. 
+Further, it guarantees that a channel was opened on the sidechain with the correct chain ID and network ID. 
+When a sidechain is registered on the mainchain, an ecosystem wide chain ID and name are assigned to this chain. 
+The chain name and the corresponding network ID are included in a registration message that is appended to the sidechain outbox. 
+When the first cross-chain update containing messages is sent to the sidechain, the equality between the properties in the registration message and the ones in the interoperability store is verified.
 
 
 #### Sidechain Terminated Message
@@ -531,7 +533,7 @@ The registration message is a CCM with
 *   `moduleID = MODULE_ID_INTEROPERABILITY`,
 *   `crossChainCommandID  = CROSS_CHAIN_COMMAND_ID_REGISTRATION`.
 
-The role of the registration message is to guarantee that a channel was opened on the sidechain with the correct chain ID and network ID.
+The role of the registration message is to active the sending chain and guarantee that a channel was opened on the sidechain with the correct name and network ID.
 
 
 ##### Parameters
@@ -559,12 +561,12 @@ registrationCCMParamsSchema = {
 
 ##### Creating Registration Message 
 
-A registration message is created by the Interoperability module when registering a sidechain on the mainchain, as specified in [LIP "Introduce chain registration mechanism"][registration-LIP]. 
+A registration message is created by the Interoperability module when registering a chain, as specified in [LIP "Introduce chain registration mechanism"][registration-LIP]. 
 
 
-##### Validating Registration Message
+##### Verifying Registration Message
 
-When a registration message `ccm` is valid if the following returns `True`: 
+A registration message `ccm` is valid if the following returns `True`: 
 
 ```python
 let ownName and ownChainID be the name and ID properties (respectively) of the deserialized value of account(0) 
@@ -576,6 +578,17 @@ and ccm.params.networkID equals the chain's networkID:
 else:
     return False
 ```
+
+
+##### Executing Registration Message
+
+When executing a registration message `ccm`, the following is done: 
+
+```python
+if account(ccm.sendingChainID).inbox.size != 1:
+    terminateChain(ccm.sendingChainID)
+```
+The `terminateChain` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
 
 #### Sidechain Terminated Message 
