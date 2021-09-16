@@ -260,7 +260,7 @@ The command ID of this transaction is `COMMAND_ID_REGISTRATION_AUTHORITY`.
 This command has an extra fee:
 
 ```
-extra fee = REGISTRATION_FEE
+extraCommandFee(MODULE_ID_DPOS, COMMAND_ID_REGISTRATION_AUTHORITY) = REGISTRATION_FEE
 ```
 
 where `REGISTRATION_FEE` is a constant given as a config parameter.
