@@ -562,19 +562,20 @@ registrationCCMParamsSchema = {
 A registration message is created by the Interoperability module when registering a sidechain on the mainchain, as specified in [LIP "Introduce chain registration mechanism"][registration-LIP]. 
 
 
-##### Executing Registration Message
+##### Validating Registration Message
 
-When a registration message `ccm` is executed, the following is done: 
+When a registration message `ccm` is valid if the following returns `True`: 
 
 ```python
 let ownName and ownChainID be the name and ID properties (respectively) of the deserialized value of account(0) 
 
-if ownChainID != ccm.receivingChainID
-or ownName != ccm.params.name
-or ccm.params.networkID does not equal the chain's networkID:
-    terminateChain(ccm.sendingChainID)
+if ownChainID == ccm.receivingChainID
+and ownName == ccm.params.name
+and ccm.params.networkID equals the chain's networkID:
+    return True
+else:
+    return False
 ```
-The `terminateChain` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
 
 #### Sidechain Terminated Message 
