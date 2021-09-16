@@ -52,7 +52,7 @@ In the next subsections, these mechanisms are explained together with their cond
 
 This mechanism allows to recover any CCM pending in the sidechain outbox. 
 That is, those CCMs that have not been included in the receiving sidechain yet. 
-Specifically, this includes all the CCMs whose indices are larger than the last message index that the receiving sidechain reported to have included in its inbox on the mainchain. 
+Specifically, this includes all the CCMs whose indices (the position of these CCMs in the sidechain outbox tree) are larger than the index of the last message that the receiving sidechain reported to have included in its inbox on the mainchain. 
 This recovery mechanism requires these conditions to work: 
 
 *   The pending CCMs to be recovered have to be available to the sender of the recovery command.
@@ -61,7 +61,7 @@ This recovery mechanism requires these conditions to work:
 
 
 ![CCM_recovery](lip-sidechain_recovery_transactions/CCMrecovery.png)
-_Figure 1: (top) The message recovery command recovers CCM<sub>32</sub> and CCM<sub>34</sub> by providing the sibling hashes to compute the outbox root (the proof of inclusion for these CCMs in the tree). 
+_Figure 1: (top) The message recovery command recovers CCM<sub>32</sub> and CCM<sub>34</sub> by providing their indices and the sibling hashes to compute the outbox root (the proof of inclusion for these CCMs in the tree). 
 The data provided by the command is highlighted in red in the tree.
 (bottom) The outbox root is then updated by recomputing the Merkle tree root with the recovered CCMs. 
 In the second Merkle tree the updated nodes are highlighted in green. A new recovery command will need to provide a proof of inclusion for this updated Merkle tree._
@@ -116,7 +116,7 @@ If the validators of the terminated sidechain were byzantine in the past, i.e., 
 ### Recovery Commands as an Off-chain Service
 
 As explained in the previous subsections, these recovery commands require specific information from the terminated sidechain to be available. 
-In particular, for the message recovery mechanism, all the pending CCMs and the state of the sidechain outbox (root, size, and append path) up to the last non-pending CCM have to be available. 
+In particular, for the message recovery mechanism, all the pending CCMs, their position in the sidechain outbox root, and the state of the sidechain outbox (root, size, and append path) up to the last non-pending CCM have to be available. 
 For the state recovery mechanism, the sidechain state up to the last valid cross-chain update has to be available. 
 Moreover, this information has to be updated for future recovery commands every time a recovery command is successfully processed. 
 
@@ -130,9 +130,7 @@ That is why if a sidechain node intends to be ready to eventually submit these c
 Since these technical requirements are not straightforward, the recovery commands are better suited to be offered as an off-chain service to sidechain users.
 When a sidechain is terminated, these recovery-service providers can recover the CCMs, tokens, NFTs or in general, any cross-chain information for the interested users.
 
-
 ## Specification
-
 
 ### Constants
 
@@ -164,12 +162,12 @@ These commands are part of the [Interoperability module][interop], with `moduleI
 
 In the rest of the section:
 
-*   Let  `account(chainID)` be the object of the interoperability account store with `storePrefix = STORE_PREFIX_CHAIN_DATA` and `storeKey = chainID`.
-*   Let  `terminatedAccount(chainID)` be the object of the terminated account store with `storePrefix = STORE_PREFIX_TERMINATED_CHAIN` and `storeKey = chainID`.
+*   Let `account(chainID)` be the object of the interoperability account store with `storePrefix = STORE_PREFIX_CHAIN_DATA` and `storeKey = chainID`.
+*   Let `terminatedAccount(chainID)` be the object of the terminated account store with `storePrefix = STORE_PREFIX_TERMINATED_CHAIN` and `storeKey = chainID`.
 *   Let `isLive `and `terminateChain `be the interoperability module internal functions defined in the [Introduce Interoperability module LIP][interop].
 *   Let `uint32be` be the function for the big endian uint32 serialization of integers defined in the [Introduce Interoperability module LIP][interop].
-*   Let  `process` be the internal function with the same name defined in [Introduce cross-chain messages LIP][CCM].
-*   Let  `unescrow` be the function with the same name defined in [Define state and state transitions of Token module LIP][tokenCCM].
+*   Let `process` be the internal function with the same name defined in [Introduce cross-chain messages LIP][CCM].
+*   Let `unescrow` be the function with the same name defined in [Define state and state transitions of Token module LIP][tokenCCM].
 *   Let `RMTVerify` be the `verifyDataBlock` function specified in [the appendix C of LIP 0031][LIP31appendixC].
 *   Let `RMTCalculateRoot` be the `calculateRootFromUpdateData` function specified in [the appendix E of LIP 0031][LIP31appendixE].
 *   Let `SMTVerify` be the `verify` function specified in the [LIP 39][SMTLIP].
@@ -181,40 +179,44 @@ In the rest of the section:
 The command ID is `COMMAND_ID_MESSAGE_RECOVERY`.
 
 * `params` property:
-    * `chainID:` An integer representing the chain ID of the terminated sidechain.
-    * `crossChainMessages:` An array of serialized CCMs, according to the schema specified in [Cross-chain messages LIP][CCMschema], to be recovered.
-    * `siblingHashes:` Array of bytes with the paths in the Merkle tree for the proofs of inclusion of `crossChainMessages` in the outbox root of the sidechain as specified in [LIP 0031][LIP31inclusions].
+    * `chainID`: An integer representing the chain ID of the terminated sidechain.
+    * `crossChainMessages`: An array of serialized CCMs, according to the schema specified in [Cross-chain messages LIP][CCMschema], to be recovered.
+    * `idxs`: An array of indices corresponding to the position in the Merkle tree of the outbox root of the sidechain for the elements in `crossChainMessages` as specified in [LIP 0031][LIP31inclusions].
+    * `siblingHashes`: Array of bytes with the paths in the Merkle tree for the proofs of inclusion of `crossChainMessages` in the outbox root of the sidechain as specified in [LIP 0031][LIP31inclusions].
 
 #### Message Recovery Command Schema
 
 ```java
 messageRecoveryParams = {
-   "type":"object",
-   "properties":{
-      "chainID":{
-         "dataType":"uint32",
-         "fieldNumber":1
-      },
-      "crossChainMessages":{
-         "type":"array",
-         "items":{
-            "dataType":"bytes"
-         },
-         "fieldNumber":2
-      },
-      "siblingHashes":{
-         "type":"array",
-         "items":{
-            "dataType":"bytes"
-         },
-         "fieldNumber":3
-      }
-   },
-   "required":[
-      "chainID",
-      "crossChainMessages",
-      "siblingHashes"
-   ]
+    "type": "object",
+    "required": ["chainID", "crossChainMessages", "idxs", "siblingHashes"],
+    "properties": {
+        "chainID": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "crossChainMessages": {
+            "type": "array",
+            "items": {
+                "dataType": "bytes"
+            },
+            "fieldNumber": 2
+        },
+        "idxs": {
+            "type": "array",
+            "items": {
+                "dataType": "uint64"
+            },
+            "fieldNumber": 3
+        },
+        "siblingHashes": {
+            "type": "array",
+            "items": {
+                "dataType": "bytes"
+            },
+            "fieldNumber": 4
+        }
+    }
 }
 ```
 
@@ -233,16 +235,19 @@ sidechainAccount = account(trs.params.chainID)
 if sidechainAccount.status != CHAIN_TERMINATED and isLive(trs.params.chainID, timestamp):
     return false
 
+# check that the CCMs are still pending 
+for index in trs.params.idxs:
+    if index < sidechainAccount.partnerChainInboxSize:
+        return false
+	
 # check the validity of the CCMs to be recovered
 for CCM in deserializedCCMs:
-    if CCM.index < sidechainAccount.partnerChainInboxSize:
-        return false
     if CCM.status != CCM_STATUS_OK:
         return false
 
 # check the inclusion proof against the sidechain outbox root
 proof = { size: sidechainAccount.outbox.size, 
-	  idxs: [CCM.index for CCM in deserializedCCMs], 
+	  idxs: trs.params.idxs, 
 	  siblingHashes: trs.params.siblingHashes}
 
 return RMTVerify( [SHA-256(CCMData) for CCMData in trs.params.crossChainMessages], 
@@ -272,7 +277,7 @@ for CCM in deserializedCCMs:
 
 # update sidechain outbox root
 proof = { size: sidechainAccount.outbox.size,
-	  idxs: [CCM.index for CCM in deserializedCCMs],
+	  idxs: trs.params.idxs,
 	  siblingHashes: trs.params.siblingHashes}
 
 sidechainAccount.outbox.root = RMTCalculateRoot([SHA-256(CCMData) for CCMData in updatedCCMs], proof)
@@ -306,61 +311,51 @@ The command ID is `COMMAND_ID_STATE_RECOVERY`.
 
 ```java
 stateRecoveryParams = {
-   "type":"object",
-   "properties":{
-      "chainID":{
-         "dataType":"uint32",
-         "fieldNumber":1
-      },
-      "moduleID":{
-         "dataType":"uint32",
-         "fieldNumber":2
-      },
-      "storeEntries":{
-         "type":"array",
-         "fieldNumber":3,
-         "items":{
-            "type":"object",
-            "properties":{
-               "storePrefix":{
-                  "dataType":"uint32",
-                  "fieldNumber":1
-               },
-               "storeKey":{
-                  "dataType":"bytes",
-                  "fieldNumber":2
-               },
-               "storeValue":{
-                  "dataType":"bytes",
-                  "fieldNumber":3
-               },
-               "bitmap":{
-                  "dataType":"bytes",
-                  "fieldNumber":4
-               }
+    "type": "object",
+    "required": ["chainID", "moduleID", "storeEntries", "siblingHashes"],
+    "properties": {
+        "chainID": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "moduleID": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        },
+        "storeEntries": {
+            "type": "array",
+            "fieldNumber": 3,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "storePrefix": {
+                        "dataType": "uint32",
+                        "fieldNumber": 1
+                    },
+                    "storeKey": {
+                        "dataType": "bytes",
+                        "fieldNumber": 2
+                    },
+                    "storeValue": {
+                        "dataType": "bytes",
+                        "fieldNumber": 3
+                    },
+                    "bitmap": {
+                        "dataType": "bytes",
+                        "fieldNumber": 4
+                    }
+                },
+                "required": ["storePrefix", "storeKey", "storeValue", "bitmap"]
+            }
+        },
+        "siblingHashes": {
+            "type": "array",
+            "items": {
+                "dataType": "bytes"
             },
-            "required":[
-               "storePrefix",
-	       "storeKey",
-               "storeValue",
-               "bitmap"
-            ]
-         }
-      },
-      "siblingHashes":{
-         "type":"array",
-         "items":{
-            "dataType":"bytes"
-         },
-         "fieldNumber":4
-      }
-   },
-   "required":[
-      "chainID",
-      "moduleID"
-      "storeEntries",
-      "siblingHashes"
-   ]
+            "fieldNumber": 4
+        }
+    }
 }
 ```
 
@@ -449,34 +444,34 @@ The command ID is `COMMAND_ID_INITIATE_RECOVERY`.
 
 ```java
 recoveryInitializationParams = {
-    "type":"object",
-    "properties":{
-       "chainID":{
-          "dataType":"uint32",
-          "fieldNumber":1
-       },
-       "sidechainInteropAccount":{
-          "dataType":"bytes",
-          "fieldNumber":2
-       },
-       "bitmap":{
-          "dataType":"bytes",
-          "fieldNumber":3
-       },
-       "siblingHashes":{
-          "type":"array",
-          "items":{
-             "dataType":"bytes"
-          },
-          "fieldNumber":4
-       }
-    },
-    "required":[
-       "chainID",
-       "sidechainInteropAccount"
-       "bitmap",
-       "siblingHashes"
-    ]
+    "type": "object",
+    "required": [
+        "chainID",
+        "sidechainInteropAccount",
+        "bitmap",
+        "siblingHashes"
+    ],
+    "properties": {
+        "chainID": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "sidechainInteropAccount": {
+            "dataType": "bytes",
+            "fieldNumber": 2
+        },
+        "bitmap": {
+            "dataType": "bytes",
+            "fieldNumber": 3
+        },
+        "siblingHashes": {
+            "type": "array",
+            "items": {
+                "dataType": "bytes"
+            },
+            "fieldNumber": 4
+        }
+    }
 }
 ```
 
