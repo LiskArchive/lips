@@ -69,6 +69,7 @@ We define the following constants:
 
 The Fee module allows to specify extra fees for each command.
 This is specified in the module configuration and is written as `extraFee(moduleID, commandID)` in this LIP. 
+All `(moduleID, commandID)` pairs that do not have a specified extra fee are assumed to have `extraFee(moduleID, commandID) = 0`.
 
 For the Lisk mainchain, the following extra fees are defined:
 
