@@ -44,6 +44,17 @@ As introduced in [LIP 0013][LIP-0013], all transactions must have a fee greater 
 The minimum fee is computed from a part based on the transaction size and a part specific to the command (called _extra fee_). 
 Chains can configure their minimum fee per byte and the eventual extra fees.
 
+For example, on the Lisk mainchain, the following extra fees are defined:
+
+* `extraFee(MODULE_ID_DPOS, COMMAND_ID_DELEGATE_REGISTRATION) = 1000000000`,
+* `extraFee(MODULE_ID_INTEROPERABILITY, COMMAND_ID_SIDECHAIN_REG) = 1000000000`.
+
+The constants `MODULE_ID_DPOS` and `COMMAND_ID_DELEGATE_REGISTRATION` are defined in [LIP "Define state and state transitions of DPoS module"][DPoS-LIP]. 
+The constants `MODULE_ID_INTEROPERABILITY` and `COMMAND_ID_SIDECHAIN_REG` are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+
+
+### Burning the Minimum Fee
+
 If the chosen fee token is a native token (with chain ID equal 0) then the minimum part of the fee is burned. 
 If the chosen fee token is not a native token (for example the LSK token on sidechains), the minimum fee per byte and the extra fees should be set to zero.
 This is the only choice that makes sense, as burning non-native tokens is not supported by the [Token module][token-LIP].
@@ -70,14 +81,6 @@ We define the following constants:
 The Fee module allows to specify extra fees for each command.
 This is specified in the module configuration and is written as `extraFee(moduleID, commandID)` in this LIP. 
 All `(moduleID, commandID)` pairs that do not have a specified extra fee are assumed to have `extraFee(moduleID, commandID) = 0`.
-
-For the Lisk mainchain, the following extra fees are defined:
-
-* `extraFee(MODULE_ID_DPOS, COMMAND_ID_DELEGATE_REGISTRATION) = 1000000000`,
-* `extraFee(MODULE_ID_INTEROPERABILITY, COMMAND_ID_SIDECHAIN_REG) = 1000000000`.
-
-The constants `MODULE_ID_DPOS` and `COMMAND_ID_DELEGATE_REGISTRATION` are defined in [LIP "Define state and state transitions of DPoS module"][DPoS-LIP]. 
-The constants `MODULE_ID_INTEROPERABILITY` and `COMMAND_ID_SIDECHAIN_REG` are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
 
 
 ### Fee Module Store
