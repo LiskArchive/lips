@@ -529,7 +529,7 @@ getGeneratorsBetweenTimestamps(startTimestamp, endTimestamp):
         for generatorAddress in generatorList.addresses:
             result[generatorAddress] = baseSlots
 
-    # Assign remaining slots
+    # Assign remaining block slots
     for slotNumber in range(startSlotNumber, startSlotNumber + totalSlots):
         slotIndex = slotNumber % generatorList.addresses.length
         generatorAddress = generatorList.addresses[slotIndex]
