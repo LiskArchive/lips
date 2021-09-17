@@ -8,28 +8,24 @@ Discussions-To: https://research.lisk.com/t/introduce-validators-module/317
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Requires: LIP 0040 
+Requires: LIP 0040
 ```
-
 
 ## Abstract
 
 The Validators module is responsible for validating the eligibility of a validator for generating a block and the block signature. Furthermore, it maintains information about the registered validators in its module store and provides the generator list. In this LIP, we specify the properties of the Validators module, along with their serialization and default values. Furthermore, we specify the state transitions logic defined within this module, i.e. the protocol logic injected during the block processing and the functions that can be called from other modules or off-chain services.
 
-
 ## Copyright
 
 This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
-
 
 ## Motivation
 
 Validators in Lisk DPoS and Lisk PoA chains share many common properties, like the generator and BLS keys. It is therefore desirable to handle these properties and their associated logic in a single module, the Validators module.
 
-The Validators module handles parts of the block validation. In particular, it verifies that a validator is eligible for generating a block in a certain block slot and the validity of the block signature. Furthermore, it maintains the generator and BLS keys of all registered validators in its store and exposes functions to register new keys during a validator registration, to update the generator key, and to get the list of current validators (the generator list). 
+The Validators module handles parts of the block validation. In particular, it verifies that a validator is eligible for generating a block in a certain block slot and the validity of the block signature. Furthermore, it maintains the generator and BLS keys of all registered validators in its store and exposes functions to register new keys during a validator registration, to update the generator key, and to get the list of current validators (the generator list).
 
 In this LIP we specify the properties, serialization, and initialization of the Validators module, as well as the protocol logic processed during a block processing and the functions exposed to other modules and to off-chain services.
-
 
 ## Rationale
 
@@ -37,9 +33,7 @@ In this LIP we specify the properties, serialization, and initialization of the 
 
 To be able to create block signatures, the secret key of the validator account needs to be accessible for a generator node. The most common approach is to store the encrypted passphrase that yields the secret key (or the encrypted secret key) on the node, where the encryption key is derived from a password-based key derivation function. This results in a small security risk: If an attacker is able to get the encrypted passphrase (or encrypted secret key) and the password for the encryption key derivation, the attacker has full control over the validator account. This may be a bigger concern for validators running a Lisk node on a remote data center.
 
-
 To mitigate this risk, we propose to add an extra key pair to a validator account that is used for creating block signatures. Then, a generator node only requires access to the secret generator key, but not to the secret that is used for signing transactions. To increase security even further, validators should be able to update the generator key pair at any time. This is done by calling the `setValidatorGeneratorKey` function, described [below](#setValidatorGeneratorKey).
-
 
 ### Ensuring Uniqueness of validator BLS Keys
 
@@ -47,41 +41,31 @@ The Validators module store maintains an account for each validator registered i
 
 ### Block Slots
 
-In the Lisk protocol, time is divided into intervals of fixed length. 
-These intervals are called _block slots_ and at most one block can be added to the blockchain during each slot. 
-The length of a block slot is a constant called _block time_.
-The validator module provides the functions to calculate the block slot given the timestamp and viceversa.
-Furthermore, it maintains the _generator list_, an array of addresses corresponding to the accounts that are eligible to generate a block in the current round. 
-Each entry of the generator list is assigned to a block slot.
+In the Lisk protocol, time is divided into intervals of fixed length. These intervals are called _block slots_ and at most one block can be added to the blockchain during each slot. The length of a block slot is a constant called _block time_. The validator module provides the functions to calculate the block slot given the timestamp and viceversa. Furthermore, it maintains the _generator list_, an array of addresses corresponding to the accounts that are eligible to generate a block in the current round. Each entry of the generator list is assigned to a block slot.
 
 ## Specification
 
 In this section, we specify the substores that are part of the Validators module store and the protocol logic called during the block processing. The Validators module has module ID `MODULE_ID_VALIDATORS` (see the [table below](#notation-and-constants)).
 
-
 ### Notation and Constants
 
 We define the following constants:
 
-
-| Name          | Type    | Value       | Description |
-| ------------- |---------| ------------| ------------|
-|`MODULE_ID_VALIDATORS` | uint32 | TBD | ID of the Validators module.|
-|`STORE_PREFIX_VALIDATORS_DATA` | bytes | 0x0000 | Store prefix of the validators data substore.|
-|`STORE_PREFIX_GENERATOR_LIST` | bytes | 0x4000 | Store prefix of the generator list substore.|
-|`STORE_PREFIX_BLS_KEYS` | bytes | 0x8000 | Store prefix of the registered BLS keys substore.|
-|`STORE_PREFIX_GENESIS_DATA` | bytes | 0xc000 | Store prefix of the genesis data substore.|
-|`INVALID_BLS_KEY` | bytes | 48 bytes all set to 0x00 | An invalid BLS key, used as a placeholder before a valid BLS key is registered.|
-|`BLOCK_TIME` | integer | 10 (value for the Lisk mainchain) | Block time (in seconds) set in the chain configuration. |
-
+| Name                          | Type    | Value                             | Description                                                                     |
+|-------------------------------|---------|-----------------------------------|---------------------------------------------------------------------------------|
+|`MODULE_ID_VALIDATORS`         | uint32  | TBD                               | ID of the Validators module.                                                    |
+|`STORE_PREFIX_VALIDATORS_DATA` | bytes   | 0x0000                            | Store prefix of the validators data substore.                                   |
+|`STORE_PREFIX_GENERATOR_LIST`  | bytes   | 0x4000                            | Store prefix of the generator list substore.                                    |
+|`STORE_PREFIX_BLS_KEYS`        | bytes   | 0x8000                            | Store prefix of the registered BLS keys substore.                               |
+|`STORE_PREFIX_GENESIS_DATA`    | bytes   | 0xc000                            | Store prefix of the genesis data substore.                                      |
+|`INVALID_BLS_KEY`              | bytes   | 48 bytes all set to 0x00          | An invalid BLS key, used as a placeholder before a valid BLS key is registered. |
+|`BLOCK_TIME`                   | integer | 10 (value for the Lisk mainchain) | Block time (in seconds) set in the chain configuration.                         |
 
 ### Validators Module Store
 
-The key-value pairs in the module store are organized in the following substores. 
-
+The key-value pairs in the module store are organized in the following substores.
 
 #### Validators Data Substore
-
 
 ##### Store Prefix, Store Key, and Store Value
 
@@ -90,9 +74,7 @@ The key-value pairs in the module store are organized in the following substores
 * Store values are set to _validator account_ data structures, holding the properties indicated [below](#properties-and-default-values), serialized using the JSON schema `validatorAccountSchema`, presented [below](#json-schema).
 * Notation: For the rest of this proposal let `validatorAccount(address)` be an entry in the validators data substore identified by the store key `address`.
 
-
 ##### JSON Schema
-
 
 ```java
 validatorAccountSchema = {
@@ -111,18 +93,14 @@ validatorAccountSchema = {
 }
 ```
 
-
 ##### Properties and Default values
 
-The validator account holds the generator and BLS keys of a registered validator. In this section, we describe the properties of a validator account. These properties are set by the `registerValidatorKeys` function, called for instance during the processing of the [delegate registration command][DPOS-LIP] or the [authority registration command][POA-LIP]. 
-
+The validator account holds the generator and BLS keys of a registered validator. In this section, we describe the properties of a validator account. These properties are set by the `registerValidatorKeys` function, called for instance during the processing of the [delegate registration command][DPOS-LIP] or the [authority registration command][POA-LIP].
 
 * `generatorKey`: The public key whose corresponding private key is used to sign blocks generated by the validator. A valid generator key is 32 bytes long.
 * `blsKey`: The validator BLS key is the public BLS key whose corresponding private key is used to sign certificates. A valid BLS key is 48 bytes long.
 
-
 #### Generator List Substore
-
 
 ##### Store Prefix, Store Key, and Store Value
 
@@ -130,7 +108,6 @@ The validator account holds the generator and BLS keys of a registered validator
 * The store key is set to empty bytes.
 * The store value is set to the _generator list_ data structure, serialized using the JSON schema `generatorListSchema`, presented [below](#json-schema-1).
 * Notation: For the rest of this proposal let `generatorList` be the entry in the generator list substore.
-
 
 ##### JSON Schema
 
@@ -154,16 +131,13 @@ generatorListSchema = {
 
 This substore stores an array of addresses, corresponding to the ordered list of eligible generators for the current round. An address is 20 bytes long. The array is initialized to the initial generator list specified in the genesis block.
 
-
 #### Registered BLS Keys Substore
-
 
 ##### Store Prefix, Store Key, and Store Value
 
 * The store prefix is set to `STORE_PREFIX_BLS_KEYS`.
 * Store keys are set to 48 bytes BLS keys.
 * Store values are set to the addresses of the validators corresponding to the store keys, serialized using the `validatorAddressSchema` schema presented [below](#json-schema-2).
-
 
 ##### JSON Schema
 
@@ -180,14 +154,11 @@ validatorAddressSchema = {
 }
 ```
 
-
 ##### Properties and Default values
 
-The registered BLS keys substore maintains all registered validator BLS keys, using the BLS key as store key and the address of the validator that registered the BLS key as the corresponding store value. The registered BLS keys substore is initially empty, i.e. it does not contain any key-value pairs. 
-
+The registered BLS keys substore maintains all registered validator BLS keys, using the BLS key as store key and the address of the validator that registered the BLS key as the corresponding store value. The registered BLS keys substore is initially empty, i.e. it does not contain any key-value pairs.
 
 #### Genesis Data Substore
-
 
 ##### Store Prefix, Store Key, and Store Value
 
@@ -195,7 +166,6 @@ The registered BLS keys substore maintains all registered validator BLS keys, us
 * The store key is set to empty bytes.
 * The store value is set to a data structure holding values from the genesis block of the chain, serialized using the `genesisDataSchema` schema presented [below](#json-schema-3).
 * Notation: For the rest of this proposal let `genesisData` be the entry in the genesis data substore.
-
 
 ##### JSON Schema
 
@@ -222,38 +192,33 @@ The Validators module does not specify any commands.
 
 ### Protocol Logic for Other Modules
 
-
 #### registerValidatorKeys
 
-This function creates a new validator account in the validators data substore. It is called as part of the [delegate registration][DPOS-LIP] and [authority registration][POA-LIP] commands that are part of the DPoS and PoA module. 
-
+This function creates a new validator account in the validators data substore. It is called as part of the [delegate registration][DPOS-LIP] and [authority registration][POA-LIP] commands that are part of the DPoS and PoA module.
 
 ##### Parameters
 
 This function has the following input parameters in the order given below:
 
 * `validatorAddress`: A 20 bytes value identifying the validator account in the validators data substore.
-* `proofOfPossession`: The [proof of possession](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#public-key-registration-and-proof-of-possession) for `blsKey`. 
+* `proofOfPossession`: The [proof of possession](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#public-key-registration-and-proof-of-possession) for `blsKey`.
 * `generatorKey`: A 32 bytes value, specifying the generator key of the validator.
 * `blsKey`: A 48 bytes value, specifying the BLS key of the validator.
-
 
 ##### Returns
 
 * `success`: A boolean, indicating success or failure of the command execution.
 
-
 ##### Execution
 
 This function checks that there is no account already registered for the input `validatorAddress`, that the input BLS key has not been registered before in the chain, and that the proof of possession for the BLS key is valid. Finally, it creates a new validator account in the validators data substore.
-
 
 ```python
 registerValidatorKeys(validatorAddress, proofOfPossession, generatorKey, blsKey):
     if there exists an entry in the validators data substore with storeKey == validatorAddress:
         return False
     if there exists an entry in the registered BLS keys substore with storeKey == blsKey:
-        return False 
+        return False
     if PopVerify(blsKey, proofOfPossession) != VALID:
         return False
 
@@ -263,81 +228,68 @@ registerValidatorKeys(validatorAddress, proofOfPossession, generatorKey, blsKey)
     }
     insert validatorAccount in the validators data substore with storeKey = validatorAddress
     insert validatorAddress in the registered BLS keys substore with storeKey = blsKey
-    
+
     return True
 ```
 
 The function [`PopVerify`][bls-specs-v4-popverify] is part of the [BLS signature scheme][lip-bls-public-key-registration].
 
-
 #### getValidatorAccount
 
 This function is used to retrieve information about a validator account.
-
 
 ##### Parameters
 
 * `address`: A 20 bytes value identifying the validator account.
 
-
 ##### Returns
 
 This function returns the validator account corresponding to the input address.
-
 
 ##### Execution
 
 This function returns `validatorAccount(address)`. If there is no entry corresponding to `address`, it returns an empty object.
 
-
 #### getGenesisData
 
 This function is used to retrieve information about the genesis data.
-
 
 ##### Parameters
 
 This function has no input parameter.
 
-
 ##### Returns
 
 This function returns the data structure stored in the genesis data substore.
-
 
 #### setValidatorBLSKey
 
 This function sets the BLS key of a validator account. This update is only possible if the current BLS key of the validator is equal to a predefined constant invalid BLS key.
 
-
 ##### Parameters
 
 This function has the following input parameters in the order given below:
 
-
 * `validatorAddress`: A 20 bytes value identifying the validator account in the validators data substore.
-* `proofOfPossession`: The [proof of possession](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#public-key-registration-and-proof-of-possession) for `blsKey`. 
+* `proofOfPossession`: The [proof of possession](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#public-key-registration-and-proof-of-possession) for `blsKey`.
 * `blsKey`: A 48 bytes value, specifying the new BLS key of the validator.
-
 
 ##### Returns
 
 * `success`: A boolean, indicating success or failure of the command execution.
 
-
 ##### Execution
 
 This function checks that there exists a validator account registered for the input `validatorAddress`, that the input BLS key has not been registered before in the chain, that the BLS key of the validator account is equal to a certain constant invalid BLS key, and that the proof of possession for the BLS key is valid. Finally, it updates the BLS key of the validator account.
-
 
 ```python
 setValidatorBLSKey(validatorAddress, proofOfPossession, blsKey):
     if no entry in the validators data substore exist with storeKey == validatorAddress:
         return False
     if there exists an entry in the registered BLS keys substore with storeKey == blsKey:
-        return False 
+        return False
     if validatorAccount(validatorAddress).blsKey != INVALID_BLS_KEY:
-        return False  
+        return False
     if PopVerify(blsKey, proofOfPossession) != VALID:
         return False
 
@@ -346,11 +298,9 @@ setValidatorBLSKey(validatorAddress, proofOfPossession, blsKey):
     return True
 ```
 
-
 #### setValidatorGeneratorKey
 
 This function sets the generator key of a validator account.
-
 
 ##### Parameters
 
@@ -359,16 +309,13 @@ This function has the following input parameters in the order given below:
 * `validatorAddress`: A 20 bytes value identifying the validator account in the validators data substore.
 * `generatorKey`: A 32 bytes value, specifying the new generator key of the validator.
 
-
 ##### Returns
 
 * `success`: A boolean, indicating success or failure of the command execution.
 
-
 ##### Execution
 
 This function checks that there exists a validator account registered for the input `validatorAddress` and then updates the generator key.
-
 
 ```python
 setValidatorGeneratorKey(validatorAddress, generatorKey):
@@ -383,56 +330,45 @@ setValidatorGeneratorKey(validatorAddress, generatorKey):
 
 This function checks whether a certain BLS key has been already registered in the chain.
 
-
 ##### Parameters
 
 `blsKey`: A 48 bytes value corresponding to a BLS key.
-
 
 ##### Returns
 
 This function returns a boolean, indicating whether the input BLS key `blsKey` has been already registered or not.
 
-
 ##### Execution
 
-This function checks if an entry with store key equal to  `blsKey` exists in the registered BLS keys substore. If this is the case, it returns true, else it returns false. 
-
+This function checks if an entry with store key equal to  `blsKey` exists in the registered BLS keys substore. If this is the case, it returns true, else it returns false.
 
 #### getGeneratorList
 
 This function returns the current generator list.
 
-
 ##### Parameters
 
 This function has no input parameter.
-
 
 ##### Returns
 
 This function returns the current generator list.
 
-
 ##### Execution
 
-This function returns `generatorList`. 
-
+This function returns `generatorList`.
 
 #### getSlotNumber
 
 This function returns the slot number corresponding to the input timestamp.
 
-
 ##### Parameters
 
 `timestamp`: An integer value corresponding to a timestamp.
 
-
 ##### Returns
 
 This function returns an integer, indicating the generator slot number.
-
 
 ##### Execution
 
@@ -446,16 +382,13 @@ getSlotNumber(timestamp):
 
 This function returns the slot time corresponding to the input slot number.
 
-
 ##### Parameters
 
 `slotNumber`: An integer value corresponding to a slot number.
 
-
 ##### Returns
 
 This function returns an integer, indicating the slot time.
-
 
 ##### Execution
 
@@ -469,16 +402,13 @@ getSlotTime(slotNumber):
 
 This function returns the address of the generator active at the input timestamp. Notice that if the input timestamp corresponds to a time before the beginning of the current round, this function may not return the correct generator address.
 
-
 ##### Parameters
 
 `timestamp`: An integer value corresponding to a timestamp.
 
-
 ##### Returns
 
 This function returns a 20 bytes address.
-
 
 ##### Execution
 
@@ -491,9 +421,7 @@ getGeneratorAtTimestamp(timestamp):
 
 #### getGeneratorsBetweenTimestamps
 
-This function returns the address of the generators active between the two input timestamps and the number of block slots assigned to them. 
-Notice that if the input timestamps corresponds to times before the beginning of the current round, this function may not return the correct generator addresses.
-
+This function returns the address of the generators active between the two input timestamps and the number of block slots assigned to them. Notice that if the input timestamps corresponds to times before the beginning of the current round, this function may not return the correct generator addresses.
 
 ##### Parameters
 
@@ -502,17 +430,14 @@ This function has the following input parameters in the order given below:
 * `startTimestamp`: An integer value corresponding to a timestamp.
 * `endTimestamp`: An integer value corresponding to a timestamp.
 
-
 ##### Returns
 
 This function returns an object whose keys are generator addresses, with value corresponding to the number of block slots assigned to them in between the input timestamps.
-
 
 ##### Execution
 
 ```python
 getGeneratorsBetweenTimestamps(startTimestamp, endTimestamp):
-    
     if endTimestamp < startTimestamp:
         return invalid timestamps error
 
@@ -522,7 +447,7 @@ getGeneratorsBetweenTimestamps(startTimestamp, endTimestamp):
     endSlotNumber = floor((endTimestamp - genesisData.timestamp) / BLOCK_TIME)
     totalSlots = endSlotNumber - startSlotNumber + 1
 
-    # Quick skip to directly assign many block slots to every generator in the list 
+    # Quick skip to directly assign many block slots to every generator in the list
     baseSlots = floor(totalSlots / generatorList.addresses.length)
     if baseSlots > 0:
         totalSlots -= baseSlots * generatorList.addresses.length
@@ -545,71 +470,59 @@ getGeneratorsBetweenTimestamps(startTimestamp, endTimestamp):
 
 This function updates the value of the generator list.
 
-
 ##### Parameters
 
 * `generatorAddresses`: An array of 20 bytes values.
-
 
 ##### Returns
 
 This function returns a boolean indicating the successful update of the generator list.
 
-
 ##### Execution
 
-This function checks if all elements of `generatorAddresses` have a registered validator account in the validators data substore. If this is not the case, it returns false. Otherwise, it updates the value of `generatorList.addresses` to `generatorAddresses` and returns true. 
-
+This function checks if all elements of `generatorAddresses` have a registered validator account in the validators data substore. If this is not the case, it returns false. Otherwise, it updates the value of `generatorList.addresses` to `generatorAddresses` and returns true.
 
 ### Endpoints for Off-Chain Services
-
 
 #### getGeneratorList
 
 This function returns the current generator list.
 
-
 ##### Parameters
 
 This function has no input parameter.
-
 
 ##### Returns
 
 This function returns the current generator list.
 
-
 ##### Execution
 
-This function returns `generatorList`. 
-
+This function returns `generatorList`.
 
 #### validateBLSKey
 
-This function checks that the input BLS key is valid, i.e. can be registered in a validator account. 
+This function checks that the input BLS key is valid, i.e. can be registered in a validator account.
 
 ##### Parameters
 
 This function has the following input parameters in the order given below:
 
-* `proofOfPossession`: The [proof of possession](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#public-key-registration-and-proof-of-possession) for `blsKey`. 
+* `proofOfPossession`: The [proof of possession](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#public-key-registration-and-proof-of-possession) for `blsKey`.
 * `blsKey`: A 48 bytes value, specifying the BLS key to be checked.
-
 
 ##### Returns
 
 * `success`: A boolean, indicating the validity of the input BLS key.
 
-
 ##### Execution
 
-This function checks that the input BLS key has not been registered before in the chain and that the proof of possession for the BLS key is valid. 
-
+This function checks that the input BLS key has not been registered before in the chain and that the proof of possession for the BLS key is valid.
 
 ```python
 validateBLSKey(proofOfPossession, blsKey):
     if there exists an entry in the registered BLS keys substore with storeKey == blsKey:
-        return False  
+        return False
 
     if PopVerify(blsKey, proofOfPossession) != VALID:
         return False
@@ -617,16 +530,13 @@ validateBLSKey(proofOfPossession, blsKey):
     return True
 ```
 
-
-
 ### Block Processing
-
 
 #### After Genesis Block Execution
 
 After the genesis block `b` is executed, the following logic is executed:
 
-* Create the entry in the genesis data substore. In particular, set `genesisData.timestamp` to `b.header.timestamp`. 
+* Create the entry in the genesis data substore. In particular, set `genesisData.timestamp` to `b.header.timestamp`.
 * Check the validity of the validators store included in the genesis block. In particular, for each entry `validatorAccount` in the validators data substore:
   * Check that `validatorAccount.generatorKey` is a 32 bytes value.
   * Check that `validatorAccount.blsKey` is a 48 bytes value.
@@ -635,11 +545,9 @@ After the genesis block `b` is executed, the following logic is executed:
 * Check the validity of the registered BLS keys substore included in the genesis block. In particular, for each entry `blsKey` in the registered BLS keys substore:
   * Let `validatorAddress` be the store value of `blsKey`. Check that there is an entry `validatorAccount` in the validators data substore with store key equals to `validatorAddress` and `validatorAccount.blsKey` equals to `blsKey`.
 
-
 ## Backwards Compatibility
 
 This LIP defines a new module and specify its store, which in turn will become part of the state tree and will be authenticated by the state root. As such, it will induce a hardfork.
-
 
 [DPOS-LIP]: https://research.lisk.com
 [POA-LIP]: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/
