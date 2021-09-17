@@ -522,7 +522,7 @@ getGeneratorsBetweenTimestamps(startTimestamp, endTimestamp):
     endSlotNumber = floor((endTimestamp - genesisData.timestamp) / BLOCK_TIME)
     totalSlots = endSlotNumber - startSlotNumber + 1
 
-    # Quick skip to assign directly many block slot to every generator in the list 
+    # Quick skip to directly assign many block slots to every generator in the list 
     baseSlots = floor(totalSlots / generatorList.addresses.length)
     if baseSlots > 0:
         totalSlots -= baseSlots * generatorList.addresses.length
