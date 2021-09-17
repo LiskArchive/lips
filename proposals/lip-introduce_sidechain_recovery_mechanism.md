@@ -60,7 +60,7 @@ This recovery mechanism requires these conditions to work:
 *   The proof of inclusion for the pending CCMs into the current `outbox.root` has to be available. When a message recovery command is processed, the `outbox.root` property of the interoperability account of the corresponding sidechain is updated to account for the recovered CCMs (see Figure 1). This implies that the future potential message recovery commands have to include a proof of inclusion into the updated Merkle tree against the new `outbox.root`.
 
 
-![CCM_recovery](lip-sidechain_recovery_transactions/CCMrecovery.png)
+![CCM_recovery](lip-introduce_sidechain_recovery_mechanism/CCMrecovery.png)
 _Figure 1: (top) The message recovery command recovers CCM<sub>32</sub> and CCM<sub>34</sub> by providing their indices and the sibling hashes to compute the outbox root (the proof of inclusion for these CCMs in the tree). 
 The data provided by the command is highlighted in red in the tree.
 (bottom) The outbox root is then updated by recomputing the Merkle tree root with the recovered CCMs. 
@@ -99,7 +99,7 @@ In general, this information is only available on mainchain (in the interoperabi
 A way to make sidechains aware of this specific information for state recoveries is needed. This recovery initialization process on sidechains can happen in two ways:
 * **Recovery initialization command**: This command is used to prove on a sidechain the value that the `stateRoot` of the terminated sidechain has on mainchain.
 Any user on the corresponding sidechain can send a transaction with this command and initiate the state recoveries with respect to the terminated sidechain.
-* Sidechain terminated message: As specified in the [cross-chain message LIP][CCMterminatedMessage], when a CCM reaches a receiving chain that has been terminated, a sidechain terminated message is created and sent back to the sending chain carrying the stateRoot of the terminated sidechain. 
+* Sidechain terminated message: As specified in the [cross-chain message LIP][CCMterminatedMessage], when a CCM reaches a receiving chain that has been terminated, a sidechain terminated message is created and sent back to the sending chain carrying the `stateRoot` of the terminated sidechain. 
 The application of this CCM on the sidechain will effectively initiate the recovery process.
 
 Assuming these conditions are fulfilled, the entries of substores of any recoverable module in a terminated sidechain can be recovered back to the chain in which the transaction with this command was submitted. 
@@ -149,11 +149,11 @@ When a sidechain is terminated, these recovery-service providers can recover the
 | **Command ID** |||
 | `COMMAND_ID_MESSAGE_RECOVERY`  | uint32 | 4 |
 | `COMMAND_ID_STATE_RECOVERY` | uint32 | 5 |
-| `COMMAND_ID_INITIATE_RECOVERY`    | uint32 | 6 |
+| `COMMAND_ID_RECOVERY_INITIALIZATION`    | uint32 | 6 |
 | `CROSS_CHAIN_COMMAND_ID_TRANSFER` | uint32 | 0 |
 | **Other** |||
 | `MAINCHAIN_ID`               | uint32 | 1 |
-| LIVENESS_LIMIT               | uint32 | `30*24*3600`
+| `LIVENESS_LIMIT`               | uint32 | `30*24*3600`
 
 This LIP specifies three commands for Lisk mainchain. 
 These commands are part of the [Interoperability module][interop], with `moduleID = MODULE_ID_INTEROPERABILITY`.
@@ -165,7 +165,7 @@ In the rest of the section:
 
 *   Let `account(chainID)` be the object of the interoperability account store with `storePrefix = STORE_PREFIX_CHAIN_DATA` and `storeKey = chainID`.
 *   Let `terminatedAccount(chainID)` be the object of the terminated account store with `storePrefix = STORE_PREFIX_TERMINATED_CHAIN` and `storeKey = chainID`.
-*   Let `isLive `and `terminateChain `be the interoperability module internal functions defined in the [Introduce Interoperability module LIP][interop].
+*   Let `isLive` and `terminateChain` be the interoperability module internal functions defined in the [Introduce Interoperability module LIP][interop].
 *   Let `uint32be` be the function for the big endian uint32 serialization of integers defined in the [Introduce Interoperability module LIP][interop].
 *   Let `process` be the internal function with the same name defined in [Introduce cross-chain messages LIP][CCM].
 *   Let `unescrow` be the function with the same name defined in [Define state and state transitions of Token module LIP][tokenCCM].
@@ -182,7 +182,7 @@ The command ID is `COMMAND_ID_MESSAGE_RECOVERY`.
 * `params` property:
     * `chainID`: An integer representing the chain ID of the terminated sidechain.
     * `crossChainMessages`: An array of serialized CCMs, according to the schema specified in [Cross-chain messages LIP][CCMschema], to be recovered.
-    * `idxs`: An array of indices corresponding to the position in the Merkle tree of the outbox root of the sidechain for the elements in `crossChainMessages` as specified in [LIP 0031][LIP31inclusions].
+    * `idxs`: An array of indices corresponding to the position in the outbox Merkle tree of the sidechain for the elements in `crossChainMessages` as specified in [LIP 0031][LIP31inclusions].
     * `siblingHashes`: Array of bytes with the paths in the Merkle tree for the proofs of inclusion of `crossChainMessages` in the outbox root of the sidechain as specified in [LIP 0031][LIP31inclusions].
 
 #### Message Recovery Command Schema
@@ -233,6 +233,7 @@ if trs.params.chainID does not correspond to a registered sidechain:
 sidechainAccount = account(trs.params.chainID)
 
 # chain has to be either terminated or inactive
+timestamp = timestamp of the block including trs
 if sidechainAccount.status != CHAIN_TERMINATED and isLive(trs.params.chainID, timestamp):
     return false
 
@@ -246,9 +247,9 @@ for CCM in deserializedCCMs:
     if CCM.status != CCM_STATUS_OK:
         return false
     if CCM.sendingChainID == MAINCHAIN_ID:
-        if CCM.moduleID != MODULE_ID_TOKEN
+        if CCM.moduleID != MODULE_ID_TOKEN:
             return false
-        if CCM.crossChainCommandID != CROSS_CHAIN_COMMAND_ID_TRANSFER
+        if CCM.crossChainCommandID != CROSS_CHAIN_COMMAND_ID_TRANSFER:
             return false
 
 # check the inclusion proof against the sidechain outbox root
@@ -410,7 +411,7 @@ for each entry in trs.params.storeEntries:
     route processing logic to the module given by trs.params.moduleID
     recover(trs.params.chainID, trs.params.moduleID, entry.storePrefix, entry.storeKey, entry.storeValue)
 
-    emptyStore = empty bytes // define an empty store entry
+    emptyStore = empty bytes # define an empty store entry
     query = { key: entry.storekey, 
               value: SHA-256(emptyStore), 
               bitmap: entry.bitmap}
@@ -438,7 +439,7 @@ The recover function is specified for the [Token module][tokenReducer] and in th
 
 ### Recovery Initialization Command
 
-The command ID is `COMMAND_ID_INITIATE_RECOVERY`.
+The command ID is `COMMAND_ID_RECOVERY_INITIALIZATION`.
 
 * `params` property:
     * `chainID:` An integer representing the chain ID of the terminated sidechain.
@@ -483,7 +484,7 @@ recoveryInitializationParams = {
 
 #### Recovery Initialization Command Validation
 
-Let `trs` be a transaction with module ID `MODULE_ID_INTEROPERABILITY` and command ID `COMMAND_ID_INITIATE_RECOVERY` to be verified.
+Let `trs` be a transaction with module ID `MODULE_ID_INTEROPERABILITY` and command ID `COMMAND_ID_RECOVERY_INITIALIZATION` to be verified.
 
 ```python
 if trs.params.chainID == 1 or trs.params.chainID == ownChainID:
@@ -514,7 +515,7 @@ return SMTVerify(queryKeys, proofOfInclusionInteropAccount, mainchainAccount.sta
 
 #### Recovery Initialization Command Execution
 
-Processing a transaction `trs` with module ID `MODULE_ID_INTEROPERABILITY` and command ID `COMMAND_ID_INITIATE_RECOVERY` implies the following logic:
+Processing a transaction `trs` with module ID `MODULE_ID_INTEROPERABILITY` and command ID `COMMAND_ID_RECOVERY_INITIALIZATION` implies the following logic:
 
 ```python
 let deserializedInteropAccount be the deserialization of trs.params.sidechainInteropAccount
