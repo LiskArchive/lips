@@ -534,7 +534,8 @@ The registration message is a CCM with
 *   `moduleID = MODULE_ID_INTEROPERABILITY`,
 *   `crossChainCommandID  = CROSS_CHAIN_COMMAND_ID_REGISTRATION`.
 
-The role of the registration message is to active the sending chain and guarantee that a channel was opened on the sidechain with the correct chain ID, name and network ID.
+The role of the registration message is to guarantee that a registration transaction was included in the partner chain when activating the cross-chain channel. 
+It also serves to guarantee that the channel was opened on the sidechain with the correct chain ID, name and network ID.
 
 
 ##### Parameters
