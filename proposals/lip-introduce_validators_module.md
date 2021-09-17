@@ -260,7 +260,6 @@ registerValidatorKeys(validatorAddress, proofOfPossession, generatorKey, blsKey)
     validatorAccount = {
         generatorKey: generatorKey,
         blsKey: blsKey,
-        proofOfPossession: proofOfPossession
     }
     insert validatorAccount in the validators data substore with storeKey = validatorAddress
     insert validatorAddress in the registered BLS keys substore with storeKey = blsKey
