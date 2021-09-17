@@ -489,7 +489,7 @@ getGeneratorAtTimestamp(timestamp):
     return generatorList.addresses[slotIndex]
 ```
 
-#### getGeneratorBetweenTimestamps
+#### getGeneratorsBetweenTimestamps
 
 This function returns the address of the generators active between the two input timestamps and the number of block slots assigned to them. 
 Notice that if the input timestamps corresponds to times before the beginning of the current round, this function may not return the correct generator addresses.
@@ -511,7 +511,7 @@ This function returns an object whose keys are generator addresses, with value c
 ##### Execution
 
 ```python
-getGeneratorBetweenTimestamps(startTimestamp, endTimestamp):
+getGeneratorsBetweenTimestamps(startTimestamp, endTimestamp):
     
     if endTimestamp < startTimestamp:
         return invalid timestamps error
