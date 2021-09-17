@@ -176,7 +176,7 @@ If a CCM is invalid (as specified in the ["Execute Cross-chain Updates" section]
 The first cross-chain update containing messages from a given chain has a special function. 
 It will change the sending chain status from `CHAIN_REGISTERED` to `CHAIN_ACTIVE`.
 This change means that the receiving chain is now available to receive cross-chain messages and can interact with the sending chain.
-Additionally, once active, sidechains must now follow the liveness condition and regularly post cross-chain updates on the mainchain (at least once a month).
+Additionally, once active, sidechains must follow the liveness condition and regularly post cross-chain updates on the mainchain (at least once every 30 days).
 If the sidechain fails to follow the liveness condition, it is terminated on the mainchain.
 
 When a sidechain is started and registered, the sidechain developers might decide to not activate the sidechain straight away (maybe to do further testing).
