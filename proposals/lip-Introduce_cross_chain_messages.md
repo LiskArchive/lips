@@ -35,7 +35,7 @@ The cross-chain update receipt serves to update a few properties of the interope
 The second one, the _channel terminated message_, is sent to chains which have been terminated. 
 This message also updates a few properties of the interoperability store to keep them synchronized between chains. 
 The third one, the _registration message_, is used when registering a chain. 
-This message activates the channel between the chains.
+This message must be the first message added to the inbox for a CCU to activate the channel between the chains.
 Furthermore, it serves as a guarantee that the correct chain ID, name and network ID were used when the registration transaction was sent on the sidechain.
 The last one, the _sidechain terminated message_ is created on the Lisk mainchain when a message should be routed to a terminated or inactive chain.
 This message allows other sidechains to automatically trigger the creation of the terminated sidechain account.
@@ -168,7 +168,9 @@ This allows the sidechain to know exactly which messages were executed on the ma
 
 #### Registration Message
 
-The role of the registration message is to change the sending chain status from `CHAIN_REGISTERED` to `CHAIN_ACTIVE`. 
+The role of the registration message is to allow for a safe activation of the channel between the sending and receiving chains.
+It guarantees that when the CCU activating the channel is executed, a registration transaction has been included on the partner chain.
+
 When a sidechain is registered on the mainchain, an ecosystem wide chain ID and name are assigned to this chain. 
 The chain name and the corresponding network ID are included in a registration message that is appended to the sidechain outbox. 
 When the first cross-chain update containing messages is sent to the sidechain, the equality between the properties in the registration message and the ones in the interoperability store is verified.
