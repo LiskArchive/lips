@@ -5,10 +5,11 @@ Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
         Rishi Mittal <rishi.mittal@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-validators-module/317
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: LIP 0040
+Created: 2021-08-06
+Updated: 2021-09-17
+Requires: 0040
 ```
 
 ## Abstract
