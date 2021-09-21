@@ -51,11 +51,11 @@ This command also initializes another data structure in the interoperability sto
 
 _Figure 1: A sketch of an interoperability interaction between the Lisk mainchain and a sidechain. Information (cross-chain messages and updated state) from mainchain blocks (light blue) is collected into a cross-chain update command by the relayer, which then posts it on the sidechain._
 
-CCUs are used to post the updated state of the sending chain on the receiving chain. Furthermore, they transmit the cross-chain messages that need to be sent to the receiving chain (see Figure 1). We introduce two different CCUs, one for posting on the Lisk mainchain, and the other for posting on sidechains. They differ in the way the included messages are handled: on mainchain, messages targeting another sidechain are forwarded to that sidechain outbox, while messages targeting the mainchain are simply processed. On the other hand, a CCU posted on a sidechain can only contain CCMs targeting that sidechain, being invalid otherwise.
+CCUs are used to post the updated state of the sending chain on the receiving chain. Furthermore, they transmit the cross-chain messages that need to be sent to the receiving chain (see Figure 1). We introduce two different CCUs, one for posting on the Lisk mainchain, and the other for posting on sidechains. They differ in the way the included messages are handled: on the mainchain, messages targeting another sidechain are forwarded to that sidechain outbox, while messages targeting the mainchain are simply processed. On the other hand, a CCU posted on a sidechain can only contain CCMs targeting that sidechain, being invalid otherwise.
 
 #### [Recovery Initialization Command][recovery-LIP]
 
-This command is used to initialize a terminated chain account on a sidechain. The user proves with an inclusion proof that the target chain state on mainchain implies that that chain is terminated (either the status is set to 'terminated' or the liveness condition is violated). Once the terminated chain account has been initialized, the state recovery command can be issued in the sidechain.
+This command is used to initialize a terminated chain account on a sidechain. The user proves with an inclusion proof that the target chain state on the mainchain implies that that chain is terminated (either the status is set to 'terminated' or the liveness condition is violated). Once the terminated chain account has been initialized, the state recovery command can be issued in the sidechain.
 
 #### [State Recovery Command][recovery-LIP]
 
@@ -63,7 +63,7 @@ This command is used to recover a certain state (for example fungible and non-fu
 
 #### [Message Recovery Command][recovery-LIP]
 
-This command is used to recover a pending message in the outbox of a terminated chain. The user proves with an inclusion proof that the message is in the terminated sidechain outbox. The proof is validated against the outbox root stored in the sidechain account on mainchain. The recovered message is then bounced back to the original sending chain (which could be the mainchain).
+This command is used to recover a pending message in the outbox of a terminated chain. The user proves with an inclusion proof that the message is in the terminated sidechain outbox. The proof is validated against the outbox root stored in the sidechain account on the mainchain. The recovered message is then bounced back to the original sending chain (which could be the mainchain).
 
 ### Liveness Condition
 
@@ -73,9 +73,9 @@ Active sidechains are required to prove their liveness to the mainchain at least
 
 The life cycle of a sidechain can be split into 3 parts, corresponding to the 3 values of the account status property: ''registered'', ''active'', and ''terminated''.
 
-A sidechain registers on the mainchain with a [sidechain registration command][registration-LIP]. This command creates the sidechain account on mainchain, with initial status set to ''registered''. Thereafter, the mainchain account is created on a sidechain with a [mainchain registration command][registration-LIP], with initial status set to ''registered''.
+A sidechain registers on the mainchain with a [sidechain registration command][registration-LIP]. This command creates the sidechain account on the mainchain, with initial status set to ''registered''. Thereafter, the mainchain account is created on a sidechain with a [mainchain registration command][registration-LIP], with initial status set to ''registered''.
 
-After a sidechain has been registered on the mainchain, it cannot receive any cross-chain message and does not need to follow the liveness rule, until the first sidechain CCU has been included in the mainchain. At this point, the status of the sidechain account on mainchain is updated to ''active'' and the liveness requirement is enforced.
+After a sidechain has been registered on the mainchain, it cannot receive any cross-chain message and does not need to follow the liveness rule, until the first sidechain CCU has been included in the mainchain. At this point, the status of the sidechain account on the mainchain is updated to ''active'' and the liveness requirement is enforced.
 
 If no CCU is received within 30 days, the [chain account is terminated](#terminateChain) and no more CCMs can be sent to or received from the sidechain. A sidechain account can also be terminated if the sidechain posts a CCU containing a CCM with an invalid schema or with an invalid sending chain ID. A message targeting a terminated chain is bounced on the mainchain instead of being forwarded. When this happens, a ''terminated sidechain'' message is emitted by the mainchain, targeting the original sending chain. When this message is processed, the chain is also terminated in the sending chain, blocking future messages.
 
@@ -83,19 +83,19 @@ When a chain is terminated, a ''terminated chain'' account is created, storing t
 
 ### Properties of the Interoperability Module
 
-Each interoperable sidechain maintains a chain account for the mainchain, while the mainchain maintains an account for each registered sidechain. Correspondingly, on a sidechain we denote with ''partner chain'' the mainchain, while on mainchain we denote with ''partner chain'' the relevant sidechain.
+Each interoperable sidechain maintains a chain account for the mainchain, while the mainchain maintains an account for each registered sidechain. Correspondingly, on a sidechain we denote with ''partner chain'' the mainchain, while on the mainchain we denote with ''partner chain'' the relevant sidechain.
 
 Each chain also includes an account storing the chain name and ID in the ecosystem as well as the current chain nonce. This ''own chain'' account is present by default in the mainchain, while on a sidechain is created by the mainchain registration command.
 
 <img src="lip-introduce-interoperability-module/store.png" width="80%">
 
-_Figure 2: A summary of the Interoperability module store. The Interoperability module defines 4 stores: the outbox store for outbox roots, the account store for partner chain accounts and the own chain account, and the terminated chains to allow for recovery commands. The name and network ID stores, keeping track of the names and network IDs of registered sidechains, are present only on mainchain._
+_Figure 2: A summary of the Interoperability module store. The Interoperability module defines 4 stores: the outbox store for outbox roots, the account store for partner chain accounts and the own chain account, and the terminated chains to allow for recovery commands. The name and network ID stores, keeping track of the names and network IDs of registered sidechains, are present only on the mainchain._
 
 ### Message Forwarding and the Role of the Lisk Mainchain
 
 In the Lisk ecosystem, the Lisk mainchain plays a central role, distinct from any other chain. It acts as an intermediary chain, [relaying cross-chain messages between sidechains][CCU-LIP]. This has a few notable advantages:
 
-1. Relayers only need to follow the chosen sidechain and the mainchain. All CCMs sent to a given chain will go through the sidechain outbox on mainchain.
+1. Relayers only need to follow the chosen sidechain and the mainchain. All CCMs sent to a given chain will go through the sidechain outbox on the mainchain.
 2. The mainchain guarantees that messages are available and can be delivered to active sidechains. In the case in which the receiving sidechain is not active, the messages are returned to their sending chain. This allows the sidechain protocol to remain simple and agnostic to the state of other sidechains. In particular, transaction handling does not require knowledge of all potential receiving chains.
 
 ### Inbox and Outbox
@@ -110,7 +110,7 @@ The outbox root property is duplicated and additionally stored separately from a
 
 ### Storage of Auxiliary Data
 
-In order to process sidechain registration commands more efficiently, it is convenient to store on mainchain auxiliary data that can be used to check the uniqueness of the sidechain name and network ID. For instance, if an entry is already present in the name auxiliary data, it means that a chain with that name is already registered in the ecosystem.  
+In order to process sidechain registration commands more efficiently, it is convenient to store on the mainchain auxiliary data that can be used to check the uniqueness of the sidechain name and network ID. For instance, if an entry is already present in the name auxiliary data, it means that a chain with that name is already registered in the ecosystem.  
 
 ## Specification
 
@@ -343,12 +343,12 @@ In this section, we describe the properties of a chain account and specify their
   * `size`: The current size of the tree, i.e. the number of cross-chain messages sent to the partner chain. The default value of this property is 0.
 * `networkID`: This property corresponds to the network identifier, or network ID, of the partner chain. For a sidechain account on the mainchain, it is set by the [sidechain registration command][registration-LIP]. For the mainchain account on sidechains, it is a protocol constant, set to `MAINCHAIN_NETWORK_ID`.
 * `lastCertifiedStateRoot`: The value of this property is set to the state root contained in the last CCU from the partner chain. It is used to validate the inclusion proof of the cross-chain messages contained in a CCU and to verify the validity of the token recovery command. The default value of this property is the constant `EMPTY_HASH`.
-* `lastCertifiedTimestamp`: The value of this property is set to the timestamp contained in the last CCU from the partner chain. On mainchain, it is used to check that the sidechain chain fulfills the liveness requirement (see [above](#Liveness-Condition)). The default value of this property is 0.
+* `lastCertifiedTimestamp`: The value of this property is set to the timestamp contained in the last CCU from the partner chain. On the mainchain, it is used to check that the sidechain chain fulfills the liveness requirement (see [above](#Liveness-Condition)). The default value of this property is 0.
 * `lastCertifiedHeight`: The value of this property is set to the height contained in the last certificate from the partner chain. It is used to [validate a certificate][CCU-LIP] (certificates must contain block headers with increasing heights). The default value of this property is 0.
 * `partnerChainOutboxRoot`: The value of this property is set to the outbox root computed from the last CCU from the partner chain. It is used to validate the cross-chain messages contained in a future CCU when the CCU does not certify a new outbox root. The default value of this property is the constant `EMPTY_HASH`.
 * `partnerChainOutboxSize`: This property corresponds to the size of the outbox tree of the partner chain, i.e. the number of cross-chain messages sent from the partner chain. This property is updated by the [`inboxUpdate property`][CCU-LIP] contained in CCUs from the partner chain. The default value of this property is 0.
 * `partnerChainInboxSize`: This property corresponds to the size of the inbox tree of the partner chain, i.e. the number of cross-chain messages received and processed by the partner chain. This property is used to verify the validity of the message recovery command and it is updated by a [cross-chain update receipt message][CCM-LIP] from the partner chain. The default value of this property is 0.
-* `name`: This property corresponds to the name of the sidechain as a string of characters. It has to be unique in the ecosystem. For the mainchain account on a sidechain, this property is initialized to the string `MAINCHAIN_NAME`. For a sidechain account on mainchain, this property is set by the sidechain registration command.
+* `name`: This property corresponds to the name of the sidechain as a string of characters. It has to be unique in the ecosystem. For the mainchain account on a sidechain, this property is initialized to the string `MAINCHAIN_NAME`. For a sidechain account on the mainchain, this property is set by the sidechain registration command.
 * `status`: This property stores the current status of the partner chain account. As explained [above](#Life-Cycle-of-a-Sidechain), there are 3 possible statuses: ''active'', ''registered'', and ''terminated''. The default value of this property is `CHAIN_REGISTERED`, corresponding to the "registered" status.
 * `activeValidators`: An array of objects corresponding to the set of validators eligible to sign the certificates from the partner chain. Each entry contains the following properties:
   * `blsKey`: The BLS public key used to sign certificates.
@@ -392,11 +392,11 @@ ownChainAccountSchema = {
 
 ##### Properties and Default values
 
-* `name`: The name of the sidechain registered on mainchain with the sidechain registration command.
-* `chainID`: The chain ID assigned to the sidechain on mainchain after processing the sidechain registration command.
+* `name`: The name of the sidechain registered on the mainchain with the sidechain registration command.
+* `chainID`: The chain ID assigned to the sidechain on the mainchain after processing the sidechain registration command.
 * `nonce`: The chain nonce, an incremental integer indicating the total number of CCMs sent from the chain.
 
-On manchain, the own chain account is present by default, set to an object with properties:
+On the manchain, the own chain account is present by default, set to an object with properties:
 
 * `name=MAINCHAIN_NAME`,
 * `ID=MAINCHAIN_ID`,
@@ -437,7 +437,7 @@ A terminated chain account is created as part of the `terminateChain` internal f
 
 #### Registered Names Substore
 
-This substore contains the names of all chains in the ecosystem. It is present only on mainchain. Entries are created as part of the processing of the sidechain registration command.
+This substore contains the names of all chains in the ecosystem. It is present only on the mainchain. Entries are created as part of the processing of the sidechain registration command.
 
 ##### Store Prefix, Store Key, and Store Value
 
@@ -471,7 +471,7 @@ An entry for the mainchain is present by default, where:
 
 #### Registered Network IDs Substore
 
-This substore contains the network IDs of all chains in the ecosystem. It is present only on mainchain. Entries are created as part of the processing of the sidechain registration command.
+This substore contains the network IDs of all chains in the ecosystem. It is present only on the mainchain. Entries are created as part of the processing of the sidechain registration command.
 
 ##### Store Prefix, Store Key, and Store Value
 
@@ -630,7 +630,7 @@ isLive(chainID, timestamp):
 
 #### getPartnerChainID
 
-The `getPartnerChainID` function returns the chain ID of the partner chain. On mainchain, this is always the given chain ID, while on a sidechain this is always the mainchain ID.
+The `getPartnerChainID` function returns the chain ID of the partner chain. On the mainchain, this is always the given chain ID, while on a sidechain this is always the mainchain ID.
 
 ##### Parameters
 
@@ -652,15 +652,15 @@ getPartnerChainID(chainID):
 
 #### createCrossChainMessage
 
-The `createCrossChainMessage` function creates and returns a new CCM. It is specified in ["Cross-chain Messages" LIP][CCM-LIP].
+The `createCrossChainMessage` function creates and returns a new CCM. It is specified in the ["Cross-chain Messages" LIP][CCM-LIP].
 
 #### validateFormat
 
-The `validateFormat` function checks that a CCM follows the correct schema and does not exceed a size limit of 10KB. It is specified in ["Cross-chain Messages" LIP][CCM-LIP].
+The `validateFormat` function checks that a CCM follows the correct schema and does not exceed a size limit of 10KB. It is specified in the ["Cross-chain Messages" LIP][CCM-LIP].
 
 #### process
 
-The `process` function applies or forwards CCMs, including the handling of the different error cases. It is specified in ["Cross-chain Messages" LIP][CCM-LIP].
+The `process` function applies or forwards CCMs, including the handling of the different error cases. It is specified in the ["Cross-chain Messages" LIP][CCM-LIP].
 
 #### terminateChain
 
