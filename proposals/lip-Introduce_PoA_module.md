@@ -599,7 +599,7 @@ TBA
 
 [creative]: https://creativecommons.org/publicdomain/zero/1.0/
 [gavin]: https://github.com/ethereum/guide/blob/master/poa.md
-[rounds]: https://lisk.io/documentation/lisk-sdk/protocol/consensus-algorithm.html#delegate_selection
+[rounds]: https://lisk.com/documentation/lisk-sdk/protocol/consensus-algorithm.html#delegate_selection
 [lip23]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#delegate-productivity-1
 [lip24]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md
 [lip35]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0035.md
@@ -613,6 +613,6 @@ TBA
 [randomModule]: https://research.lisk.com/t/define-state-and-state-transitions-of-the-random-module/311
 [validatorsModule]: https://research.lisk.com/t/introduce-validators-module/317
 [weighted-bft-lip-link]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md
-[delegatedoc]: https://lisk.io/documentation/lisk-sdk/protocol/transactions.html#delegate
+[delegatedoc]: https://lisk.com/documentation/lisk-sdk/protocol/transactions.html#delegate
 [lip27]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0027.md
 [BLS]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md
