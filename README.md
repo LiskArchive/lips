@@ -56,3 +56,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0042](proposals/lip-0042.md) | Define state transitions of Reward module                                                      | Iker Alustiza, Mehmet Egemen Albayrak                  | Standards Track | Draft         |
 | [0043](proposals/lip-0043.md) | Introduce chain registration mechanism                                                         | Iker Alustiza                                          | Standards Track | Draft         |
 | [0044](proposals/lip-0044.md) | Introduce Validators module                                                                    | Alessandro Ricottone, Andreas Kendziorra, Rishi Mittal | Standards Track | Draft         |
+| [0045](proposals/lip-0045.md) | Introduce Interoperability module                                                              | Alessandro Ricottone, Mitsuaki Uchimoto                | Standards Track | Draft         |
