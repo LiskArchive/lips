@@ -4,9 +4,10 @@ Title: Introduce Interoperability module
 Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Mitsuaki Uchimoto <mitsuaki.uchimoto@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-interoperability-module/290
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-05-21
+Updated: 2021-09-21
 ```
 
 ## Abstract
