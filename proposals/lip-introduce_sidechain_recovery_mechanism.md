@@ -547,7 +547,7 @@ It also implies that sidechains implement the Interoperability module, recoverab
 [CCUviolations]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298#cross-chain-updates-posted-on-mainchain-26
 [LIP31appendixC]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-c-proof-of-inclusion-protocol-for-leaf-nodes
 [LIP31appendixE]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-e-update-of-leaf-nodes 
-[SMTLIP]: https://research.lisk.io/t/introduce-sparse-merkle-trees/283#proof-verification-12
+[SMTLIP]: https://research.lisk.com/t/introduce-sparse-merkle-trees/283#proof-verification-12
 [CCMschema]: https://research.lisk.com/t/cross-chain-messages/299#cross-chain-message-schema-21
 [LIP31inclusions]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#proof-of-inclusion
 [tokenReducer]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295#recover-75
