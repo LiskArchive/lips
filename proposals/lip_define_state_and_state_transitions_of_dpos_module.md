@@ -505,30 +505,29 @@ Transaction executing this command have:
 delegateRegistrationTransactionParams = {
     "type": "object",
     "required": [
-        "name", 
-        "generatorKey", 
-        "blsKey", 
-        "proofOfPossession"
+        "name",
+        "blsKey",
+        "proofOfPossession",
+        "generatorKey"
     ],
     "properties": {
         "name": {
             "dataType": "string",
             "fieldNumber": 1
         },
-        "generatorKey": {
+        "blsKey": {
             "dataType": "bytes",
             "fieldNumber": 2
         },
-        "blsKey": {
+        "proofOfPossession": {
             "dataType": "bytes",
             "fieldNumber": 3
         },
-        "proofOfPossession": {
+        "generatorKey": {
             "dataType": "bytes",
             "fieldNumber": 4
         }
-    },
-
+    }
 }
 ```
 
@@ -542,6 +541,9 @@ The params property of a delegate registration command is valid if:
   (lower case letters, numbers and symbols `!@$&_.`), is at least `1` character long and at most `MAX_LENGTH_NAME` characters long. 
 * There exists no entry in the delegate substore with store key `delegateAddress`, 
   `delegateAddress` being derived from the transaction sender public key.
+* `generatorKey` must have length 32.
+* `blsKey` must have length 48.
+* `proofOfPossession` must have length 96.
 
 
 ##### Execution
@@ -555,6 +557,8 @@ validators.registerValidatorKeys(delegateAddress,
                                  proofOfPossession,
                                  generatorKey,
                                  blsKey)
+
+if the above function returns False, the execution fails
 
 create an entry in the delegate substore with 
     storeKey = delegateAddress,
