@@ -169,10 +169,10 @@ voterStoreSchema = {
             "fieldNumber": 1,
             "items": {
                 "type": "object",
-                "required": ["delegateAddress", "amount"]
+                "required": ["delegateAddress", "amount"],
                 "properties": {
                     "delegateAddress": {
-                        "dataType": "bytes", 
+                        "dataType": "bytes",
                         "fieldNumber": 1
                     },
                     "amount": {
@@ -190,17 +190,16 @@ voterStoreSchema = {
                 "required": ["delegateAddress", "amount", "unvoteHeight"],
                 "properties": {
                     "delegateAddress": {
-                        "dataType": "bytes", 
-                            "fieldNumber": 1
-                        },
-                        "amount": {
-                            "dataType": "uint64",
-                            "fieldNumber": 2
-                        },
-                        "unvoteHeight": {
-                            "dataType": "uint32",
-                            "fieldNumber": 3
-                        }
+                        "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "amount": {
+                        "dataType": "uint64",
+                        "fieldNumber": 2
+                    },
+                    "unvoteHeight": {
+                        "dataType": "uint32",
+                        "fieldNumber": 3
                     }
                 }
             }
