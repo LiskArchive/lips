@@ -7,13 +7,12 @@ Discussions-To: https://research.lisk.com/t/define-state-and-state-transitions-o
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Requires: LIP 0022, LIP 0040 
+Requires: LIP 0022, LIP 0040
 ```
 
 ## Abstract
 
-The Random module handles the validation of the inputs and computation of outputs for the commit and reveal process for a Lisk blockchain. 
-In this LIP, we specify the state transitions logic defined within this module, i.e., the protocol logic injected during the block lifecycle, and the functions that can be called from other modules or off-chain services.
+The Random module handles the validation of the inputs and computation of outputs for the commit and reveal process for a Lisk blockchain. In this LIP, we specify the state transitions logic defined within this module, i.e., the protocol logic injected during the block lifecycle, and the functions that can be called from other modules or off-chain services.
 
 ## Copyright
 
@@ -21,45 +20,40 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal][creative].
 
 ## Motivation
 
-The Random module handles the validation of the inputs for the commit and reveal process introduced in [LIP 0022][randomSeeds] as well as the computation of the random seeds from that process. 
-In this LIP we specify the properties, serialization, and default values of the Random module, as well as the protocol logic processed during a block lifecycle, and the functions exposed to other modules and to off-chain services.
+The Random module handles the validation of the inputs for the commit and reveal process introduced in [LIP 0022][randomSeeds] as well as the computation of the random seeds from that process. In this LIP we specify the properties, serialization, and default values of the Random module, as well as the protocol logic processed during a block lifecycle, and the functions exposed to other modules and to off-chain services.
 
 ## Rationale
 
 ### Random Module Store
 
-The Random module defines a random substore whose value contains the validator reveals array. 
-This array contains the necessary information to:
+The Random module defines a random substore whose value contains the validator reveals array. This array contains the necessary information to:
 
-* validate the seeds revealed by the validators as part of [the commit and reveal process][commitReveal], and 
+* validate the seeds revealed by the validators as part of [the commit and reveal process][commitReveal], and
 * compute the random seed to be used as source of randomness to re-order the generator list for a new round (both in PoA and DPoS chains) and to select the standby delegates (in certain DPoS chains as well as the Lisk mainchain).
 
-This array has a bounded length that is given as part of the configuration of the Random module. 
-On one hand, when a new block is executed, a new element is added to this array. On the other hand, the old revealed seeds are in most of the cases deleted from the array since they are not needed anymore. 
+This array has a bounded length that is given as part of the configuration of the Random module. On one hand, when a new block is executed, a new element is added to this array. On the other hand, the old revealed seeds are in most of the cases deleted from the array since they are not needed anymore.
 
-It is worth noting that random seed computation from this commit and reveal process can be used for other applications that need a source of randomness. 
-However, this random seed has [certain limitations][lastReveal] that have to be taken into account as explained in LIP 0022. 
-Certain applications may require a different source of randomness to be secure. 
+It is worth noting that random seed computation from this commit and reveal process can be used for other applications that need a source of randomness. However, this random seed has [certain limitations][lastReveal] that have to be taken into account as explained in LIP 0022. Certain applications may require a different source of randomness to be secure.
 
 ## Specification
 
-In this section, we specify the substores that are part of the Random module store, and the protocol logic called during the block lifecycle. 
+In this section, we specify the substores that are part of the Random module store, and the protocol logic called during the block lifecycle.
 
 The Random module has module ID `MODULE_ID_RANDOM` (see the table below). It is a module with no dependencies.
 
 ### Constants and config parameters
 
-| **Name**                 | **Type** | **Value** | **Description** |
-|--------------------------|----------|-----------|-----------------|
-| **Constants**     |    |        |  |
-| `MODULE_ID_RANDOM `      | uint32   | TBD       | ID of the Random module |
-| `STORE_PREFIX_RANDOM`     | bytes   | `0x0000`  | Prefix of the random substore |
-| **Config parameters**     |    |  mainchain value      |  |
-| `MAX_LENGTH_VALIDATOR_REVEALS` | uint32 | 206 | Maximum length of the `validatorReveals` array |
+| **Name**                       | **Type** | **Value**       | **Description**                                |
+|--------------------------------|----------|-----------------|------------------------------------------------|
+| **Constants**                  |          |                 |                                                |
+| `MODULE_ID_RANDOM `            | uint32   | TBD             | ID of the Random module                        |
+| `STORE_PREFIX_RANDOM`          | bytes    | `0x0000`        | Prefix of the random substore                  |
+| **Config parameters**          |          | mainchain value |                                                |
+| `MAX_LENGTH_VALIDATOR_REVEALS` | uint32   | 206             | Maximum length of the `validatorReveals` array |
 
 ### Random Module Store
 
-The key-value pairs in the module store are organized in the following substore.  
+The key-value pairs in the module store are organized in the following substore.
 
 #### Random Substore
 
@@ -101,9 +95,9 @@ seedRevealSchema = {
                     }
                 },
                 "required": [
-                    "generatorAddress", 
-                    "seedReveal", 
-                    "height", 
+                    "generatorAddress",
+                    "seedReveal",
+                    "height",
                     "valid"]
             }
         },
@@ -146,10 +140,11 @@ H(input):
     t = SHA-256(input)
     digest = trunc(t)
     return digest
-```  
+```
+
 where the function `trunc` truncates its input to the 16 most significant bytes.
 
-#### isSeedValidInput 
+#### isSeedValidInput
 
 This function assesses the validity of the revealed seed as input for the random seed computation.
 
@@ -160,7 +155,7 @@ This function assesses the validity of the revealed seed as input for the random
 
 ##### Returns
 
-This function returns `true` if `seedReveal` is valid input for the random seed computation, otherwise, `false`. 
+This function returns `true` if `seedReveal` is valid input for the random seed computation, otherwise, `false`.
 
 ##### Execution
 
@@ -194,7 +189,7 @@ This function assesses the validity of the `seedReveal` property of a block.
 
 ##### Returns
 
-This function returns `true` if `seedReveal` was correctly revealed, otherwise, `false`. 
+This function returns `true` if `seedReveal` was correctly revealed, otherwise, `false`.
 
 ##### Execution
 
@@ -213,16 +208,16 @@ isSeedRevealValid(generatorAddress, seedReveal):
 
 #### getRandomBytes
 
-This function is used to return the random seed as a 32-bytes value. 
+This function is used to return the random seed as a 32-bytes value.
 
 ##### Parameters
 
-* `height`: An integer with the height of a certain block. 
+* `height`: An integer with the height of a certain block.
 * `numberOfSeeds`: An integer with the number of seeds to consider for the computation.
 
 ##### Returns
 
-`randomSeed`: A 32-bytes value representing the random seed. 
+`randomSeed`: A 32-bytes value representing the random seed.
 
 ##### Execution
 
@@ -231,7 +226,7 @@ It is specified as:
 ```python
 getRandomBytes(height, numberOfSeeds):
     randomSeed = H(height + numberOfSeeds)
-    let currentSeeds be an array with every seedObject element in validatorReveals so that height <= seedObject.height <= height + numberOfSeeds 
+    let currentSeeds be an array with every seedObject element in validatorReveals so that height <= seedObject.height <= height + numberOfSeeds
     for every seedObject element in currentSeeds:
         if seedObject.valid == true:
             randomSeed = randomSeed XOR seedObject.seedReveal
@@ -256,9 +251,7 @@ After the genesis block `g` is executed, the following logic is executed:
 
 #### Block Verification
 
-As part of the verification of a block `b`, the following checks are applied. 
-If the checks fail the block is discarded and has no further effect. 
-This logic is not called during the block creation process.
+As part of the verification of a block `b`, the following checks are applied. If the checks fail the block is discarded and has no further effect. This logic is not called during the block creation process.
 
 Let `blockAssetBytes` be the bytes included in the block asset for the Random module:
 
@@ -270,22 +263,21 @@ Let `blockAssetBytes` be the bytes included in the block asset for the Random mo
 After a block `b` is executed, the following logic is applied:
 
 * While the size of the `validatorReveals` array is larger than `MAX_LENGTH_VALIDATOR_REVEALS`, delete the element of `validatorReveals` array with the smallest value of `height`.
-    * By construction this should be the first element of the `validatorReveals` array. 
-    * The value of the `MAX_LENGTH_VALIDATOR_REVEALS` constant is given in the initial configuration of the Random module. It should be set as twice the maximum length of the chains validator set.
+  * By construction this should be the first element of the `validatorReveals` array.
+  * The value of the `MAX_LENGTH_VALIDATOR_REVEALS` constant is given in the initial configuration of the Random module. It should be set as twice the maximum length of the chains validator set.
 * Add a new element to the `validatorReveals` array with the following content:
-    * `seedReveal = blockAssetObject.seedReveal` 
-    * `generatorAddress = b.header.generatorAddress` 
-    * `height = b.header.height`
-    * `valid = isSeedValidInput(b.header.generatorAddress, blockAssetObject.seedReveal)`
+  * `seedReveal = blockAssetObject.seedReveal`
+  * `generatorAddress = b.header.generatorAddress`
+  * `height = b.header.height`
+  * `valid = isSeedValidInput(b.header.generatorAddress, blockAssetObject.seedReveal)`
 
-  where the `isSeedValidInput` is the internal function specified above.
+where the `isSeedValidInput` is the internal function specified above.
 
-### Block Creation 
+### Block Creation
 
 #### Block Initialization
 
-The asset data created by the Random module contains a serialized object following the `blockHeaderAssetRandomModule` schema where the property `seedReveal`, the seed revealed by the block generator, is set by the module. 
-This can be done by implementing the hash onion algorithm introduced in the [Appendix B of LIP 0022][appendixB].
+The asset data created by the Random module contains a serialized object following the `blockHeaderAssetRandomModule` schema where the property `seedReveal`, the seed revealed by the block generator, is set by the module. This can be done by implementing the hash onion algorithm introduced in the [Appendix B of LIP 0022][appendixB].
 
  ```java
 blockHeaderAssetRandomModule = {
@@ -302,8 +294,7 @@ blockHeaderAssetRandomModule = {
 
 ## Backwards Compatibility
 
-This LIP defines a new store interface for the Random module, which in turn will become part of the state tree and will be authenticated by the state root. 
-As such, it will induce a hardfork.
+This LIP defines a new store interface for the Random module, which in turn will become part of the state tree and will be authenticated by the state root. As such, it will induce a hardfork.
 
 ## Reference Implementation
 
