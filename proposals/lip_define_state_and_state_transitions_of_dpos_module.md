@@ -1092,10 +1092,16 @@ This function has no input parameter.
 
 This function returns all `delegateStore` items deserialized using `delegateStoreSchema`.
 
+
 ## Backwards Compatibility
 
 This LIP defines a new store interface for the DPoS module, which in turn will become part of the state tree and will be authenticated by the state root. 
 As such, it will induce a hardfork.
+
+
+## Reference Implementation
+
+TBA
 
 [LIP-0022]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md
 [LIP-0023]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md
