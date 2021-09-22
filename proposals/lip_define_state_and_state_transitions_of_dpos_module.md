@@ -128,6 +128,7 @@ For the rest of this proposal we define the following constants:
 | `NUMBER_ACTIVE_DELEGATES`    | uint32 | `101` |The number of active delegates. |
 | `NUMBER_STANDBY_DELEGATES`   | uint32 | `2` |The number of standby delegates. This LIP is specified for the number of standby delegates being 0, 1 or 2.|
 | `TOKEN_ID_DPOS`              | object | `TOKEN_ID_LSK` = {<br /> `"chainID": 0`, <br /> `"localID": 0`<br />}  |The token ID of the token used to cast votes. |
+| `DELEGATE_REGISTRATION_FEE`  | uint32 | `10*(10^8)` |The extra command fee of the delegate registration. |
 
 
 #### uint32be
@@ -497,6 +498,15 @@ Transaction executing this command have:
 
 * `moduleID = MODULE_ID_DPOS`,
 * `commandID = COMMAND_ID_DELEGATE_REGISTRATION`.
+
+
+##### Fee
+
+This command has an extra command fee:
+
+```python
+extraCommandFee(MODULE_ID_DPOS, COMMAND_ID_DELEGATE_REGISTRATION) = DELEGATE_REGISTRATION_FEE
+```
 
 
 ##### Parameters
