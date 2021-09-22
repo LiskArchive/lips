@@ -4,10 +4,11 @@ Title: Define state and state transitions of Random module
 Author: Iker Alustiza <iker@lightcurve.io>
         Ishan Tiwari <ishan.tiwari@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/define-state-and-state-transitions-of-random-module
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: LIP 0022, LIP 0040
+Created: 2021-06-30
+Updated: 2021-09-22
+Requires: 0022, 0040
 ```
 
 ## Abstract
