@@ -8,8 +8,7 @@ Discussions-To: https://research.lisk.com/t/define-state-and-state-transitions-o
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Required: 0022, 0023, 0024, 0040, 0044, 
-          Define state and state transitions of Random module, 
+Required: 0022, 0023, 0024, 0040, 0044, 0046,
           Introduce BFT module,
           Introduce unlocking condition for incentivizing certificate generation
 ```
