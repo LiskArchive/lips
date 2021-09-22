@@ -1020,14 +1020,14 @@ isNameAvailable(name):
     if (nameStore(name) exists
        or name includes symbols not in "abcdefghijklmnopqrstuvwxyz0123456789!@$&_."
        or length(name) > MAX_LENGTH_NAME
-       or length(name) < 1:
+       or length(name) < 1):
         return False
     else:
         return True
 ```
 
 
-#### getVoter(address)
+#### getVoter
 
 Returns the stored information relative to the given address.
 
@@ -1042,7 +1042,7 @@ Returns the stored information relative to the given address.
 This functions returns `voterStore(address)` deserialized using `voterStoreSchema`.
 
 
-#### getDelegate(address)
+#### getDelegate
 
 Returns the stored information relative to the given address.
 
@@ -1059,18 +1059,24 @@ This functions returns `delegateStore(address)` deserialized using `delegateStor
 
 ### Endpoints for Off-Chain Services
 
+
 #### getVoter(address)
+
 Returns voter information for the given address.
+
 
 ##### Parameters
 
 * `address`: A 20-byte value identifying the voter.
 
+
 ##### Returns
 
 This function returns `voterStore(address)` deserialized using `voterStoreSchema`
 
+
 #### getDelegate(address)
+
 Returns delegate information for the given address.
 
 ##### Parameters
@@ -1081,12 +1087,16 @@ Returns delegate information for the given address.
 
 This functions returns `delegateStore(address)` deserialized using `delegateStoreSchema`.
 
+
 #### getAllDelegates()
+
 Returns information of all delegates.
+
 
 ##### Parameters
 
 This function has no input parameter.
+
 
 ##### Returns
 
