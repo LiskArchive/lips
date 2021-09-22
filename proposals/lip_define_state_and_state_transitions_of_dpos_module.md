@@ -113,6 +113,7 @@ For the rest of this proposal we define the following constants:
 | `COMMAND_ID_VOTE`                  | uint32  | `1` | The command ID of the vote transaction.|
 | `COMMAND_ID_UNLOCK`                | uint32  | `2` | The command ID of the unlock transaction.|
 | `COMMAND_ID_POM`                   | uint32  | `3` | The command ID of the proof-of-misbehavior transaction.|
+| `COMMAND_ID_UPDATE_GENERATOR_KEY`  | uint32  | `4` | The command ID of the update generator key transaction.|
 | **Configurable Constants** ||**Mainchain Value**||
 | `FACTOR_SELF_VOTES`          | uint32 | `10` |The factor multiplying the self-votes of a delegate for the delegate weight computation.|
 | `MAX_LENGTH_NAME`            | uint32 | `20` |The maximum allowed name length for delegates.|
