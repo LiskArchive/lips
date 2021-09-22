@@ -897,16 +897,21 @@ After a block `newBlock` is executed, the properties related to missed blocks ar
 
 ```python
 newHeight = newBlock.header.height
+# previousTimestamp is the value in the previous timestamp substore
+missedBlocks = validators.getGeneratorsBetweenTimestamps(previousTimestamp, newBlock.header.timestamp)
 
-missedBlocks = validators.getMissedBlocks(previousTimestamp, newBlock.header.timestamp)
-for each entry in missedBlocks:
-    delegateStore(entry.delegateAddress).consecutiveMissedBlocks += entry.missedBlocks
-    
+# remove the start and end blocks, as those are not missed
+missedBlocks[validators.getGeneratorAtTimestamp(previousTimestamp)] -= 1
+missedBlocks[validators.getGeneratorAtTimestamp(newBlock.header.timestamp)] -= 1
+
+for address in missedBlocks:
+    delegateStore(address).consecutiveMissedBlocks += missedBlocks[address]
+
     # the rule below was introduced in LIP 0023
-    if (delegateStore(entry.delegateAddress).consecutiveMissedBlocks > FAIL_SAFE_MISSED_BLOCKS
-        and newHeight - delegateStore(entry.delegateAddress).lastGeneratedHeight > FAIL_SAFE_INACTIVE_WINDOW):
-        delegateStore(entry.delegateAddress).isBanned = True
-    
+    if (delegateStore(address).consecutiveMissedBlocks > FAIL_SAFE_MISSED_BLOCKS
+        and newHeight - delegateStore(address).lastGeneratedHeight > FAIL_SAFE_INACTIVE_WINDOW):
+        delegateStore(address).isBanned = True
+
 delegateStore(newBlock.header.generatorAddress).consecutiveMissedBlocks = 0
 delegateStore(newBlock.header.generatorAddress).lastGeneratedHeight = newHeight
 
