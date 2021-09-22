@@ -4,6 +4,7 @@ Title: Define state and state transitions of DPoS module
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
         Nazar Hussain <nazar@lightcurve.io>
         Mehmet Egemen Albayrak <mehmet.albayrak@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
