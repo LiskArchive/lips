@@ -266,7 +266,7 @@ If the prevote and precommit weights have been updated correctly, the following 
 ##### Execution
 
 ```python
-updateMaxHeightPrevoted(){
+updateMaxHeightPrevoted():
     # iterate over blockBFTInfo objects in decreasing order by height
     for blockBFTInfo in bftVotes.blockBFTInfos:
         if blockBFTInfo.prevoteWeight >= getBFTParametersInternal(blockBFTInfo.height).prevoteThreshold:
@@ -282,7 +282,7 @@ If the prevote and precommit weights have been updated correctly, the following 
 ##### Execution
 
 ```python
-updateMaxHeightPrecommitted(){
+updateMaxHeightPrecommitted():
     # iterate over blockBFTInfo objects in decreasing order by height
     for blockBFTInfo in bftVotes.blockBFTInfos:
         if blockBFTInfo.precommitWeight >= getBFTParametersInternal(blockBFTInfo.height).precommitThreshold:
