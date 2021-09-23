@@ -704,7 +704,11 @@ for each unlockObject in voterStore(senderAddress).pendingUnlocks:
 ```
 
 The definition and rationale for the `isCertificateGenerated` function is part of [LIP "Introduce unlocking condition for incentivizing certificate generation"][LIP-incentivizeCertificateGeneration]. 
-The `hasWaited` and `isPunished` functions are defined below and are rationalized in [LIP 0023][LIP-0023-unlockRationale] and [LIP 0024][LIP-0024-rationale] respectively.
+The `hasWaited` and `isPunished` functions are defined below and are rationalized in [LIP 0023][LIP-0023-unlockRationale] and [LIP 0024][LIP-0024-rationale] respectively. Both functions have the following input parameters:
+*  `unlockObject`: an object with properties `delegateAddress` (the address of the previously voted delegate), `amount` (the unvote amount) and `unvoteHeight` (the height of the unvote).
+*  `senderAddress`: 20-byte address of the user sending the unlock transaction.
+*  `height`: the height of the block including the unlock transaction.
+                    
 ```python
 hasWaited(unlockObject, senderAddress, height):
     if unlockObject.delegateAddress == senderAddress:
@@ -725,7 +729,7 @@ isPunished(unlockObject, senderAddress, height):
         return false
     else:
         let lastPomHeight be the last element of delegateStore(unlockObject.delegateAddress).pomHeights 
-        # lastPomHeight is also its largest element of the pomHeights array
+        # lastPomHeight is also the largest element of the pomHeights array
         
         if unlockObject.address == senderAddress:
             # this is a self-unvote
@@ -874,7 +878,7 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
         roundHash[address] = hash(randomSeed || address)
 
     # Reorder the validator list
-    shuffledValidatorAddresses = sort validatorsAddresses where address1 < adress2 if (roundHash(address1) < roundHash(address2))
+    shuffledValidatorAddresses = sort validatorsAddresses where address1 < address2 if (roundHash(address1) < roundHash(address2))
                                  or ((roundHash(address1) == roundHash(address2)) and address1 < address2)         
     
     return shuffledValidatorAddresses
@@ -1090,7 +1094,7 @@ This functions returns `delegateStore(address)` deserialized using `delegateStor
 ### Endpoints for Off-Chain Services
 
 
-#### getVoter(address)
+#### getVoter
 
 Returns voter information for the given address.
 
@@ -1105,7 +1109,7 @@ Returns voter information for the given address.
 This function returns `voterStore(address)` deserialized using `voterStoreSchema`
 
 
-#### getDelegate(address)
+#### getDelegate
 
 Returns delegate information for the given address.
 
@@ -1118,7 +1122,7 @@ Returns delegate information for the given address.
 This functions returns `delegateStore(address)` deserialized using `delegateStoreSchema`.
 
 
-#### getAllDelegates()
+#### getAllDelegates
 
 Returns information of all delegates.
 
