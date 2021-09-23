@@ -510,7 +510,7 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
         roundHash[address] = hash(randomSeed || address)
 
     # Reorder the validator list
-    shuffledValidatorAddresses = sort validatorsAddresses where address1 < adress2 if (roundHash(address1) < roundHash(address2))
+    shuffledValidatorAddresses = sort validatorsAddresses where address1 < address2 if (roundHash(address1) < roundHash(address2))
                                  or ((roundHash(address1) == roundHash(address2)) and address1 < address2)         
     
     return shuffledValidatorAddresses
