@@ -25,7 +25,7 @@ To achieve interoperability, chains need to exchange information by sending mess
 
 To achieve some of its basic functionalities, the Interoperability module uses four messages. The first one, the _cross-chain update receipt_, is sent back to the partner chain (the chain with which the current chain is exchanging messages) whenever a cross-chain update transaction from this chain gets included. The cross-chain update receipt serves to update a few properties of the interoperability store, and in general to acknowledge the inclusion of cross-chain update transactions. The second one, the _channel terminated message_, is sent to chains which have been terminated. This message also updates a few properties of the interoperability store to keep them synchronized between chains. The third one, the _registration message_, is used when registering a chain. This message must be the first message added to the inbox for a CCU to activate the channel between the chains. Furthermore, it serves as a guarantee that the correct chain ID, name and network ID were used when the registration transaction was sent on the sidechain. The last one, the _sidechain terminated message_ is created on the Lisk mainchain when a message should be routed to a terminated or inactive chain. This message allows other sidechains to automatically trigger the creation of the terminated sidechain account.
 
-Further motivation and rationale behind the Lisk interoperability architecture is given in the general interoperability document ["Introduce Interoperability module"][base-interoperability-LIP].
+Further motivation and rationale behind the Lisk interoperability architecture is given in the general interoperability document [LIP 0045][LIP-0045].
 
 ## Rationale
 
@@ -79,7 +79,7 @@ The Interoperability module perfoms some basic validations for all messages and 
 
 Whenever a message is created, it must be added to the outbox of the corresponding partner chain. On sidechains, this logic always appends to the mainchain outbox, while on the mainchain, this logic can append to any registered sidechain outbox.
 
-The Interoperability module exposes the <code>[send][base-interoperability-LIP-sendReducer]</code> reducer which should be used whenever other modules need to send cross-chain messages. This functions also checks the liveness of the receiving chain, sets the message nonce property and appends the message to the outbox of the partner chain.
+The Interoperability module exposes the <code>[send][LIP-0045-send]</code> reducer which should be used whenever other modules need to send cross-chain messages. This functions also checks the liveness of the receiving chain, sets the message nonce property and appends the message to the outbox of the partner chain.
 
 ### CCMs Specified by the Interoperability Module
 
@@ -113,7 +113,7 @@ Cross-chain messages (CCM) are used by modules to execute actions on other chain
 
 ### Notation and Constants
 
-The following constants are used throughout the document, multiple of those constants are shared with the other LIPs defining the Interoperability module and all of the needed constants for the Interoperability module are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP]. That LIP should be considered correct if a value stated here would be different.
+The following constants are used throughout the document, multiple of those constants are shared with the other LIPs defining the Interoperability module and all of the needed constants for the Interoperability module are defined in [LIP 0045][LIP-0045]. That LIP should be considered correct if a value stated here would be different.
 
 | Name                                           | Type   | Value  |
 |------------------------------------------------|--------|--------|
@@ -317,7 +317,7 @@ tryToForward(ccm):
       ccm is discarded and has no further effect
 ```
 
-The `addToOutbox`, `getPartnerChainID` and `isLive` functions are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+The `addToOutbox`, `getPartnerChainID` and `isLive` functions are defined in [LIP 0045][LIP-0045].
 
 ### Cross-chain Commands
 
@@ -380,7 +380,7 @@ or account(sendingChainID).partnerChainInboxSize > ccuReceipt.params.partnerChai
 account(sendingChainID).partnerChainInboxSize = ccuReceipt.params.partnerChainInboxSize
 ```
 
-The `terminateChain` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+The `terminateChain` function is defined in [LIP 0045][LIP-0045].
 
 #### Channel Terminated Message
 
@@ -412,7 +412,7 @@ channelTerminatedCCMParamsSchema = {
 
 ##### Creating Channel Terminated Messages
 
-A channel terminated message is created by the Interoperability module when [terminating a chain account][base-interoperability-LIP-terminationFunction], for example when encountering a malicious cross-chain update transaction or malicious cross-chain message.
+A channel terminated message is created by the Interoperability module when [terminating a chain account][LIP-0045-terminateChain], for example when encountering a malicious cross-chain update transaction or malicious cross-chain message.
 
 ##### Executing Channel Terminated Messages
 
@@ -486,7 +486,7 @@ if account(ccm.sendingChainID).inbox.size != 1:
     terminateChain(ccm.sendingChainID)
 ```
 
-The `terminateChain` function is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+The `terminateChain` function is defined in [LIP 0045][LIP-0045].
 
 #### Sidechain Terminated Message
 
@@ -541,20 +541,20 @@ create an entry in the interoperability store with
     storeValue = {"stateRoot": stm.params.stateRoot} serialized using the terminatedChain schema.
 ```
 
-The `terminatedChain` schema is defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+The `terminatedChain` schema is defined in [LIP 0045][LIP-0045].
 
 ## Backwards Compatibility
 
-This proposal, together with [LIP "Introduce chain registration mechanism"][registration-LIP], [LIP "Introduce Interoperability module"][base-interoperability-LIP], [LIP "Introduce cross-chain update mechanism"][CCU-LIP], and [LIP "Introduce sidechain recovery mechanism"][recovery-LIP], is part of the Interoperability module. This new module defines and specifies its store, which in turn will become part of the state tree and will be authenticated by the state root. As such, it will induce a hardfork.
+This proposal, together with [LIP "Introduce chain registration mechanism"][registration-LIP], [LIP 0045][LIP-0045], [LIP "Introduce cross-chain update mechanism"][CCU-LIP], and [LIP "Introduce sidechain recovery mechanism"][recovery-LIP], is part of the Interoperability module. This new module defines and specifies its store, which in turn will become part of the state tree and will be authenticated by the state root. As such, it will induce a hardfork.
 
 ## Reference Implementation
 
 TBA
 
-[base-interoperability-LIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
+[LIP-0045]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0045.md
 [registration-LIP]: https://research.lisk.com/t/chain-registration/291
 [recovery-LIP]: https://research.lisk.com/t/sidechain-recovery-transactions/292
 [CCU-LIP]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
-[token-LIP-tokenID]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295#token-identification-27
-[base-interoperability-LIP-sendReducer]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290#send-49
-[base-interoperability-LIP-terminationFunction]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290#terminatechain-47
+[token-LIP-tokenID]: https://research.lisk.com/t/define-state-and-state-transitions-of-token-module/295#token-identification-and-interoperability-6
+[LIP-0045-send]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0045.md#send
+[LIP-0045-terminateChain]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0045.md#terminatechain
