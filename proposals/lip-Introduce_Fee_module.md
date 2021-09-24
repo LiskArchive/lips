@@ -20,7 +20,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-This LIP defines the fee system in a modular way, as currently [used in the Lisk ecosystem][state-model-LIP]. The fee handling is implemented in a separate module to allow sidechains to freely update or replace the fee handling module, possibly to implement a more complex fee structure, without needing to modify or update the Token module.
+This LIP defines the fee system in a modular way, as currently [used in the Lisk ecosystem][LIP-0040]. The fee handling is implemented in a separate module to allow sidechains to freely update or replace the fee handling module, possibly to implement a more complex fee structure, without needing to modify or update the Token module.
 
 ## Rationale
 
@@ -37,7 +37,7 @@ For example, on the Lisk mainchain, the following extra fees are defined:
 * `extraCommandFee(MODULE_ID_DPOS, COMMAND_ID_DELEGATE_REGISTRATION) = 1000000000`,
 * `extraCommandFee(MODULE_ID_INTEROPERABILITY, COMMAND_ID_SIDECHAIN_REG) = 1000000000`.
 
-The constants `MODULE_ID_DPOS` and `COMMAND_ID_DELEGATE_REGISTRATION` are defined in [LIP "Define state and state transitions of DPoS module"][DPoS-LIP].  The constants `MODULE_ID_INTEROPERABILITY` and `COMMAND_ID_SIDECHAIN_REG` are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+The constants `MODULE_ID_DPOS` and `COMMAND_ID_DELEGATE_REGISTRATION` are defined in [LIP "Define state and state transitions of DPoS module"][DPoS-LIP].  The constants `MODULE_ID_INTEROPERABILITY` and `COMMAND_ID_SIDECHAIN_REG` are defined in [LIP 0045][LIP-0045].
 
 ### Burning the Minimum Fee
 
@@ -113,7 +113,7 @@ else:
 if any of those function fails, the transaction is invalid
 ```
 
-The functions `token.burn` and `token.transfer` are defined in the [Token module][token-LIP]. Burning the fee was specified in [LIP 0013](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md).
+The functions `token.burn` and `token.transfer` are defined in the [Token module][token-LIP]. Burning the fee was specified in [LIP 0013](LIP-0013).
 
 ### Endpoints for Off-Chain Services
 
@@ -129,6 +129,6 @@ TBA
 
 [LIP-0013]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0013.md
 [token-LIP]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
-[DPoS-LIP]: https://research.lisk.com
-[base-interoperability-LIP]:https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
-[state-model-LIP]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md
+[DPoS-LIP]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
+[LIP-0045]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0045.md
+[LIP-0040]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md
