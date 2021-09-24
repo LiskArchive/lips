@@ -59,3 +59,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0045](proposals/lip-0045.md) | Introduce Interoperability module                                                              | Alessandro Ricottone, Mitsuaki Uchimoto                | Standards Track | Draft         |
 | [0046](proposals/lip-0046.md) | Define state and state transitions of Random module                                            | Iker Alustiza, Ishan Tiwari                            | Standards Track | Draft         |
 | [0047](proposals/lip-0047.md) | Introduce PoA module                                                                           | Iker Alustiza, Ishan Tiwari                            | Standards Track | Draft         |
+| [0048](proposals/lip-0048.md) | Introduce Fee module                                                                           | Maxime Gagnebin, Mitsuaki Uchimoto                     | Standards Track | Draft         |
