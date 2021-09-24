@@ -4,10 +4,11 @@ Title: Introduce Fee module
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
         Mitsuaki Uchimoto <mitsuaki.uchimoto@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-fee-module/318
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Required: Introduce Token module
+Created: 2021-08-09
+Updated: 2021-09-24
+Requires: Define state and state transitions of Token module
 ```
 
 ## Abstract
