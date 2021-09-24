@@ -3,10 +3,11 @@ LIP:
 Title: Introduce PoA module
 Author: Iker Alustiza <iker@lightcurve.io>
         Ishan Tiwari <ishan.tiwari@lightcurve.io>
-Discussions-To: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/
+Discussions-To: https://research.lisk.com/t/introduce-poa-module/288
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-04-29
+Updated: 2021-09-24
 Requires: 0038, 0040, Introduce Validators module, Introduce BFT module
 ```
 
