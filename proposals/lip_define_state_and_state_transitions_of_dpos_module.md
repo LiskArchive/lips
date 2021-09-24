@@ -573,7 +573,7 @@ create an entry in the delegate substore with
     storeValue = {
         "name": trs.params.name,
         "totalVotesReceived": 0,
-        "lastGeneratedHeight": b.height,
+        "lastGeneratedHeight": b.header.height,
         "isBanned": False,
         "pomHeights": [],
         "consecutiveMissedBlocks": 0
@@ -946,13 +946,13 @@ delegateStore(newBlock.header.generatorAddress).lastGeneratedHeight = newHeight
 previousTimestamp = newBlock.header.timestamp
 ```
 
-After an end-of-round block `b` is executed (`isEndOfRound(b.height) == True`), the following logic is executed (this must be done after the properties related to missed blocks are updated):
+After an end-of-round block `b` is executed (`isEndOfRound(b.header.height) == True`), the following logic is executed (this must be done after the properties related to missed blocks are updated):
 
 ```python
-roundNumber = roundNumber(b.height)
+roundNumber = roundNumber(b.header.height)
 currentWeights = {}
 for address being a storeKey in delegate substore and isBanned(address) == False:
-    currentWeights[address] = delegateWeight(address, b.height)} 
+    currentWeights[address] = delegateWeight(address, b.header.height)} 
 
 activeDelegates = array of the top 101 address by decreasing delegateWeight from currentWeights, ties broken by lexicographical ordering of the address
 
@@ -993,7 +993,7 @@ if roundNumber > initRounds:
     ]
                   
     # get the last stored BFT parameters, and update them if needed
-    currentBFTParameters = BFT.getBFTParameters(b.height)
+    currentBFTParameters = BFT.getBFTParameters(b.header.height)
     if (currentBFTParameters.validators != bftWeights
         or currentBFTParameters.precommitThreshold != BFT_THRESHOLD
         or currentBFTParameters.certificateThreshold != BFT_THRESHOLD):
@@ -1002,9 +1002,9 @@ if roundNumber > initRounds:
                              bftWeights)
 
     if NUMBER_STANDBY_DELEGATES == 2:
-        randomSeed1 = random.getRandomBytes(b.height +1 - (ROUND_LENGTH*3)//2, 
+        randomSeed1 = random.getRandomBytes(b.header.height +1 - (ROUND_LENGTH*3)//2, 
                                      ROUND_LENGTH)
-        randomSeed2 = random.getRandomBytes(b.height +1 - 2*ROUND_LENGTH,
+        randomSeed2 = random.getRandomBytes(b.header.height +1 - 2*ROUND_LENGTH,
                                      ROUND_LENGTH)
         delegate1, delegate2 = addresses of the standby delegates selected from validatorsTwoRoundsAgo.delegateWeightSnapshot 
                                as specified in LIP 0022, using the seeds randomSeed1 and randomSeed2
@@ -1012,13 +1012,13 @@ if roundNumber > initRounds:
         validators = union of activeDelegates and {delegate1, delegate2}
 
     elif NUMBER_STANDBY_DELEGATES == 1:
-        randomSeed1 = random.getRandomBytes(b.height +1 - (ROUND_LENGTH*3)//2,
+        randomSeed1 = random.getRandomBytes(b.header.height +1 - (ROUND_LENGTH*3)//2,
                                  	 ROUND_LENGTH)
         delegate1 = address of the standby delegates selected from validatorsTwoRoundsAgo.delegateWeightSnapshot 
                     as specified in LIP 0022, using the seed randomSeed1
         validators = union of activeDelegates and {delegate1}
     else: # no standby delegates
-        randomSeed1 = random.getRandomBytes(b.height +1 - (ROUND_LENGTH*3)//2,
+        randomSeed1 = random.getRandomBytes(b.header.height +1 - (ROUND_LENGTH*3)//2,
                                  	 ROUND_LENGTH)
         validators = activeDelegates
 
@@ -1158,7 +1158,6 @@ TBA
 [LIP-0024-verifyPOM]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#validity-of-a-pom-transaction
 [LIP-0024-rationale]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#rationale
 [LIP-0034-bootstrapPeriod]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md#bootstrap-period
-
 [LIP-newBlockHeader]: https://research.lisk.com/t/new-block-header-and-block-asset-schema/293
 [LIP-incentivizeCertificateGeneration]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
-[LIP-validators]: https://research.lisk.com/t/introduce-validators-module/317
+[LIP-validators]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0044.md
