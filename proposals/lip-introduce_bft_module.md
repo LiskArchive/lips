@@ -3,11 +3,12 @@ LIP: <LIP number>
 Title: Introduce BFT module
 Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
         Mitsuaki Uchimoto <mitsuaki.uchimoto@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-bft-module/321
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
 Requires: Add weights to Lisk-BFT consensus protocol LIP,
-          Introduce a certificate generation mechanism LIP,
+          Introduce certificate generation mechanism LIP,
           Update block schema and block processing LIP
 ```
 
@@ -36,7 +37,7 @@ The main purpose of the BFT module is to compute the following three properties:
 This value is important for the block verification and fork choice rule.
 * `maxHeightPrecommitted`: The maximum height of a block for which the weight of precommits is at least a certain threshold value, see LIP [“Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] for details.
 This value is important for knowing up to which height the chain is finalized.
-* `maxHeightCertified`: The maximum height of a block for which a certificate has been generated and included in the chain, see [LIP “Introduce a certificate generation mechanism”][lip-certificate-generation].
+* `maxHeightCertified`: The maximum height of a block for which a certificate has been generated and included in the chain, see [LIP “Introduce certificate generation mechanism”][lip-certificate-generation].
 This value is important for validating aggregate commits and for the [unlock transaction in DPoS][lip-unlock-condition].
 
 For computing the three values above, the following inputs are required:
@@ -44,7 +45,7 @@ For computing the three values above, the following inputs are required:
 * **prevote threshold**: This threshold value is required for correctly updating the property `maxHeightPrevoted`.
 This threshold can be computed from the sum of BFT weights of the active validators, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details
 * **precommit threshold**: This threshold value is required for correctly updating the property `maxHeightPrecommitted`, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details.
-* **certificate threshold**: This threshold value is important for validating aggregate commits included in blocks and then updating the value of `maxHeightCertified`, see [LIP “Introduce a certificate generation mechanism”][lip-certificate-generation].
+* **certificate threshold**: This threshold value is important for validating aggregate commits included in blocks and then updating the value of `maxHeightCertified`, see [LIP “Introduce certificate generation mechanism”][lip-certificate-generation].
 * **BFT weights of consensus participants**: For computing the prevote and precommit weight of a block, the BFT weight of the active validators at that block height is required.
 * **block headers information**: A subset of the properties of the recent block headers in the current chain is required to update the prevote and precommits weights.
 The reason is that validators cast prevotes and precommits as part of their block header, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details.
@@ -764,7 +765,7 @@ This LIP defines a new module and specifies its store, which in turn will become
 
 TBD
 
-[lip-certificate-generation]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/296
+[lip-certificate-generation]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296
 [lip-dpos]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
 [lip-poa]: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/288
 [lip-reward-module]: https://research.lisk.com/t/define-state-transitions-of-reward-module/316
