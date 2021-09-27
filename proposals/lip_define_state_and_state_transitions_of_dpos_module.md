@@ -428,7 +428,7 @@ genesisDataStoreSchema = {
     ],
     "properties": {
         "height": {
-            "dataType": "uint64",
+            "dataType": "uint32",
             "fieldNumber": 1
         },
         "initRounds": {
