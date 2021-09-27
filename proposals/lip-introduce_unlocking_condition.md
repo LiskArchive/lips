@@ -6,7 +6,9 @@ Discussions-To: https://research.lisk.com/t/introduce-unlocking-condition-for-in
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Requires: Introduce certificate generation mechanism LIP, Define state and state transitions of DPoS module LIP, Introduce BFT module LIP
+Requires: Introduce certificate generation mechanism LIP,
+          Define state and state transitions of DPoS module LIP,
+          Introduce BFT module LIP
 ```
 
 ## Abstract
