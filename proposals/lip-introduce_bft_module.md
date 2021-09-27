@@ -1,0 +1,774 @@
+```
+LIP: <LIP number>
+Title: Introduce BFT module
+Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
+        Mitsuaki Uchimoto <mitsuaki.uchimoto@lightcurve.io>
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+Requires: Add weights to Lisk-BFT consensus protocol LIP,
+          Introduce a certificate generation mechanism LIP,
+          Update block schema and block processing LIP
+```
+
+## Abstract
+
+This LIP introduces the BFT module, which is responsible for maintaining the consensus participants, their BFT weights and all information related to the consensus votes that have been cast as part of the block headers.
+In this LIP, we specify how this information is serialized and stored as well as updated as part of the block processing.
+Additionally, we specify the functions that can be called from other modules and off-chain services.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+The Lisk-BFT consensus protocol introduced in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md) specifies two new block properties, `maxHeightGenerated` (renamed from `maxHeightPreviouslyForged`) and `maxHeightPrevoted`, which are validated as part of the block processing.
+As part of the new state architecture and stricter separation between state machine layer and replication layer, the majority of the block verification now happens in the state machine layer and is logically separated into separate modules.
+That is why the consensus participants, their BFT weights and the current state of consensus votes is also maintained as part of the state machine.
+We therefore propose to introduce the BFT module that defines how this information is stored and updated as part of the block processing.
+
+## Rationale
+
+The main purpose of the BFT module is to compute the following three properties:
+
+* `maxHeightPrevoted`: The maximum height of a block for which the weight of prevotes is at least a certain threshold value, see LIP [“Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] for details.
+This value is important for the block verification and fork choice rule.
+* `maxHeightPrecommitted`: The maximum height of a block for which the weight of precommits is at least a certain threshold value, see LIP [“Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] for details.
+This value is important for knowing up to which height the chain is finalized.
+* `maxHeightCertified`: The maximum height of a block for which a certificate has been generated and included in the chain, see [LIP “Introduce a certificate generation mechanism”][lip-certificate-generation].
+This value is important for validating aggregate commits and for the [unlock transaction in DPoS][lip-unlock-condition].
+
+For computing the three values above, the following inputs are required:
+
+* **prevote threshold**: This threshold value is required for correctly updating the property `maxHeightPrevoted`.
+This threshold can be computed from the sum of BFT weights of the active validators, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details
+* **precommit threshold**: This threshold value is required for correctly updating the property `maxHeightPrecommitted`, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details.
+* **certificate threshold**: This threshold value is important for validating aggregate commits included in blocks and then updating the value of `maxHeightCertified`, see [LIP “Introduce a certificate generation mechanism”][lip-certificate-generation].
+* **BFT weights of consensus participants**: For computing the prevote and precommit weight of a block, the BFT weight of the active validators at that block height is required.
+* **block headers information**: A subset of the properties of the recent block headers in the current chain is required to update the prevote and precommits weights.
+The reason is that validators cast prevotes and precommits as part of their block header, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details.
+
+We call the first four inputs above the **BFT parameters**. For the BFT module, we assume that these BFT parameters are provided from another module via the `setBFTParameters` function defined below.
+For a DPoS chain, the DPoS module would need to call the BFT module with the correct parameters, in particular, notifying the BFT module about any changes of validators.
+Similarly, for a PoA chain, it is the responsibility of the PoA module to provide the correct parameters as input to the BFT module.
+The block header information can be obtained by the module itself as part of the block processing.
+
+All the input parameters above, except the block headers, are stored in the BFT Parameters substore of the BFT module.
+We use the height at which the parameters are first valid as key.
+This means that if `h1` and `h2` are two keys in the BFT Parameters substore with `h1 < h2` and there is no key between `h1` and `h2`, then the BFT parameters for the key `h1` are valid at heights `h1, ..., h2-1`.
+The BFT module is therefore agnostic of the concept of rounds and the frequency at which these parameters are updated.
+
+The output of the computations of the BFT module is stored in the BFT Votes substore and is updated as part of processing a block.
+In that store, the current values of `maxHeightPrevoted`, `maxHeightPrecommitted` and `maxHeightCertified` are stored. Additionally, the substore contains the relevant properties of the `MAX_LENGTH_BLOCK_BFT_INFOS` most recent block headers (if these exist) together with their current prevote weight and precommit weight.
+Note that the constant `MAX_LENGTH_BLOCK_BFT_INFOS` is defined in the table at the beginning of the specifications.
+
+As auxiliary information for fast updates of the prevotes and precommits, we additionally store some information regarding the currently active validators, namely the minimum height since when a validator has been active and the largest height for which a validator has already cast a precommit.
+
+Apart from the main responsibility, to correctly compute the three heights mentioned at the beginning, the BFT module includes the following additional logic:
+
+* The logic for computing the validators hash, a hash value authenticating the BLS keys of the currently active validators, their BFT weights and the certificate threshold.
+* The function `impliesMaximalPrevotes` for the [Reward module][lip-reward-module] to be able to check whether the block reward has to be reduced as the validator is not constructively participating in the Lisk-BFT consensus.
+* Functions that allow to verify the Lisk-BFT related properties in the block header, namely `validatorsHash`, `maxHeightGenerated` and `maxHeightPrevoted`. See also [LIP "Update block schema and block processing"][lip-update-block-processing] for the block header verification.
+* Functions for other modules to obtain information regarding the current state of the BFT module. For instance, the DPoS module requires the value of `maxHeightCertified` for the [unlock transaction][lip-unlock-condition].
+
+## Specification
+
+### Constants
+
+| **Name**                      | **Type**  | **Value**              | **Description**                                   |
+|-------------------------------|-----------|------------------------|----------------------------------------------     |
+| `MODULE_ID_BFT`               |`uint32`   | TBD                    | The module ID of the BFT module.                  |
+| `STORE_PREFIX_BFT_PARAMETERS` |`bytes`    | `0x0000`               | The store prefix of the BFT Parameters substore.  |
+| `STORE_PREFIX_BFT_VOTES`      |`bytes`    | `0x8000`               | The store prefix of the BFT Votes substore.       |
+| `LSK_BFT_BATCH_SIZE`          |`uint32`   | configurable per chain | This constant determines the value of `MAX_LENGTH_BLOCK_BFT_INFOS` and thereby the range of prevotes and precommits. Additionally, it is used in the block synchronization mechanism and fast chain switching mechanism defined in  [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md). |
+| `MAX_LENGTH_BLOCK_BFT_INFOS`  |`uint32`   | `3*LSK_BFT_BATCH_SIZE` | The maximum length of the array `blockBFTInfos` in the BFT Votes substore. |
+
+As explained in [LIP "Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft-bft-paper], the constant `LSK_BFT_BATCH_SIZE` should never smaller than the maximum round length of the chain.
+For a blockchain using the [DPoS module][lip-dpos], it is therefore recommended to use `LSK_BFT_BATCH_SIZE = NUMBER_ACTIVE_DELEGATES + NUMBER_STANDBY_DELEGATES`, where `NUMBER_ACTIVE_DELEGATES` and `NUMBER_STANDBY_DELEGATES` are constants defined in the DPoS module.
+For a blockchain using the [PoA module][lip-poa], a safe choice is `LSK_BFT_BATCH_SIZE = MAX_NUM_VALIDATORS`, where `MAX_NUM_VALIDATORS` is a constant defined in the PoA module.
+If the maximum number of authorities is known to be smaller, it is recommended to use a smaller value for `LSK_BFT_BATCH_SIZE` for improved efficiency.
+
+### Notation and Functions
+
+| **Name**      | **Description**                                                                          |
+|---------------|------------------------------------------------------------------------------------------|
+| `uint32be(x)` | For an integer `x` with `0 <= x < 2^32`, the function returns 4 bytes representing the big endian unsigned integer serialization of `x`. |
+
+### BFT Module Store
+
+The BFT module store is organized in the two substores described below.
+
+#### BFT Parameters
+
+##### Store Prefix, Store Key, and Store Value
+
+* The store prefix is `STORE_PREFIX_BFT_PARAMETERS`.
+* Each store key is `uint32be(h)` for a height `h`.
+* Each store value is the serialization of an object following the JSON schema `bftParametersSchema` defined below.
+* Notation: We let `bftParameters(height)` denote the object stored in the BFT module store for the store prefix `STORE_PREFIX_BFT_PARAMETERS` and store key `uint32be(height)`.
+
+##### JSON Schema
+
+```json
+bftParametersSchema = {
+    "type": "object",
+    "required": [
+        "prevoteThreshold",
+        "precommitThreshold",
+        "certificateThreshold",
+        "validators",
+        "validatorsHash"
+    ],
+    "properties": {
+        "prevoteThreshold": {
+            "dataType": "uint64",
+            "fieldNumber": 1
+        },
+        "precommitThreshold": {
+            "dataType": "uint64",
+            "fieldNumber": 2
+        },
+        "certificateThreshold": {
+            "dataType": "uint64",
+            "fieldNumber": 3
+        },
+        "validators": {
+            "type": "array",
+            "fieldNumber": 4,
+            "items": {
+                "type": "object",
+                "required": ["address", "bftWeight"],
+                "properties": {
+                    "address": {
+                        "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "bftWeight": {
+                        "dataType": "uint64",
+                        "fieldNumber": 2
+                    }
+                }
+            }
+        },
+        "validatorsHash": {
+            "dataType": "bytes",
+            "fieldNumber": 5
+        }
+    }
+}
+```
+
+##### Properties
+
+All properties below are valid starting from the height given as key:
+
+* `prevoteThreshold`: This property stores the prevote threshold. For casting a precommit for a block, the sum of BFT weights of all validators casting a prevote for this block has to be at least the prevote threshold.
+If `aggregateBFTWeight` is the sum of BFT weights of all validators stored, then the property value must be `floor(2/3*aggregateBFTWeight(h))+1`.
+* `precommitThreshold`: This property stores the precommit threshold.
+For considering a block final, the sum of BFT weights of all validators casting a precommit for this block has to be at least the precommit threshold.
+If `aggregateBFTWeight` is the sum of BFT weights of all validators stored, then the value of this property must satisfy `floor(1/3*aggregateBFTWeight)+1 <= precommitThreshold <= aggregateBFTWeight`.
+* `certificateThreshold`: This property stores the certificate threshold.
+For considering a certificate or aggregate commit for a block valid, the sum of BFT weights of all validators signing the certificate has to be at least the certificate threshold.
+If `aggregateBFTWeight` is the sum of BFT weights of all validators stored, then the value of this property must satisfy `floor(1/3*aggregateBFTWeight)+1 <= certificateThreshold <= aggregateBFTWeight.`
+* `validators`: Each element in the array `validators` corresponds to a validator and stores its address and BFT weight property as positive integer.
+It is an array of all validators active starting at the height given as key.
+The elements in the array must be sorted lexicographically by address property.
+* `validatorsHash`: A 32-byte value authenticating the BLS keys and BFT weights of the validators and the certificate threshold of the same store entry.
+
+#### BFT Votes
+
+##### Store Prefix, Store Key, and Store Value
+
+* The store prefix is `STORE_PREFIX_BFT_VOTES`.
+* The store key is empty bytes.
+* The store value is the serialization of an object following the JSON schema `bftVotesSchema` defined below.
+* Notation: We let `bftVotes` denote the object stored in the BFT module store for the store prefix `STORE_PREFIX_BFT_VOTES` and store key equal to empty bytes.
+
+##### JSON Schema
+
+```json
+bftVotesSchema = {
+    "type": "object",
+    "required": [
+        "maxHeightPrevoted",
+        "maxHeightPrecommitted",
+        "maxHeightCertified",
+        "blockBFTInfos",
+        "activeValidatorsVoteInfo"
+    ],
+    "properties": {
+        "maxHeightPrevoted": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "maxHeightPrecommitted": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        },
+        "maxHeightCertified": {
+            "dataType": "uint32",
+            "fieldNumber": 3
+        },
+        "blockBFTInfos": {
+            "type": "array",
+            "fieldNumber": 4,
+            "items": {
+                "type": "object",
+                "required": [
+                    "height",
+                    "generatorAddress",
+                    "maxHeightGenerated",
+                    "maxHeightPrevoted",
+                    "prevoteWeight",
+                    "precommitWeight"
+                ],
+                "properties": {
+                    "height": {
+                        "dataType": "uint32",
+                        "fieldNumber": 1
+                    },
+                    "generatorAddress": {
+                        "dataType": "bytes",
+                        "fieldNumber": 2
+                    },
+                    "maxHeightGenerated": {
+                        "dataType": "uint32",
+                        "fieldNumber": 3
+                    },
+                    "maxHeightPrevoted": {
+                        "dataType": "uint32",
+                        "fieldNumber": 4
+                    },
+                    "prevoteWeight": {
+                        "dataType": "uint64",
+                        "fieldNumber": 5
+                    },
+                    "precommitWeight": {
+                        "dataType": "uint64",
+                        "fieldNumber": 6
+                    }
+                }
+            }
+        },
+        "activeValidatorsVoteInfo": {
+            "type": "array",
+            "fieldNumber": 5,
+            "items": {
+                "type": "object",
+                "required": [
+                    "address",
+                    "minActiveHeight",
+                    "largestHeightPrecommit"
+                ],
+                "properties": {
+                    "address": {
+                        "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "minActiveHeight": {
+                        "dataType": "uint32",
+                        "fieldNumber": 2
+                    },
+                    "largestHeightPrecommit": {
+                        "dataType": "uint32",
+                        "fieldNumber": 3
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+##### Properties
+
+* `maxHeightPrevoted`: This property stores the largest height `h` such that the aggregate BFT weight of validators prevoting for the block at height `h` is at least the prevote threshold.
+* `maxHeightPrecommitted`: This property stores the largest height `h` such that the aggregate BFT weight of validators precommitting for the block at height h is at least the precommit threshold.
+* `maxHeightCertified`: This property stores the largest height for which the current chain contains an aggregate commit and therefore a certificate.
+* `blockBFTInfos`: This property stores an array of length at most `MAX_LENGTH_BLOCK_BFT_INFOS`. Each element references a block in the current chain and contains all block properties relevant for the Lisk-BFT consensus protocol. If `currentHeight` is the current height of the chain, `genesisHeight` is the height of the genesis block, then `blockBFTInfos` contains on object for each block at heights `{currentHeight, currentHeight-1, …, max(genesisHeight + 1, currentHeight - MAX_LENGTH_BLOCK_BFT_INFOS+1)}` in descending order of height. In particular, it holds that `blockBFTInfos[0].height == currentHeight`.
+    * `prevoteWeight`: This property stores the aggregate weight of prevotes for the block, considering all prevotes implied by blocks in the current chain.
+    * `precommitWeight`: This property stores the aggregate weight of precommits for the block, considering all precommits implied by blocks in the current chain.
+* `activeValidators`: This property stores an array of objects, one for each currently active validator. The array is sorted lexicographically by the address property of each object. Every object contains the following three properties:
+    * `address`: The 20-byte address of the validator.
+    * `minActiveHeight`: The height from which the validator has been continuously active.
+    * `largestHeightPrecommit`: The largest height for which a block generated by the validator implied a precommit.
+
+### Commands
+
+The BFT module does not define any commands.
+
+### Internal Function
+
+For convenience of the specifications below, we define the following internal functions.
+
+#### areDistinctHeadersContradicting
+
+This function allows to check whether two distinct block headers are contradicting and, in particular, imply a violation of the Lisk-BFT protocol.
+
+##### Parameters
+
+* `blockHeaderInfo1`: An object corresponding to a block header with the properties `height`, `maxHeightGenerated`, `maxHeightPrevoted` and `generatorAddress`.
+* `blockHeaderInfo2`: An object corresponding to a block header with the properties `height`, `maxHeightGenerated`, `maxHeightPrevoted` and `generatorAddress`.
+This object must correspond to a different block header than `blockHeaderInfo1.`
+
+##### Returns
+
+The function returns `True` if the two objects provided as input correspond to contradicting block headers and `False` otherwise.
+
+##### Execution
+
+```python
+areDistinctHeadersContradicting(blockHeaderInfo1,blockHeaderInfo2):
+    # order the two block headers such that b1 must be forged first
+    b1 = blockHeaderInfo1
+    b2 = blockHeaderInfo2
+    if b1.maxHeightGenerated > b2.maxHeightGenerated
+       or (b1.maxHeightGenerated == b2.maxHeightGenerated
+           and b1.maxHeightPrevoted > b2.maxHeightPrevoted)
+       or (b1.maxHeightGenerated == b2.maxHeightGenerated
+           and b1.maxHeightPrevoted == b2.maxHeightPrevoted
+           and b1.height > b2.height):
+        b1 = blockHeaderInfo2
+        b2 = blockHeaderInfo1
+
+    # the order of cases is essential here
+    if b1.generatorAddress != b2.generatorAddress:
+        # blocks by different delegates are never contradicting
+        return False
+    elif b1.maxHeightPrevoted == b2.maxHeightPrevoted and b1.height >= b2.height:
+        # Violation of the fork choice rule as delegate moved to different chain
+        # without strictly larger maxHeightPrevoted or larger height as justification.
+        # This in particular happens if a delegate is double forging.
+        return True
+    elif b1.height > b2.maxHeightGenerated:
+        # violates disjointness condition
+        return True
+    elif b1.maxHeightPrevoted > b2.maxHeightPrevoted:
+        # violates that delegate chooses branch with largest maxHeightPrevoted
+        return True
+    else:
+  	    # no contradiction between block headers
+  	    return False
+```
+
+Note that the function above corresponds to the function `checkHeadersContradicting` defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#detecting-contradicting-block-headers), except for not checking whether the two objects `blockHeaderInfo1` and `blockHeaderInfo2` correspond to the same block.
+Additionally, the block header property names are updated according to [LIP "Update block schema and block processing"][lip-update-block-processing].
+
+#### computeValidatorsHashInternal
+
+The following function computes the validators hash value from the provided input parameters. The validators hash is 32-byte value authenticating the BLS keys and BFT weights of the validators and the certificate threshold.
+
+##### Parameters
+
+* `validators`: An array of objects, each with a property `blsKey` of type bytes and a property `bftWeight`, which is an unsigned 64-bit integer.
+The elements in the array must be sorted lexicographically by the `blsKey` property.
+* `certificateThreshold`: An unsigned 64-bit integer.
+
+##### Returns
+
+The value of the validators hash corresponding to the validator information and the certificate threshold given as input.
+
+##### Execution
+
+We use the following JSON schema for the computation of the validators hash.
+
+```json
+validatorsHashInputSchema = {
+    "type": "object",
+    "required": ["validators", "certificateThreshold"],
+    "properties": {
+        "validators": {
+            "type": "array",
+            "fieldNumber": 1,
+            "items": {
+                "type": "object",
+                "required": ["blsKey", "bftWeight"],
+                "properties": {
+                    "blsKey": {
+                        "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "bftWeight": {
+                        "dataType": "uint64",
+                        "fieldNumber": 2
+                    }
+                }
+            }
+        },
+        "certificateThreshold": {
+            "dataType": "uint64",
+            "fieldNumber": 2
+        }
+    }
+}
+```
+
+The following function uses the schema above to compute the validators hash from the input parameters.
+
+```python
+computeValidatorsHashInternal(validators, certificateThreshold):
+    inputObject = object following validatorsHashInputSchema
+    inputObject.validators = validators
+    inputObject.certificateThreshold = certificateThreshold
+    input = serialization of inputObject according to LIP 0027
+    return SHA-256(input)
+```
+
+#### getBlockBFTProperties
+
+This function creates a `blockBFTInfo` object with a subset of the block properties that are required for the BFT module.
+
+##### Parameters
+
+* `blockHeader`: A block header object.
+
+##### Returns
+
+Object following the schema of the objects in the array `bftVotes.blockBFTInfos`.
+
+##### Execution
+
+```python
+getBlockBFTProperties(blockHeader):
+    blockBFTInfo = object following schema of objects in bftVotes.blockBFTInfos
+    blockBFTInfo.generatorAddress = blockHeader.generatorAddress
+    blockBFTInfo.height = blockHeader.height
+    blockBFTInfo.maxHeightGenerated = blockHeader.maxHeightGenerated
+    blockBFTInfo.maxHeightPrevoted = blockHeader.maxHeightPrevoted
+    blockBFTInfo.prevoteWeight = 0
+    blockBFTInfo.precommitWeight = 0
+    return blockBFTInfo
+```
+
+#### getBFTParametersInternal
+
+This function is a convenience function for obtaining the BFT parameters for a given height.
+
+##### Parameters
+
+* `h`: Height for which to obtain the BFT parameters.
+Note that for `h <= bftVotes.maxHeightCertified` the function may fail as among all key-value pairs in the BFT Parameters substore with key less or equal to `bftVotes.maxHeightCertified+1` only the one with largest key is kept and all others are pruned.
+
+##### Returns
+
+The BFT parameters valid at the height `h`.
+
+##### Execution
+
+```python
+getBFTParametersInternal(h):
+    for key,value in BFT Parameters substore ordered
+        decreasing by key:
+        if key <= h:
+            return deserialized value
+    # in this case no BFT parameters are stored for the height h
+    Fail
+```
+
+### Protocol Logic for Other Modules
+
+#### areHeadersContradicting
+
+This function checks whether the block headers objects given as input are contradicting and, in particular, imply a violation of the Lisk-BFT protocol.
+
+##### Parameters
+
+* `blockHeader1`: A block header object.
+* `blockHeader2`: A block header object.
+
+##### Returns
+
+The function returns `True` if the two block headers provided as input are contradicting and `False` otherwise.
+
+##### Execution
+
+```python
+areHeadersContradicting(blockHeader1,blockHeader2):
+    if  blockHeader1.blockID == blockHeader2.blockID:
+        # no contradiction, as block headers are the same
+        return False
+    return areDistinctHeadersContradicting(blockHeader1,blockHeader2)
+```
+
+#### computeValidatorsHash
+
+For the function description, parameters and return value see the corresponding internal function `computeValidatorsHashInternal`.
+
+##### Execution
+
+```python
+computeValidatorsHash(validators, certificateThreshold):
+    return computeValidatorsHashInternal(validators, certificateThreshold)
+```
+
+#### existBFTParameters
+
+This function allows to check whether for a certain height there is an entry in the BFT Parameters substore. This function is needed for validating aggregate commits in blocks and checking that there is always an aggregate commit authenticating the BFT weights and certificate threshold for every BFT Parameters substore entry.
+
+##### Parameters
+
+* `h`: Height for which to check whether there is an entry in the BFT Parameters substore.
+
+##### Returns
+
+The function returns `True` if and only if there is an entry in the BFT Parameters store with key `h`.
+
+##### Execution
+
+```python
+existBFTParameters(h):
+    if exists entry in BFT Parameters store with key h:
+        return True
+    return False
+```
+
+#### getBFTParameters
+
+This function allows to obtain the BFT parameters valid at the height given as input.
+
+##### Parameters
+
+* `h`: Height for which to obtain the BFT parameters.
+Note that for `h <= bftVotes.maxHeightCertified` the function may fail as among all key-value pairs in the BFT Parameters substore with key less or equal to `bftVotes.maxHeightCertified+1` only the one with largest key is kept and all others are pruned.
+
+##### Returns
+
+The BFT parameters valid at the height `h`.
+
+##### Execution
+
+```python
+getBFTParameters(h)
+    return getBFTParametersInternal(h)
+```
+
+#### getBFTHeights
+
+The function returns the current values of the property `maxHeightPrevoted`, `maxHeightPrecommitted` and `maxHeightCertified` in the BFT Votes substore.
+
+##### Returns
+
+* The value of the property `maxHeightPrevoted` as unsigned 32-bit integer.
+* The value of the property `maxHeightPrecommitted` as unsigned 32-bit integer.
+* The value of the property `maxHeightCertified` as unsigned 32-bit integer.
+
+##### Execution
+
+```python
+getBFTHeights():
+    return {
+        "maxHeightPrevoted": bftVotes.maxHeightPrevoted,
+        "maxHeightPrecommitted": bftVotes.maxHeightPrecommitted,
+        "maxHeightCertified": bftVotes.maxHeightCertified
+    }
+```
+
+#### impliesMaximalPrevotes
+
+The function returns whether the block header given as input implies the maximal number of prevotes which shows that the block generator is constructively contributing in the Lisk-BFT protocol.
+This function needs to be called before the execution of the block with the block header `blockHeader` given as input,
+as it requires `blockHeader.height` to be one larger than the maximum height stored in `bftVotes.blockBFTInfos`.
+
+##### Parameters
+
+* `blockHeader`: A block header that is being verified and supposed to be added to the current tip of the chain.
+
+##### Returns
+
+The function returns `True` if the reward is supposed to be reduced and `False` otherwise.
+
+##### Execution
+
+```python
+impliesMaximalPrevotes(blockHeader):
+    heightCurrentTip = bftVotes.blockBFTInfos[0].height
+    if blockHeader.height != heightCurrentTip + 1:
+        Fail
+    previousHeight = blockHeader.maxHeightGenerated
+
+    # if the condition below is satisfied, the block does not
+    # imply any prevotes
+    if previousHeight >= blockHeader.height:
+        return False
+
+    # if the condition below is satisfied, there is no block
+    # information stored for height previousHeight and blockHeader
+    # implies the maximal number of prevotes
+    offset = heightCurrentTip-previousHeight
+    if offset >= length(bftVotes.blockBFTInfos):
+        return True
+
+    # if the condition below is satisfied, the block at height
+    # previousHeight is generated by a different delegate and
+    # and b does not imply the maximal number of prevotes
+    if bftVotes.blockBFTInfos[offset].generatorAddress != blockHeader.generatorAddress:
+        return False
+    return True
+```
+
+#### isHeaderContradictingChain
+
+This function checks whether the block header provided as input contradicts a recent block in the current chain, i.e., one of the `MAX_LENGTH_BLOCK_BFT_INFOS` most recent blocks in the current chain contradicts the block header that is supposed to be added. This check should be done before the block given as input is processed by the BFT module and the respective properties are added to `bftVotes.blockBFTInfos`.
+
+##### Parameters
+
+* `blockHeader`: The block header of a block that is supposed to be added to the current chain.
+
+##### Returns
+
+The function returns `True` if the block header `blockHeader` provided as input contradicts the current chain and should be rejected.
+
+##### Execution
+
+```python
+isHeaderContradictingChain(blockHeader):
+    for blockBFTInfo in bftVotes.blockBFTInfos:
+        if blockBFTInfo.generatorAddress == blockHeader.generatorAddress:
+            return areDistinctHeadersContradicting(blockBFTInfo, blockHeader)
+    return False
+```
+
+Note that the function above is the update of the function `checkHeaderContradictingChain` defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#processing-blocks) to the new state structure.
+
+#### getNextHeightBFTParameters
+
+The function allows to obtain the next larger key in the BFT Parameters substore given a height as input.
+This function is needed for validating aggregate commits in blocks and checking that there is always an aggregate commit authenticating the BFT weights and certificate threshold for every BFT Parameters substore entry.
+
+##### Parameters
+
+* `h`: Height value which serves as lower bound for iteration over the keys in the BFT Parameters substore.
+
+##### Returns
+
+For a height `h` as input, the function returns the smallest height `h1 > h` with an entry in the BFT Parameters substore with key `h1`, if such height exists. Otherwise, it fails.
+
+#### setBFTParameters
+
+This function allows to set the thresholds, validators and associated BFT weights to be used from the next height onward and updates the BFT module store accordingly.
+
+##### Parameters
+
+* `precommitThreshold`: The precommit threshold value to be used from the next height onward. The value must be a 64-bit unsigned integer.
+* `certificateThreshold`: The certificate threshold value to be used from the next height onward. The value must be a 64-bit unsigned integer.
+* `validators`: The validators and their associated BFT weight to be used from the next height onward. The value must be an array of objects with an `address` property containing the 20-byte address of the validator and a `bftWeight` property containing the BFT weight of the validator as 64-bit unsigned positive integer.
+Note that this function fails if the input contains validators with zero BFT weight or if the number of provided validators is more than `LSK_BFT_BATCH_SIZE`.
+
+##### Execution
+
+```python
+setBFTParameters(precommitThreshold, certificateThreshold, validators):
+    if length(validators) > LSK_BFT_BATCH_SIZE:
+        fail
+    aggregateBFTWeight = 0
+    for validator in validators:
+        if validator.bftWeight <= 0:
+            fail
+        aggregateBFTWeight += validator.bftWeight
+    if floor(1/3*aggregateBFTWeight)+1 > precommitThreshold or precommitThreshold > aggregateBFTWeight:
+        fail
+    if floor(1/3*aggregateBFTWeight)+1 > certificateThreshold or certificateThreshold > aggregateBFTWeight:
+        fail
+    bftParams = object following bftParametersSchema
+    bftParams.prevoteThreshold = floor(2/3*aggregateBFTWeight)+1
+    bftParams.precommitThreshold = precommitThreshold
+    bftParams.certificateThreshold = certificateThreshold
+    sort validators lexicographically by address
+    bftParams.validators = validators
+
+    # compute the validators hash
+    activeValidators = []
+    for validator in validators:
+        activeValidator = object with property bftWeight and blsKey
+        activeValidator.bftWeight = validator.bftWeight
+        activeValidator.blsKey =  validatorModule.getValidatorAccount(validator.address).blsKey
+        add activeValidator to activeValidators
+    sort elements in activeValidators lexicographically by blsKey property
+    bftParams.validatorsHash = computeValidatorsHashInternal(activeValidators, certificateThreshold)
+
+    # set the BFT parameters for the correct next height
+    if length(bftVotes.blockBFTInfos) > 0:
+        nextHeight = bftVotes.blockBFTInfos[0].height + 1
+    else:
+        # only directly after processing the genesis block we have
+        # length(bftVotes.blockBFTInfos) == 0
+        nextHeight = bftVotes.maxHeightPrevoted + 1
+    bftParameters(nextHeight)=parameters
+
+    # update bftVotes.updateActiveValidatorsVoteInfo
+    newActiveValidatorsVoteInfo = []
+    for each validator in validators:
+        if validator.address appears in bftVotes.activeValidatorsVoteInfo:
+            validatorVoteInfo = object in bftVotes.activeValidatorsVoteInfo
+                                with address equal to validator.address
+        else:
+            validatorVoteInfo = object following schema of elements
+                                in bftVotes.activeValidatorsVoteInfo
+            validatorVoteInfo.address = validator.address
+            validatorVoteInfo.minHeightActive = nextHeight
+            validatorVoteInfo.largestHeightPrecommit = nextHeight-1
+        add validatorVoteInfo to newActiveValidatorsVoteInfo
+    sort newActiveValidatorsVoteInfo lexicographically by address
+    bftVotes.activeValidatorsVoteInfo = newActiveValidatorsVoteInfo
+```
+
+### Endpoints for Off-Chain Services
+
+TBD
+
+### Block Processing
+
+#### Genesis Block
+
+As part of processing a genesis block `b`, the BFT module store is initialized as follows:
+
+* The BFT Parameters substore is empty.
+* The BFT Votes substore is initialized as follows:
+    * `bftVotes.maxHeightPrevoted = b.height,`
+    * `bftVotes.maxHeightPrecommitted = b.height,`
+    * `bftVotes.maxHeightCertified = b.height,`
+    * `bftVotes.blockBFTInfos` is an empty array.
+    * `bftVotes.activeValidatorsVoteInfo` is an empty array.
+
+This initialization must happen before any functions are called by other modules, in particular, before `setBFTParameters` is called by the PoA module or DPoS module.
+
+#### After Block Execution
+
+After a block `b` is executed, the following logic is executed:
+
+1. The object `getBlockBFTProperties(b.header)` is added to the beginning of the array `bftVotes.blockBFTInfos`.
+2. If `bftVotes.blockBFTInfos[MAX_LENGTH_BLOCK_BFT_INFOS]` exists, then the corresponding value is removed from the array.
+3. The function `applyPrevotesPrecommits` from the LIP ["Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] is executed to update the prevote and precommit weights.
+4. The value of `bftVotes.maxHeightPrevoted` is updated by calling the function `updateMaxHeightPrevoted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
+5. The value of `bftVotes.maxHeightPrecommitted` is updated by calling the function `updateMaxHeightPrecommitted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
+6. Let `m` be the aggregate commit included in block `b`. If `m` has only default values (`m.height == 0`, `m.aggregationBits` is empty bytes and `m.signature` is empty bytes), do nothing.
+Otherwise, set `bftVotes.maxHeightCertified` to `m.height`.
+7. Let `h` be the largest integer such that `h <= bftVotes.maxHeightCertified+1` and there is an entry in the BFT Parameters store with key `h`.
+Then remove any key-value pair from BFT Parameters with a key strictly smaller than `h`.
+
+### Block Creation
+
+During the block creation process, the properties `maxHeightPrevoted`, `maxHeightGenerated` and `validatorsHash` in the block header related to the BFT module (see also [LIP "Update block schema and block processing"][lip-update-block-processing]) have to be set as follows:
+
+* The value of `maxHeightPrevoted` is obtained by calling `getBFTHeights().maxHeightPrevoted` before executing any of the state transitions defined by the BFT module in the section "Block Processing" above.
+* The value of `maxHeightGenerated` must come from outside the state machine.
+As defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#processing-blocks), this value must be the maximum height at which the respective validator previously has generated a block, which is stored as private information for every validator.
+* The value of `validatorsHash` can be obtained calling `getBFTParameters().validatorsHash` after executing all state changes implied by the modules in the chain.
+
+## Backwards Compatibility
+
+This LIP defines a new module and specifies its store, which in turn will become part of the state tree and will be authenticated by the state root. As such, it will induce a hardfork.
+
+## Reference Implementation
+
+TBD
+
+[lip-certificate-generation]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/296
+[lip-dpos]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
+[lip-poa]: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/288
+[lip-reward-module]: https://research.lisk.com/t/define-state-transitions-of-reward-module/316
+[lip-unlock-condition]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
+[lip-update-block-processing]: https://research.lisk.com/t/update-block-schema-and-block-processing/293
+[lip-weighted-lisk-bft]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
+[lip-weighted-lisk-bft-bft-paper]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289#comparison-to-the-lisk-bft-paper-7
