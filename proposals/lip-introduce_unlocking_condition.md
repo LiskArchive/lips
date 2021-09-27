@@ -2,10 +2,11 @@
 LIP: <LIP number>
 Title: Introduce unlocking condition for incentivizing certificate generation
 Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Requires: Introduce a certificate generation mechanism LIP, Define state and state transitions of DPoS module LIP, Introduce BFT module LIP
+Requires: Introduce certificate generation mechanism LIP, Define state and state transitions of DPoS module LIP, Introduce BFT module LIP
 ```
 
 ## Abstract
@@ -18,7 +19,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The [“Introduce a certificate generation mechanism” LIP][certificate-generation-lip] specifies a mechanism for blockchains in the Lisk ecosystem to generate certificates.
+The [“Introduce certificate generation mechanism” LIP][certificate-generation-lip] specifies a mechanism for blockchains in the Lisk ecosystem to generate certificates.
 Certificates are the key object facilitating interoperability and every blockchain in the Lisk ecosystem has to regularly generate certificates so that new outgoing cross-chain messages can be submitted to other chains via cross-chain updates, see the ["Introduce cross-chain update transactions" LIP][ccu-lip] for details.
 In particular, the minimum requirement for any sidechain is to submit at least one certificate to the Lisk mainchain in any 30 day period.
 Otherwise, the connection of the sidechain to the mainchain is terminated and the submission of further cross-chain updates from that sidechain is no longer possible.
