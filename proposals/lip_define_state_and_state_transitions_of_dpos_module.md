@@ -621,8 +621,8 @@ An update generator key transaction `trs` must fulfill the following to be valid
 
 ##### Execution
 
-Executing an update generator key transaction `trs` is done by calling `validators.updateGeneratorKey(address, trs.params.generatorKey)` where 
-`address` is the 20-byte address derived from trs.senderPublicKey.
+Executing an update generator key transaction `trs` is done by calling `validators.setValidatorGeneratorKey(address, trs.params.generatorKey)` where 
+`address` is the 20-byte address derived from trs.senderPublicKey. `trs` is invalid if this function returns `False`.
 
 
 #### Vote
