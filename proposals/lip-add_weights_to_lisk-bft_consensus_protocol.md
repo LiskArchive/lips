@@ -162,9 +162,9 @@ This function allows to update the property `largestHeightPrecommit` for the val
 
 ```python
 setLargestHeightPrecommit(validatorAddress, height):
-    for validatorInfo in bftVotes.activeValidators:
-        if validatorInfo.address == validatorAddress:
-            validatorInfo.largestHeightPrecommit = height
+    for validatorVoteInfo in bftVotes.activeValidatorsVoteInfo:
+        if validatorVoteInfo.address == validatorAddress:
+            validatorVoteInfo.largestHeightPrecommit = height
             return
 ```
 
@@ -228,18 +228,19 @@ updatePrevotesPrecommits():
     if newBlockBFTInfo.maxHeightGenerated >= newBlockBFTInfo.height:
         return
 
+    voteInfos = bftVotes.activeValidatorsVoteInfo
     # If the block generator is not BFT participant (i.e., has BFT weight 0) the block
     # does not imply prevotes or precommits. This happens for standby delegates, for instance.
-    if there is no entry in bftVotes.activeValidators with address equal to newBlockBFTInfo.generatorAddress:
+    if there is no entry in voteInfos with address equal to newBlockBFTInfo.generatorAddress:
         return
-        
-    validatorInfo = entry in bftVotes.activeValidators with address equal to newBlockBFTInfo.generatorAddress
+
+    validatorVoteInfo = entry in voteInfos with address equal to newBlockBFTInfo.generatorAddress
     heightNotPrevoted = getHeightNotPrevoted()
 
     # add implied precommits by newBlockheader
-    minPrecommitHeight = max(validatorInfo.minActiveHeight,
+    minPrecommitHeight = max(validatorVoteInfo.minActiveHeight,
                              heightNotPrevoted+1,
-                             validatorInfo.largestHeightPrecommit+1)
+                             validatorVoteInfo.largestHeightPrecommit+1)
     hasPrecommitted = False
     # iterate over blockBFTInfo objects in decreasing order by height
     for blockBFTInfo in bftVotes.blockBFTInfos:
@@ -255,7 +256,7 @@ updatePrevotesPrecommits():
 
     # add implied prevotes by newBlockheader
     minPrevoteHeight = max(newBlockBFTInfo.maxHeightGenerated+1,
-                           validatorInfo.minActiveHeight)
+                           validatorVoteInfo.minActiveHeight)
     # iterate over blockBFTInfo objects in decreasing order by height
     for blockBFTInfo in bftVotes.blockBFTInfos:
         if blockBFTInfo.height < minPrevoteHeight:
