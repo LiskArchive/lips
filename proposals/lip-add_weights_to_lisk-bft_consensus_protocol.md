@@ -228,6 +228,11 @@ updatePrevotesPrecommits():
     if newBlockBFTInfo.maxHeightGenerated >= newBlockBFTInfo.height:
         return
 
+    # If the block generator is not BFT participant (i.e., has BFT weight 0) the block
+    # does not imply prevotes or precommits. This happens for standby delegates, for instance.
+    if there is no entry in bftVotes.activeValidators with address equal to newBlockBFTInfo.generatorAddress:
+        return
+        
     validatorInfo = entry in bftVotes.activeValidators with address equal to newBlockBFTInfo.generatorAddress
     heightNotPrevoted = getHeightNotPrevoted()
 
