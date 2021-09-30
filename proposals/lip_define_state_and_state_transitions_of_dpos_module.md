@@ -952,7 +952,7 @@ After an end-of-round block `b` is executed (`isEndOfRound(b.header.height) == T
 roundNumber = roundNumber(b.header.height)
 currentWeights = {}
 for address being a storeKey in delegate substore and isBanned(address) == False:
-    currentWeights[address] = delegateWeight(address, b.header.height)} 
+    currentWeights[address] = delegateWeight(address, b.header.height)
 
 activeDelegates = array of the top 101 address by decreasing delegateWeight from currentWeights, ties broken by lexicographical ordering of the address
 
