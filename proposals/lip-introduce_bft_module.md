@@ -320,7 +320,7 @@ The function returns `True` if the two objects provided as input correspond to c
 ##### Execution
 
 ```python
-areDistinctHeadersContradicting(blockHeaderInfo1,blockHeaderInfo2):
+areDistinctHeadersContradicting(blockHeaderInfo1, blockHeaderInfo2):
     # order the two block headers such that b1 must be forged first
     b1 = blockHeaderInfo1
     b2 = blockHeaderInfo2
@@ -433,7 +433,7 @@ The BFT parameters valid at the height `h`.
 
 ```python
 getBFTParametersInternal(h):
-    for key,value in BFT Parameters substore ordered
+    for key, value in BFT Parameters substore ordered
         decreasing by key:
         if key <= h:
             return deserialized value
@@ -485,11 +485,11 @@ The function returns `True` if the two block headers provided as input are contr
 ##### Execution
 
 ```python
-areHeadersContradicting(blockHeader1,blockHeader2):
+areHeadersContradicting(blockHeader1, blockHeader2):
     if  blockHeader1.blockID == blockHeader2.blockID:
         # no contradiction, as block headers are the same
         return False
-    return areDistinctHeadersContradicting(blockHeader1,blockHeader2)
+    return areDistinctHeadersContradicting(blockHeader1, blockHeader2)
 ```
 
 #### computeValidatorsHash
@@ -787,8 +787,8 @@ TBD
 
 [lip-certificate-generation]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296
 [lip-dpos]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
-[lip-poa]: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/288
-[lip-reward-module]: https://research.lisk.com/t/define-state-transitions-of-reward-module/316
+[lip-poa]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0047.md
+[lip-reward-module]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0042.md
 [lip-unlock-condition]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
 [lip-update-block-processing]: https://research.lisk.com/t/update-block-schema-and-block-processing/293
 [lip-weighted-lisk-bft]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
