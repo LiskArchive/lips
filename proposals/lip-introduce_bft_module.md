@@ -416,6 +416,31 @@ computeValidatorsHashInternal(validators, certificateThreshold):
     return SHA-256(input)
 ```
 
+#### getBFTParametersInternal
+
+This function is a convenience function for obtaining the BFT parameters for a given height.
+
+##### Parameters
+
+* `h`: Height for which to obtain the BFT parameters.
+Note that for `h <= bftVotes.maxHeightCertified` the function may fail as among all key-value pairs in the BFT Parameters substore with key less or equal to `bftVotes.maxHeightCertified+1` only the one with largest key is kept and all others are pruned.
+
+##### Returns
+
+The BFT parameters valid at the height `h`.
+
+##### Execution
+
+```python
+getBFTParametersInternal(h):
+    for key,value in BFT Parameters substore ordered
+        decreasing by key:
+        if key <= h:
+            return deserialized value
+    # in this case no BFT parameters are stored for the height h
+    Fail
+```
+
 #### getBlockBFTProperties
 
 This function creates a `blockBFTInfo` object with a subset of the block properties that are required for the BFT module.
@@ -440,31 +465,6 @@ getBlockBFTProperties(blockHeader):
     blockBFTInfo.prevoteWeight = 0
     blockBFTInfo.precommitWeight = 0
     return blockBFTInfo
-```
-
-#### getBFTParametersInternal
-
-This function is a convenience function for obtaining the BFT parameters for a given height.
-
-##### Parameters
-
-* `h`: Height for which to obtain the BFT parameters.
-Note that for `h <= bftVotes.maxHeightCertified` the function may fail as among all key-value pairs in the BFT Parameters substore with key less or equal to `bftVotes.maxHeightCertified+1` only the one with largest key is kept and all others are pruned.
-
-##### Returns
-
-The BFT parameters valid at the height `h`.
-
-##### Execution
-
-```python
-getBFTParametersInternal(h):
-    for key,value in BFT Parameters substore ordered
-        decreasing by key:
-        if key <= h:
-            return deserialized value
-    # in this case no BFT parameters are stored for the height h
-    Fail
 ```
 
 ### Protocol Logic for Other Modules
@@ -522,47 +522,6 @@ existBFTParameters(h):
     if exists entry in BFT Parameters store with key h:
         return True
     return False
-```
-
-#### getBFTParameters
-
-This function allows to obtain the BFT parameters valid at the height given as input.
-
-##### Parameters
-
-* `h`: Height for which to obtain the BFT parameters.
-Note that for `h <= bftVotes.maxHeightCertified` the function may fail as among all key-value pairs in the BFT Parameters substore with key less or equal to `bftVotes.maxHeightCertified+1` only the one with largest key is kept and all others are pruned.
-
-##### Returns
-
-The BFT parameters valid at the height `h`.
-
-##### Execution
-
-```python
-getBFTParameters(h)
-    return getBFTParametersInternal(h)
-```
-
-#### getBFTHeights
-
-The function returns the current values of the property `maxHeightPrevoted`, `maxHeightPrecommitted` and `maxHeightCertified` in the BFT Votes substore.
-
-##### Returns
-
-* The value of the property `maxHeightPrevoted` as unsigned 32-bit integer.
-* The value of the property `maxHeightPrecommitted` as unsigned 32-bit integer.
-* The value of the property `maxHeightCertified` as unsigned 32-bit integer.
-
-##### Execution
-
-```python
-getBFTHeights():
-    return {
-        "maxHeightPrevoted": bftVotes.maxHeightPrevoted,
-        "maxHeightPrecommitted": bftVotes.maxHeightPrecommitted,
-        "maxHeightCertified": bftVotes.maxHeightCertified
-    }
 ```
 
 #### impliesMaximalPrevotes
@@ -632,6 +591,47 @@ isHeaderContradictingChain(blockHeader):
 
 Note that the function above is the update of the function `checkHeaderContradictingChain` defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#processing-blocks) to the new state structure.
 
+#### getBFTHeights
+
+The function returns the current values of the property `maxHeightPrevoted`, `maxHeightPrecommitted` and `maxHeightCertified` in the BFT Votes substore.
+
+##### Returns
+
+* The value of the property `maxHeightPrevoted` as unsigned 32-bit integer.
+* The value of the property `maxHeightPrecommitted` as unsigned 32-bit integer.
+* The value of the property `maxHeightCertified` as unsigned 32-bit integer.
+
+##### Execution
+
+```python
+getBFTHeights():
+    return {
+        "maxHeightPrevoted": bftVotes.maxHeightPrevoted,
+        "maxHeightPrecommitted": bftVotes.maxHeightPrecommitted,
+        "maxHeightCertified": bftVotes.maxHeightCertified
+    }
+```
+
+#### getBFTParameters
+
+This function allows to obtain the BFT parameters valid at the height given as input.
+
+##### Parameters
+
+* `h`: Height for which to obtain the BFT parameters.
+Note that for `h <= bftVotes.maxHeightCertified` the function may fail as among all key-value pairs in the BFT Parameters substore with key less or equal to `bftVotes.maxHeightCertified+1` only the one with largest key is kept and all others are pruned.
+
+##### Returns
+
+The BFT parameters valid at the height `h`.
+
+##### Execution
+
+```python
+getBFTParameters(h)
+    return getBFTParametersInternal(h)
+```
+
 #### getNextHeightBFTParameters
 
 The function allows to obtain the next larger key in the BFT Parameters substore given a height as input.
@@ -644,6 +644,7 @@ This function is needed for validating aggregate commits in blocks and checking 
 ##### Returns
 
 For a height `h` as input, the function returns the smallest height `h1 > h` with an entry in the BFT Parameters substore with key `h1`, if such height exists. Otherwise, it fails.
+
 
 #### setBFTParameters
 
