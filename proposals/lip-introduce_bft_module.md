@@ -632,6 +632,25 @@ getBFTParameters(h)
     return getBFTParametersInternal(h)
 ```
 
+#### getCurrentValidators
+
+This function allows to obtain an array of the validators active at the current height.
+
+##### Returns
+
+An array of objects, each with a property `address` of type bytes and a property `bftWeight` of type 64-bit unsigned integer.
+
+##### Execution
+
+```python
+getCurrentValidators()
+    if length(bftVotes.blockBFTInfos) > 0:
+        currentHeight = bftVotes.blockBFTInfos[0].height
+    else:
+        Fail
+    return getBFTParametersInternal(currentHeight).validators
+```
+
 #### getNextHeightBFTParameters
 
 The function allows to obtain the next larger key in the BFT Parameters substore given a height as input.
