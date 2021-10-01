@@ -27,7 +27,7 @@ One exception to that is the bootstrap period introduced as part of the new gene
 During the bootstrap period none of the bootstrap delegates contributes to finalizing blocks, so that blocks can only be finalized after the bootstrap period is over.
 
 For more flexibility and to also support other validator selection mechanisms, we want to allow for different BFT weights of the active validators, i.e., different weights attributed to the prevotes and precommits cast by a validator.
-These weights and the threshold for finalizing a block should also not be constant, but should be allowed to change over time. This is, in particular, required in conjunction with the Proof-of-Authority validator selection mechanism introduced in the [PoA][module] where validators can be added and removed or their weights changed with a simple transaction and without a hard fork.
+These weights and the threshold for finalizing a block should also not be constant, but should be allowed to change over time. This is, in particular, required in conjunction with the Proof-of-Authority validator selection mechanism introduced in the [PoA module][poa-lip] where validators can be added and removed or their weights changed with a simple transaction and without a hard fork.
 
 Additionally, as part of the new state architecture, the consensus votes are stored as part of the state as described in the [BFT module LIP][bft-module-lip]. In this LIP, we therefore describe how the consensus votes and associated properties need to be updated as part of the block processing, using the notation and state structure introduced in the [BFT module LIP][bft-module-lip].
 
@@ -89,7 +89,7 @@ Similarly, we choose `prevoteThreshold(h)` such that `prevoteThreshold(h) / aggr
 
 The parameter `ρ`, which determines how many blocks a block can imply prevotes for, is given by `3*LSK_BFT_BATCH_SIZE` in the specifications in this LIP, as also in LIP 0014.
 Here `LSK_BFT_BATCH_SIZE` is a constant of the  [BFT module LIP][bft-module-lip].
-As the round length in a PoA chain can vary, we require that the maximum possible round length in a PoA chain, given by the constant `MAX_NUM_VALIDATORS` defined in the [Proof-of-Authority LIP][poa-lip], is always at most the constant `LSK_BFT_BATCH_SIZE`.
+As the round length in a PoA chain can vary, we require that the maximum possible round length in a PoA chain, given by the constant `MAX_NUM_VALIDATORS` defined in the [PoA module][poa-lip], is always at most the constant `LSK_BFT_BATCH_SIZE`.
 As we have `ρ=3*LSK_BFT_BATCH_SIZE`, this ensures that `ρ` is at least three times the maximum number of active validators, which is required by Definition 4.1 in the [Lisk-BFT paper][lisk-bft-paper] for the liveness of the protocol.
 Additionally, we need to assume that the block proposal is done in a round-robin fashion so that the condition in Definition 4.1 in the [Lisk-BFT paper][lisk-bft-paper] is satisfied.
 In the Lisk SDK the [Validators module][validator-module-lip] is responsible for the block slot assignment.
@@ -316,5 +316,5 @@ The LIP therefore requires a hard fork as introducing the BFT module implies a h
 [lisk-bft-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md
 [lisk-bft-lip-comp]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#computing-prevotes-and-precommits
 [lisk-bft-paper]: https://arxiv.org/abs/1903.11434
-[poa-lip]: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/288
-[validator-module-lip]: https://research.lisk.com/t/introduce-validators-module/317
+[poa-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0047.md
+[validator-module-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0044.md
