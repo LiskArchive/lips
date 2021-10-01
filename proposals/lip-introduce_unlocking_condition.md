@@ -80,7 +80,7 @@ lastHeightOfRound(h):
     return r * ROUND_LENGTH + genesisHeight
 ```
 
-Here `roundNumber` is a function defined in the [LIP "Define state and state transitions of DPoS module"][dpos-module-lip] and `genesisHeight` denotes the height of the genesis block as stored in the [DPoS module][dpos-module-lip].
+Here `roundNumber` is a function defined in the [LIP "Define state and state transitions of DPoS module"][dpos-module-lip-roundNumber] and `genesisHeight` denotes the height of the genesis block as stored in the [DPoS module][dpos-module-lip].
 
 ### New Unlocking Condition
 
@@ -109,3 +109,4 @@ This LIP introduces a soft fork as the validity condition for the unlocking tran
 [ccu-lip]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
 [certificate-generation-lip]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/296
 [dpos-module-lip]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
+[dpos-module-lip-roundNumber]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320#roundnumber-63
