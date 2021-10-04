@@ -5,10 +5,11 @@ Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
         Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
         Rishi Mittal <rishi.mittal@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-legacy-module/319
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: LIP 0018
+Created: 2021-08-18
+Updated: 2021-10-04
+Requires: 0018
 ```
 
 ## Abstract
