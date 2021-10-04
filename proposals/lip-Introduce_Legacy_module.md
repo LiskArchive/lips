@@ -25,10 +25,10 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-Once [LIP 0018][LIP18] is active on the Lisk mainchain, all nodes for the Lisk mainchain must maintain the accounts that received some funds before the implementation of LIP 18,
+Once [LIP 0018][lip-0018] is active on the Lisk mainchain, all nodes for the Lisk mainchain must maintain the accounts that received some funds before the implementation of [LIP 0018][lip-0018],
 but do not have an associated public key. The balance of these accounts is maintained in the legacy accounts substore and can be recovered with a reclaim transaction.
 
-Furthermore, delegates registered before the implementation of the [Validators module][validator-LIP] do not have a registered BLS key. This module implements a command to allow those delegates to register a BLS key and hence participate in the certification generation process.
+Furthermore, delegates registered before the implementation of the [Validators module][research:validator] do not have a registered BLS key. This module implements a command to allow those delegates to register a BLS key and hence participate in the certification generation process.
 
 Implementing the Legacy module avoids the need for other modules (specifically the Token module and the Validators module) to handle legacy behaviors present only on the Lisk mainchain. This module is only part of the Lisk mainchain, and should not be implemented in any sidechain.
 
@@ -57,7 +57,7 @@ Calling a function `fct` from another module (named `moduleName`) is represented
 
 #### Legacy Accounts Substore
 
-This substore contains an array with the addresses and the balances of all legacy accounts for which no [reclaim transaction][LIP18-ReclaimTransaction] was included.
+This substore contains an array with the addresses and the balances of all legacy accounts for which no [reclaim transaction][lip-0018#ReclaimTransaction] was included.
 
 ##### Store Prefix, Store Key, and Store Value
 
@@ -82,7 +82,7 @@ legacyAccountsSchema = {
 
 ##### Properties and Default values
 
-This substore contains an entry for each legacy address for which no [reclaim transaction][LIP18-ReclaimTransaction] was included. See also the [“Accounts without Public Key” section][LIP18-AccountsWithoutPKey] in LIP 0018.
+This substore contains an entry for each legacy address for which no [reclaim transaction][lip-0018#ReclaimTransaction] was included. See also the [“Accounts without Public Key” section][lip-0018#AccountsWithoutPKey] in [LIP 0018][lip-0018].
 
 The module store will be initialized with these legacy addresses and their respective balances during the execution of the genesis block.
 
@@ -114,7 +114,7 @@ getLegacyAddress(publicKey):
 
 #### Reclaim
 
-This command allows users to reclaim tokens from a legacy account as defined in [LIP 0018][LIP18-ReclaimTransaction]. Here, we clarify the verification and execution logic with respect to the module store.
+This command allows users to reclaim tokens from a legacy account as defined in [LIP 0018][lip-0018#ReclaimTransaction]. Here, we clarify the verification and execution logic with respect to the module store.
 
 Transactions executing this command have:
 
@@ -147,8 +147,8 @@ For a reclaim transaction `trs` to be valid, the legacy accounts substore must c
 When a reclaim transaction `trs` is executed, the following is done:
 
 * Delete the entry from the legacy accounts substore with store key `getLegacyAddress(trs.senderPublicKey)`.
-* Call the function `mint(newAddress, 0, trs.params.amount)`, where `newAddress` is the [20-byte address][LIP18-addressComputation] derived from `trs.senderPublicKey`.
-  The function `mint` is defined in the [Token module][token-LIP-mint].
+* Call the function `mint(newAddress, 0, trs.params.amount)`, where `newAddress` is the [20-byte address][lip-0018#addressComputation] derived from `trs.senderPublicKey`.
+  The function `mint` is defined in the [Token module][research:token#mint].
 
 #### Register BLS Key
 
@@ -180,7 +180,7 @@ registerBLSKeyParamsSchema = {
 
 ##### Execution
 
-Executing a transaction `trs` triggering an register BLS key command is done by calling the function `setValidatorBLSKey(validatorAddress, trs.params.proofOfPossession, trs.params.blsKey)` where `validatorAddress` is the 20-byte address derived from `trs.senderPublicKey` and `setValidatorBLSKey` is defined in the [Validators module][validator-LIP-setValidatoBLSKey]. If this function returns false, the transaction is invalid.
+Executing a transaction `trs` triggering an register BLS key command is done by calling the function `setValidatorBLSKey(validatorAddress, trs.params.proofOfPossession, trs.params.blsKey)` where `validatorAddress` is the 20-byte address derived from `trs.senderPublicKey` and `setValidatorBLSKey` is defined in the [Validators module][research:validator#setValidatoBLSKey]. If this function returns false, the transaction is invalid.
 
 ### Protocol Logic for Other Modules
 
@@ -221,10 +221,10 @@ This LIP defines a new module and specifies its store, which in turn will become
 
 TBA
 
-[validator-LIP]: https://research.lisk.com/t/introduce-the-validators-module/317
-[validator-LIP-setValidatoBLSKey]: https://research.lisk.com/t/introduce-the-validators-module/317#setvalidatorblskey-38
-[token-LIP-mint]: https://research.lisk.com/t/define-state-and-state-transitions-of-token-module/295#mint-64
-[LIP18]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md
-[LIP18-addressComputation]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md#address-computation
-[LIP18-ReclaimTransaction]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md#reclaim-transaction
-[LIP18-AccountsWithoutPKey]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md#accounts-without-public-key
+[research:validator]: https://research.lisk.com/t/introduce-the-validators-module/317
+[research:validator#setValidatoBLSKey]: https://research.lisk.com/t/introduce-the-validators-module/317#setvalidatorblskey-38
+[research:token#mint]: https://research.lisk.com/t/define-state-and-state-transitions-of-token-module/295#mint-64
+[lip-0018]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md
+[lip-0018#addressComputation]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md#address-computation
+[lip-0018#ReclaimTransaction]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md#reclaim-transaction
+[lip-0018#AccountsWithoutPKey]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0018.md#accounts-without-public-key
