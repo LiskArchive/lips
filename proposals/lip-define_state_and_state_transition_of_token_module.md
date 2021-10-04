@@ -34,7 +34,7 @@ With the proposed interoperability solution for the Lisk ecosystem, we anticipat
 
 ### Token Identification and Interoperability
 
-To identify tokens in the Lisk ecosystem, we introduce token identifiers in this proposal. An identifier will be unique among all tokens in the ecosystem. It is built from the [chain ID][registration-lip] of the chain minting the token and a local identifier, an integer chosen when the token is minted. The local identifier allows chains to define multiple custom tokens, each identified by their respective local ID. For example, a decentralized exchange could have a governance token (distributed in the genesis block) and a liquidity token (distributed to liquidity providers).
+To identify tokens in the Lisk ecosystem, we introduce token identifiers in this proposal. An identifier will be unique among all tokens in the ecosystem. It is built from the [chain ID][research:chain-registration] of the chain minting the token and a local identifier, an integer chosen when the token is minted. The local identifier allows chains to define multiple custom tokens, each identified by their respective local ID. For example, a decentralized exchange could have a governance token (distributed in the genesis block) and a liquidity token (distributed to liquidity providers).
 
 In particular, the LSK token is native to the Lisk mainchain which has `chainID = 1`, it is also the first (and only) token of this chain and has `localID = 0`. This entails that the LSK token ID is `(1,0)`. Token identifiers in this LIP are written as a dictionary `{"chainID": 1, "localID": 0}` (for example for the LSK token). Other document could also choose to represent them as a tuple, the LSK ID could then be written as `(1,0)`.
 
@@ -49,13 +49,13 @@ The choice of supported tokens must abide by two rules: all chains must support 
 * A chain with a specific use case and with a native token might only support the LSK token and their native token.
 * A gambling chain might support their native token, the LSK token and tokens from a selected group of oracle chains.
 
-When receiving unsupported tokens from a cross-chain transfer, chains should return those tokens to the sending chain if the message fee was sufficient. The threshold on the message fee to return unsupported tokens is chosen to be the same as the interoperability threshold for [returning CCMs][CCM-LIP] for other errors. This threshold is set to be equal to the Lisk mainchain minimum fee.
+When receiving unsupported tokens from a cross-chain transfer, chains should return those tokens to the sending chain if the message fee was sufficient. The threshold on the message fee to return unsupported tokens is chosen to be the same as the interoperability threshold for [returning CCMs][research:ccm] for other errors. This threshold is set to be equal to the Lisk mainchain minimum fee.
 
 Lastly, note that modifying the list of supported tokens would result in a fork of the chain. For this reason, the default behavior for Lisk sidechains would be to support all tokens.
 
 ### Cross-chain Token Transfer
 
-To allow cross-chain transfers of tokens, we define a specific command which makes use of the [Interoperability module][base-interoperability-LIP] and creates a [cross-chain message][CCM-LIP] with the relevant information. When sending cross-chain tokens, it is crucial that every chain can correctly maintain escrow amounts of its native tokens across the ecosystem. In this way, the total supply of a token can never be increased by a foreign chain as the native chain only accepts as many tokens from a foreign chain as have been sent to it before.
+To allow cross-chain transfers of tokens, we define a specific command which makes use of the [Interoperability module][research:base-interoperability] and creates a [cross-chain message][research:ccm] with the relevant information. When sending cross-chain tokens, it is crucial that every chain can correctly maintain escrow amounts of its native tokens across the ecosystem. In this way, the total supply of a token can never be increased by a foreign chain as the native chain only accepts as many tokens from a foreign chain as have been sent to it before.
 
 #### Transfer To and From the Native Chain
 
@@ -111,7 +111,7 @@ This function is called by the Interoperability module before executing cross-ch
 
 #### recover
 
-This function is called by the interoperability module whenever [state recovery transaction][recovery-LIP] for the Token module is executed. The amount of native tokens stored in the terminated chain can therefore be credited again to the user on the native chain. It should not be called by any other module.
+This function is called by the interoperability module whenever [state recovery transaction][research:sidechain-recovery] for the Token module is executed. The amount of native tokens stored in the terminated chain can therefore be credited again to the user on the native chain. It should not be called by any other module.
 
 #### Use of Protocol Logics by Other Modules
 
@@ -163,11 +163,11 @@ The function `uint32be(x)` returns the big endian uint32 serialization of an int
 
 #### Logic from Other Modules
 
-Calling a function `fct` implemented in the [Interoperability module][base-interoperability-LIP] is represented by `interoperability.fct(required inputs)`.
+Calling a function `fct` implemented in the [Interoperability module][research:base-interoperability] is represented by `interoperability.fct(required inputs)`.
 
 ### Token Identification
 
-All tokens in the ecosystem are identified by a pair of non-negative integers `(chainID, localID)`, both strictly less than 2^32. The first element of the pair, `chainID`, is the chain ID of the chain that minted the token (an integer, as specified in the ["Introduce chain registration mechanism" LIP][registration-lip]) and the second element, `localID`, is an integer specified when the token is minted.
+All tokens in the ecosystem are identified by a pair of non-negative integers `(chainID, localID)`, both strictly less than 2^32. The first element of the pair, `chainID`, is the chain ID of the chain that minted the token (an integer, as specified in the ["Introduce chain registration mechanism" LIP][research:chain-registration]) and the second element, `localID`, is an integer specified when the token is minted.
 
 In this LIP, the token identifier is written as a dictionary of 2 elements `{"chainID": chainID, "localID": localID}`. This is for example used in all input formats for the module's exposed functions. This choice follows a potential way the module could be implemented in JavaScript, the same behavior could be implemented with a named tuple in Python. This allows the exposed function interfaces to be simple and uniform.
 
@@ -1115,8 +1115,8 @@ This introduces a different token handling mechanism for the whole Lisk ecosyste
 
 TBA
 
-[base-interoperability-LIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
-[registration-LIP]: https://research.lisk.com/t/chain-registration/291
-[recovery-LIP]: https://research.lisk.com/t/sidechain-recovery-transactions/292
-[CCU-LIP]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
-[CCM-LIP]: https://research.lisk.com/t/cross-chain-messages/299
+[research:base-interoperability]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
+[research:chain-registration]: https://research.lisk.com/t/chain-registration/291
+[research:sidechain-recovery]: https://research.lisk.com/t/sidechain-recovery-transactions/292
+[research:ccu]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
+[research:ccm]: https://research.lisk.com/t/cross-chain-messages/299
