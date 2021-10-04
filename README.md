@@ -61,3 +61,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0047](proposals/lip-0047.md) | Introduce PoA module                                                                           | Iker Alustiza, Ishan Tiwari                            | Standards Track | Draft         |
 | [0048](proposals/lip-0048.md) | Introduce Fee module                                                                           | Maxime Gagnebin, Mitsuaki Uchimoto                     | Standards Track | Draft         |
 | [0049](proposals/lip-0049.md) | Introduce cross-chain messages                                                                 | Maxime Gagnebin                                        | Standards Track | Draft         |
+| [0050](proposals/lip-0050.md) | Introduce Legacy module                                                                        | Maxime Gagnebin                                        | Standards Track | Draft         |
