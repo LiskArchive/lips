@@ -418,7 +418,7 @@ computeValidatorsHashInternal(validators, certificateThreshold):
 
 #### getBFTParametersInternal
 
-This function is a convenience function for obtaining the BFT parameters for a given height.
+This function is a convenience function for obtaining the BFT parameters at a given height.
 
 ##### Parameters
 
