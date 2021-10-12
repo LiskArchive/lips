@@ -3,10 +3,11 @@ LIP:
 Title: Introduce NFT module
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-nft-module/297
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: Introduce Interoperability module
+Created: 2021-05-22
+Updated: 2021-10-12
+Requires: 0045
 ```
 
 ## Abstract
