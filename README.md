@@ -63,3 +63,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0049](proposals/lip-0049.md) | Introduce cross-chain messages                                                                 | Maxime Gagnebin                                        | Standards Track | Draft         |
 | [0050](proposals/lip-0050.md) | Introduce Legacy module                                                                        | Maxime Gagnebin                                        | Standards Track | Draft         |
 | [0051](proposals/lip-0051.md) | Define state and state transitions of Token module                                             | Maxime Gagnebin                                        | Standards Track | Draft         |
+| [0052](proposals/lip-0052.md) | Introduce NFT module                                                                           | Maxime Gagnebin                                        | Standards Track | Draft         |
