@@ -54,13 +54,13 @@ In the proposed solution, all NFTs associated with a given address are stored se
 
 ### NFT Identifier
 
-To identify NFTs in the Lisk ecosystem, we introduce the NFT ID in this proposal. An NFT ID will be unique in the ecosystem. It is built from 3 integers: the [chain ID][registration-LIP] of the chain creating the token, a collection integer chosen when the token is created and an index which is automatically assigned to the new NFT.
+To identify NFTs in the Lisk ecosystem, we introduce the NFT ID in this proposal. An NFT ID will be unique in the ecosystem. It is built from 3 integers: the [chain ID][research:chain-registration] of the chain creating the token, a collection integer chosen when the token is created and an index which is automatically assigned to the new NFT.
 
 This allows chains to define multiple sets of NFTs, each identified by their respective collection. Each collection can then easily have its own attribute schema and custom logic. For example, an art NFT exchange could have a different collection per artist. The index being then the unique integer associated with each art piece of this artist.
 
 ### Cross-chain NFT Transfer
 
-To allow cross-chain transfers of NFTs, we define a specific command which makes use of the [Interoperability module][base-interoperability-LIP] and creates a [cross-chain message][CCM-LIP] with the relevant information. When sending NFTs cross-chain, it is crucial that every chain can correctly escrow its native tokens sent to other chains. In this way, a native NFT can never be created by a foreign chain and sent across the ecosystem. When receiving non-native NFTs on a chain, users can query this NFT's native chain to make sure that the NFT is properly escrowed.
+To allow cross-chain transfers of NFTs, we define a specific command which makes use of the [Interoperability module][research:base-interoperability] and creates a [cross-chain message][research:ccm] with the relevant information. When sending NFTs cross-chain, it is crucial that every chain can correctly escrow its native tokens sent to other chains. In this way, a native NFT can never be created by a foreign chain and sent across the ecosystem. When receiving non-native NFTs on a chain, users can query this NFT's native chain to make sure that the NFT is properly escrowed.
 
 #### Transfer To and From the Native Chain
 
@@ -154,7 +154,7 @@ In this LIP, `length(byteSequence)` returns the length in bytes of `byteSequence
 
 #### Functions from Other Modules
 
-Calling a function `fct` from the [Interoperability module][base-interoperability-LIP] is represented by `interoperability.fct(required inputs)`.
+Calling a function `fct` from the [Interoperability module][research:base-interoperability] is represented by `interoperability.fct(required inputs)`.
 
 ### NFT Module Store
 
@@ -958,9 +958,9 @@ Chains adding support for the NFT module specified in this document need to do s
 
 TBA
 
-[base-interoperability-LIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
-[registration-LIP]: https://research.lisk.com/t/chain-registration/291
-[recovery-LIP]: https://research.lisk.com/t/sidechain-recovery-transactions/292
-[CCU-LIP]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
-[token-LIP]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
-[CCM-LIP]: https://research.lisk.com/t/cross-chain-messages/299
+[research:base-interoperability]: https://research.lisk.com/t/introduce-interoperability-module/290
+[research:chain-registration]: https://research.lisk.com/t/chain-registration/291
+[research:sidechain-recovery]: https://research.lisk.com/t/sidechain-recovery-transactions/292
+[research:ccu]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
+[research:token-module]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
+[research:ccm]: https://research.lisk.com/t/cross-chain-messages/299
