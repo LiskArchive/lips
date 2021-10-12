@@ -43,7 +43,7 @@ Therefore, providing a unified module to handle, transfer and modify NFTs is a n
 
 The NFT store contains entries for all NFTs present on the chain, as well as entries for all native NFTs that have been sent cross-chain. Each entry contains three properties, the owner, the locking module ID and the attributes of the NFT. The owner can either be a 20 bytes user address, or a 4 bytes serialization of a chain ID. In the latter case, the token is a native token that has been sent cross-chain and is escrowed.
 
-The locking module ID stores the information regarding the locking status of the NFT. If the NFT is unlocked, this property will have value `NFT_NOT_LOCKED`, whereas if the NFT is locked, this property will store the ID of the locking module.
+The locking module ID stores the information regarding the locking status of the NFT. If the NFT is unlocked, this property will have the value `NFT_NOT_LOCKED`, whereas if the NFT is locked, this property will store the ID of the locking module.
 
 Lastly, the NFT stores an attribute property which can be used by custom applications to store information about the NFT, or modify interactions with the NFT.
 
