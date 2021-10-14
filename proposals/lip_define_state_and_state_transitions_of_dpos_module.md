@@ -900,7 +900,7 @@ store value = {
     "initDelegates": b.header.assets.initDelegates
 } serialized using genesisDataStoreSchema
 
-# set the inititial delegates in the BFT module
+# set the initial delegates in the BFT module
 bftWeights = [
     {"address": address, "bftWeight": 1} 
     for address in initDelegates
