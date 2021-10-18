@@ -514,7 +514,7 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
 Updating `sendingAccount.activeValidators` with respect to a given `activeValidatorsUpdate` is done following the logic below:
 
 ```python
-updateActiveValidaros(activeValidators, activeValidatorsUpdate)
+updateActiveValidators(activeValidators, activeValidatorsUpdate)
 
     for validator in activeValidatorsUpdate:
         if there exist currentValidator in activeValidators such that
