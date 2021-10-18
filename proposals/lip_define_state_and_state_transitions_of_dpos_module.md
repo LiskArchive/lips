@@ -573,6 +573,7 @@ create an entry in the delegate substore with
     storeValue = {
         "name": trs.params.name,
         "totalVotesReceived": 0,
+        "selfVotes": 0,
         "lastGeneratedHeight": b.header.height,
         "isBanned": False,
         "pomHeights": [],
