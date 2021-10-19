@@ -39,7 +39,7 @@ In the next subsections, these mechanisms are explained together with their cond
 ### Message Recovery from the Sidechain Account Outbox
 
 This mechanism allows to recover any CCM pending in the sidechain outbox. That is, those CCMs that have not been included in the receiving sidechain yet.
-Specifically, this includes all the CCMs whose indices (the position of these CCMs in the sidechain outbox tree) are larger than the index of the last message that the receiving sidechain reported to have included in its inbox on the mainchain. This recovery mechanism requires these conditions to work:
+Specifically, this includes all the CCMs whose indices (the position of these CCMs in the sidechain outbox tree) are larger than the index of the last message that the receiving sidechain reported to have included in its inbox on the mainchain. This recovery mechanism requires these conditions to work as follows:
 
 * The pending CCMs to be recovered have to be available to the sender of the recovery command.
 * The indices of the pending CCMs to be recovered have to be larger than the value of the `partnerChainInboxSize` property of the interoperability account of the sidechain. This implies that these CCMs are still pending or that their processing has not been certified to the mainchain.
@@ -54,7 +54,7 @@ Assuming these conditions are fulfilled, any user can submit a message recovery 
 * If the sending chain of the pending CCM is the Lisk mainchain, it must be a cross-chain LSK token transfer CCM. The amount of LSK transferred in the CCM will be added back to the sender of the original transaction.
 * If the sending chain of the pending CCM is any other sidechain, the CCM will be sent back to this chain. The sending sidechain will act on the CCM as usual, i,e., with respect to the specific logic associated with the cross-chain command.
 
-Bear in mind that users are not guaranteed to recover their CCMs in every situation. Certain state information of the terminated sidechain might have been modified before termination and this would make the recovered CCM application fail. For example, the escrowed LSK in the sidechain account on the mainchain could have been subtracted by prior malicious behavior in the terminated sidechain.
+Bearing in mind that users are not guaranteed to recover their CCMs in every situation. Certain state information of the terminated sidechain might have been modified before termination and this would make the recovered CCM application fail. For example, the escrowed LSK in the sidechain account on the mainchain could have been subtracted by prior malicious behavior in the terminated sidechain.
 
 ### State Recovery from the Sidechain State Root
 
