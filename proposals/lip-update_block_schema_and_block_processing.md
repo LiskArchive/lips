@@ -99,22 +99,42 @@ For the rest of this proposal we define the following constants.
 | ------------- |---------| ------------| ------------|
 | `MAX_PAYLOAD_SIZE_BYTES` | integer | TBD | The max size of a block payload in bytes.|
 | `MAX_ASSET_DATA_SIZE_BYTES` | integer | TBD | The max size of an assets entry in bytes.|
-|`SIGNATURE_LENGTH_BYTES`| integer | 64 | The length of a Ed25519 signature.|
+| `SIGNATURE_LENGTH_BYTES`| integer | 64 | The length of a Ed25519 signature.|
 
 
 Furthermore, in the following we indicate with `block` be the block under consideration and with `previousBlock` the previous block of the chain.
 Calling a function `fct` from another module `module` is represented by `module.fct`.
 
-### Validation Stages of Block, Block Assets, and Block Header
+### Processing Stages of Block, Block Assets, and Block Header
 
-During a block lifecycle, validations are performed in three different stages:
+<img src="lip-Update_block_schema_and_block_processing/stages.png" width="80%">
+
+In this section, we specify the order of the various processing stages of a block.
+Note that a genesis block follows different rules specified in the ["Update genesis block schema and processing" LIP][research:genesis-block].
 
 - **Static validation**: When a new block is received, some initial static checks are done to ensure that the serialized object follows the general structure of a block. 
   These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
 - **Block verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
 In particular, these checks are performed *before* the state transitions implied by the modules are processed.
+- **State-machine processing**: In this stage, the block is processed in the state machine where module-level logic is applied (see [following section][#state-machine-processing-stages]).
 - **Result verification**: In this stage we verify the properties that require access to the state store *after* the block has been executed, i.e. they can be verified only after the state transitions implied by the block execution have been performed.
 In particular, these checks are performed *after* the state transitions implied by the modules are processed.
+
+The static validation, block verification, and result verification are processed in the framework layer, while the state-machine processing is performed in the state-machine layer. 
+
+#### State-machine Processing Stages
+
+In the following, we list the block processing stages performed as part of the state-machine layer. 
+
+- **Block verification**: In this stage, the entry in the block assets relevant to the module is checked. If the checks fail, the block is discarded and has no further effect.
+- **Before block execution**: In this stage, modules can process protocol logic *before* the transactions contained in the block payload are executed. 
+- **Transaction verification**: The transaction is verified, possibly by accessing the state store. If the verification fails, the transaction is invalid and the whole block is discarded.
+- **Before transaction execution**: In this stage, modules can process protocol logic *before* a transaction contained is executed. 
+- **Transaction execution**: Commands belonging to the module (i.e. with `moduleID` property matching the module ID) are executed.
+- **After transaction execution**: In this stage, modules can process protocol logic *after* a transaction contained is executed. 
+- **After block execution**: In this stage, modules can process protocol logic *after* the transactions contained in the block payload are executed.
+
+These steps are performed for each module registered in the blockchain. The transaction verification, before transaction execution, transaction execution, and after transaction execution steps are performed for each transaction in the block payload.
 
 ### Block
 
@@ -525,5 +545,6 @@ This LIP results in a hard fork as nodes following the proposed protocol will re
 [lip-signature]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0037.md#signing-and-verifying-with-ed25519
 
 [verifyAggregateCommit]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
-<!-- https://github.com/LiskHQ/lips-staging/blob/jan_certificate-generation-lip/proposals/lip-introduce_certificate_generation_mechanism.md#block-verification -->
 [lip-32]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0032.md
+
+[research:genesis-block]: https://research.lisk.com/t/update-genesis-block-schema-and-processing/325
