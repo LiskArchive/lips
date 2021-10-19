@@ -19,14 +19,14 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal][creative].
 
 ## Motivation
 
-In the Lisk ecosystem, the ability of a sidechain to interoperate with other chains can be revoked, i.e., terminated, permanently. Specifically, this occurs when the sidechain has been inactive for too long, i.e., not posting a transaction with a [cross-chain update (CCU)][CCU] command for more than 30 days, or if it posted one with a malicious CCU command on the mainchain. Once a sidechain is terminated in the ecosystem, the users of said chain cannot have any cross-chain interaction with it. This means they will no longer be able to send or receive any (fungible or non-fungible) token, message or custom information from or to the sidechain. Therefore, it is useful to provide a trustless on-chain mechanism to recover tokens, messages and information from terminated sidechains. This mechanism will noticeably improve the user experience of the Lisk ecosystem without affecting the security guarantees of the general interoperability solution.
+In the Lisk ecosystem, the ability of a sidechain to interoperate with other chains can be revoked, i.e., terminated, permanently. Specifically, this occurs when the sidechain has been inactive for too long, i.e., not posting a transaction with a [cross-chain update (CCU)][research:ccu] command for more than 30 days, or if it posted one with a malicious CCU command on the mainchain. Once a sidechain is terminated in the ecosystem, the users of said chain cannot have any cross-chain interaction with it. This means they will no longer be able to send or receive any (fungible or non-fungible) token, message or custom information from or to the sidechain. Therefore, it is useful to provide a trustless on-chain mechanism to recover tokens, messages and information from terminated sidechains. This mechanism will noticeably improve the user experience of the Lisk ecosystem without affecting the security guarantees of the general interoperability solution.
 
 ## Rationale
 
-This LIP introduces new commands to the Lisk ecosystem to provide a recovery mechanism for sidechain users in the scenario stated in the previous section. These commands are part of the Lisk [Interoperability module][interop], thus they make use of the information provided in the interoperability store of the terminated sidechain. The main use cases provided by this recovery mechanism are:
+This LIP introduces new commands to the Lisk ecosystem to provide a recovery mechanism for sidechain users in the scenario stated in the previous section. These commands are part of the Lisk [Interoperability module][research:base-interoperability], thus they make use of the information provided in the interoperability store of the terminated sidechain. The main use cases provided by this recovery mechanism are:
 
 * On the Lisk mainchain:
-  * The users can recover a [pending cross-chain message (CCM)][CCM] from the sidechain account outbox by submitting a transaction with a **message recovery command** on the Lisk mainchain.
+  * The users can recover a [pending cross-chain message (CCM)][research:ccm] from the sidechain account outbox by submitting a transaction with a **message recovery command** on the Lisk mainchain.
   * The users can recover the balance of LSK they had on a terminated sidechain by submitting a transaction with a **state recovery command**.
 
 * On sidechains:
@@ -58,7 +58,7 @@ Bearing in mind that users are not guaranteed to recover their CCMs in every sit
 
 ### State Recovery from the Sidechain State Root
 
-This mechanism allows to recover a specific entry from a substore (i.e. the collection of key-value pairs with a common store prefix) of a module store of a terminated sidechain. Here "recover" means triggering a specific state transition defined as part of the relevant module protocol logic. In particular, it is based on the sidechain state root, `stateRoot`, set in the last certificate before sidechain termination. In the context of the mainchain, a valid state recovery command can recover the LSK token balance that users had in the terminated sidechain. In the context of a sidechain, it can recover an entry in a recoverable module store from a terminated sidechain. A recoverable module is any module that exposes a recover function. This includes the [token module][tokenLIP] (for any custom token) and the [NFT module][NFTLIP].
+This mechanism allows to recover a specific entry from a substore (i.e. the collection of key-value pairs with a common store prefix) of a module store of a terminated sidechain. Here "recover" means triggering a specific state transition defined as part of the relevant module protocol logic. In particular, it is based on the sidechain state root, `stateRoot`, set in the last certificate before sidechain termination. In the context of the mainchain, a valid state recovery command can recover the LSK token balance that users had in the terminated sidechain. In the context of a sidechain, it can recover an entry in a recoverable module store from a terminated sidechain. A recoverable module is any module that exposes a recover function. This includes the [token module][research:token-module] (for any custom token) and the [NFT module][research:nft-module].
 
 This recovery mechanism requires these conditions to be valid:
 
@@ -71,13 +71,13 @@ This recovery mechanism requires these conditions to be valid:
 There is an extra requirement in the case of recoveries in the sidechain context: The sidechain in which the recovery will happen needs to be aware of the `stateRoot` of the terminated sidechain. In general, this information is only available on mainchain (in the interoperability account of the terminated sidechain). A way to make sidechains aware of this specific information for state recoveries is needed. This recovery initialization process on sidechains can happen in two ways:
 * **Recovery initialization command**: This command is used to prove on a sidechain the value that the `stateRoot` of the terminated sidechain has on mainchain.
 Any user on the corresponding sidechain can send a transaction with this command and initiate the state recoveries with respect to the terminated sidechain.
-* **Sidechain terminated message**: As specified in the [cross-chain message LIP][CCMterminatedMessage], when a CCM reaches a receiving chain that has been terminated, a sidechain terminated message is created and sent back to the sending chain carrying the `stateRoot` of the terminated sidechain. The application of this CCM on the sidechain will effectively initiate the recovery process.
+* **Sidechain terminated message**: As specified in the [cross-chain message LIP][research:ccm#terminatedMessage], when a CCM reaches a receiving chain that has been terminated, a sidechain terminated message is created and sent back to the sending chain carrying the `stateRoot` of the terminated sidechain. The application of this CCM on the sidechain will effectively initiate the recovery process.
 
 Assuming these conditions are fulfilled, the entries of substores of any recoverable module in a terminated sidechain can be recovered back to the chain in which the transaction with this command was submitted. In particular, users can recover their LSK tokens back to their user account on mainchain. What is more, sidechain developers may implement any custom logic for the `recover` function in their custom modules, so that recoveries may have different functionalities depending on the module and the sidechain where the process happens.
 
 Similar to the case for message recovery commands, it is not guaranteed to recover from the expected state in every situation. Certain state information of the terminated sidechain might have been modified and certified to the mainchain before termination.
 
-In summary, the functionality provided by these recovery commands applies for sidechains that were terminated for inactivity or [other violations of the interoperability protocol][CCUviolations]. If the validators of the terminated sidechain were byzantine in the past, i.e., the security guarantees of the sidechain were broken, it is likely that these recovery mechanisms would not work.
+In summary, the functionality provided by these recovery commands applies for sidechains that were terminated for inactivity or [other violations of the interoperability protocol][research:ccu#violations]. If the validators of the terminated sidechain were byzantine in the past, i.e., the security guarantees of the sidechain were broken, it is likely that these recovery mechanisms would not work.
 
 ### Recovery Commands as an Off-chain Service
 
@@ -112,7 +112,7 @@ Since these technical requirements are not straightforward, the recovery command
 | `MAINCHAIN_ID`                       | uint32 | 1            |
 | `LIVENESS_LIMIT`                     | uint32 | `30*24*3600` |
 
-This LIP specifies three commands for Lisk mainchain. These commands are part of the [Interoperability module][interop], with `moduleID = MODULE_ID_INTEROPERABILITY`.
+This LIP specifies three commands for Lisk mainchain. These commands are part of the [Interoperability module][research:base-interoperability], with `moduleID = MODULE_ID_INTEROPERABILITY`.
 
 ### General Notation
 
@@ -120,14 +120,14 @@ In the rest of the section:
 
 * Let `account(chainID)` be the object of the interoperability account store with `storePrefix = STORE_PREFIX_CHAIN_DATA` and `storeKey = chainID`.
 * Let `terminatedAccount(chainID)` be the object of the terminated account store with `storePrefix = STORE_PREFIX_TERMINATED_CHAIN` and `storeKey = chainID`.
-* Let `isLive` and `terminateChain` be the interoperability module internal functions defined in the [Introduce Interoperability module LIP][interop].
-* Let `uint32be` be the function for the big endian uint32 serialization of integers defined in the [Introduce Interoperability module LIP][interop].
-* Let `process` be the internal function with the same name defined in [Introduce cross-chain messages LIP][CCM].
-* Let `unescrow` be the function with the same name defined in [Define state and state transitions of Token module LIP][tokenCCM].
-* Let `RMTVerify` be the `verifyDataBlock` function specified in [the appendix C of LIP 0031][LIP31appendixC].
-* Let `RMTCalculateRoot` be the `calculateRootFromUpdateData` function specified in [the appendix E of LIP 0031][LIP31appendixE].
-* Let `SMTVerify` be the `verify` function specified in the [LIP 0039][SMTLIP].
-* Let `SMTCalculateRoot` be the `calculateRoot` function specified in the [LIP 0039][SMTLIP].
+* Let `isLive` and `terminateChain` be the interoperability module internal functions defined in the [Introduce Interoperability module LIP][research:base-interoperability].
+* Let `uint32be` be the function for the big endian uint32 serialization of integers defined in the [Introduce Interoperability module LIP][research:base-interoperability].
+* Let `process` be the internal function with the same name defined in [Introduce cross-chain messages LIP][research:ccm].
+* Let `unescrow` be the function with the same name defined in [Define state and state transitions of Token module LIP][research:token-module].
+* Let `RMTVerify` be the `verifyDataBlock` function specified in [the appendix C of LIP 0031][lip-0031#appendixC].
+* Let `RMTCalculateRoot` be the `calculateRootFromUpdateData` function specified in [the appendix E of LIP 0031][lip-0031#appendixE].
+* Let `SMTVerify` be the `verify` function specified in the [LIP 0039][research:smt].
+* Let `SMTCalculateRoot` be the `calculateRoot` function specified in the [LIP 0039][research:smt].
 
 ### Message Recovery Command
 
@@ -135,9 +135,9 @@ The command ID is `COMMAND_ID_MESSAGE_RECOVERY`.
 
 * `params` property:
   * `chainID`: An integer representing the chain ID of the terminated sidechain.
-  * `crossChainMessages`: An array of serialized CCMs, according to the schema specified in [Cross-chain messages LIP][CCMschema], to be recovered.
-  * `idxs`: An array of indices corresponding to the position in the outbox Merkle tree of the sidechain for the elements in `crossChainMessages` as specified in [LIP 0031][LIP31inclusions].
-  * `siblingHashes`: Array of bytes with the paths in the Merkle tree for the proofs of inclusion of `crossChainMessages` in the outbox root of the sidechain as specified in [LIP 0031][LIP31inclusions].
+  * `crossChainMessages`: An array of serialized CCMs, according to the schema specified in [Cross-chain messages LIP][research:ccm#schema], to be recovered.
+  * `idxs`: An array of indices corresponding to the position in the outbox Merkle tree of the sidechain for the elements in `crossChainMessages` as specified in [LIP 0031][lip-0031#proof-of-inclusion].
+  * `siblingHashes`: Array of bytes with the paths in the Merkle tree for the proofs of inclusion of `crossChainMessages` in the outbox root of the sidechain as specified in [LIP 0031][lip-0031#proof-of-inclusion].
 
 #### Message Recovery Command Schema
 
@@ -177,7 +177,7 @@ messageRecoveryParams = {
 
 #### Message Recovery Command Verification
 
-Let `trs` be a transaction with module ID `MODULE_ID_INTEROPERABILITY` and command ID `COMMAND_ID_MESSAGE_RECOVERY` to be verified. Also, let `deserializedCCMs` be an array with the deserialization of every element in `trs.params.crossChainMessages` according to the schema specified in [Cross-chain messages LIP][CCMschema]. Then the set of validity rules to validate `trs.params` are:
+Let `trs` be a transaction with module ID `MODULE_ID_INTEROPERABILITY` and command ID `COMMAND_ID_MESSAGE_RECOVERY` to be verified. Also, let `deserializedCCMs` be an array with the deserialization of every element in `trs.params.crossChainMessages` according to the schema specified in [Cross-chain messages LIP][research:ccm#schema]. Then the set of validity rules to validate `trs.params` are:
 
 ```python
 if trs.params.chainID does not correspond to a registered sidechain:
@@ -262,8 +262,8 @@ The command ID is `COMMAND_ID_STATE_RECOVERY`.
     * `storePrefix`: An integer representing the store prefix to be recovered.
   * `storeKey`: Array of bytes with the store key to be recovered.
     * `storeValue`: Array of bytes with the store value to be recovered.
-    * `bitmap`: The bitmap corresponding to `storeValue` in the sparse Merkle tree as specified in [LIP 0039][SMTproof].
-  * `siblingHashes`: Array of bytes with the sibling hashes in the sparse Merkle tree for the inclusion proofs of `storeEntries` in the state of the sidechain as specified in [LIP 0039][SMTproof].
+    * `bitmap`: The bitmap corresponding to `storeValue` in the sparse Merkle tree as specified in [LIP 0039][research:smt#proof-construction].
+  * `siblingHashes`: Array of bytes with the sibling hashes in the sparse Merkle tree for the inclusion proofs of `storeEntries` in the state of the sidechain as specified in [LIP 0039][research:smt#proof-construction].
 
 #### State Recovery Command Schema
 
@@ -385,7 +385,7 @@ where:
 * `storeKey`: The store key of the store entry in the recoverable module state.
 * `storeValue`: The store value of the store entry in the recoverable module state.
 
-The recover function is specified for the [Token module][tokenReducer] and in the [NFT module][NFTReducer].
+The recover function is specified for the [Token module][research:token-module#recover] and in the [NFT module][research:nft-module#recover].
 
 ### Recovery Initialization Command
 
@@ -393,9 +393,9 @@ The command ID is `COMMAND_ID_RECOVERY_INITIALIZATION`.
 
 * `params` property:
   * `chainID:` An integer representing the chain ID of the terminated sidechain.
-  * `sidechainInteropAccount`: A byte array containing the serialization of the interoperability account of the terminated sidechain according to the `interoperabilityAccount` schema specified in [the Interoperability LIP][interopAccount].
-  * `bitmap`: The bitmap corresponding to `stateRoot` in the sparse Merkle tree as specified in [LIP 0039][SMTproof].
-  * `siblingHashes`: Array of bytes with the sibling hashes in the sparse Merkle tree for the inclusion proofs of `stateRoot` in the state of the mainchain as specified in [LIP 0039][SMTproof].
+  * `sidechainInteropAccount`: A byte array containing the serialization of the interoperability account of the terminated sidechain according to the `interoperabilityAccount` schema specified in [the Interoperability LIP][research:base-interoperability#specs].
+  * `bitmap`: The bitmap corresponding to `stateRoot` in the sparse Merkle tree as specified in [LIP 0039][research:smt#proof-construction].
+  * `siblingHashes`: Array of bytes with the sibling hashes in the sparse Merkle tree for the inclusion proofs of `stateRoot` in the state of the mainchain as specified in [LIP 0039][research:smt#proof-construction].
 
 #### Recovery Initialization Command Schema
 
@@ -489,21 +489,19 @@ This LIP introduces new commands with new effects to the Lisk mainchain state, t
 TBA
 
 [creative]: https://creativecommons.org/publicdomain/zero/1.0/
-[CCU]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
-[interop]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
-[CCM]: https://research.lisk.com/t/cross-chain-messages/299
-[tokenLIP]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
-[NFTLIP]: https://research.lisk.com/t/introduce-a-non-fungible-token-module/297
-[tokenCCM]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
-[NFTCCM]: https://research.lisk.com/t/introduce-a-non-fungible-token-module/297
-[CCMterminatedMessage]: https://research.lisk.com/t/cross-chain-messages/299#sidechain-terminated-message-42
-[CCUviolations]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298#cross-chain-updates-posted-on-mainchain-26
-[LIP31appendixC]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-c-proof-of-inclusion-protocol-for-leaf-nodes
-[LIP31appendixE]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-e-update-of-leaf-nodes
-[SMTLIP]: https://research.lisk.com/t/introduce-sparse-merkle-trees/283#proof-verification-12
-[CCMschema]: https://research.lisk.com/t/cross-chain-messages/299#cross-chain-message-schema-21
-[LIP31inclusions]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#proof-of-inclusion
-[tokenReducer]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295#recover-75
-[NFTReducer]: https://research.lisk.com/t/introduce-a-non-fungible-token-module/297/2#recover-75
-[interopAccount]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290#json-schemas-68
-[SMTproof]: https://github.com/LiskHQ/lips-staging/blob/Add-LIP-Introduce-sparse-Merkle-trees/proposals/lip-Introduce-sparse-Merkle-trees.md#proof-construction
+[lip-0031#appendixC]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-c-proof-of-inclusion-protocol-for-leaf-nodes
+[lip-0031#appendixE]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-e-update-of-leaf-nodes
+[lip-0031#proof-of-inclusion]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#proof-of-inclusion
+[research:base-interoperability]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
+[research:base-interoperability#specs]: https://research.lisk.com/t/introduce-interoperability-module/290#specification-19
+[research:ccm]: https://research.lisk.com/t/cross-chain-messages/299
+[research:ccm#schema]: https://research.lisk.com/t/introduce-cross-chain-messages/299#cross-chain-message-schema-26
+[research:ccm#terminatedMessage]: https://research.lisk.com/t/introduce-cross-chain-messages/299#sidechain-terminated-message-19
+[research:ccu]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
+[research:ccu#violations]: https://research.lisk.com/t/introduce-cross-chain-update-mechanism/298#cross-chain-updates-posted-on-mainchain-28
+[research:nft-module]: https://research.lisk.com/t/introduce-a-non-fungible-token-module/297
+[research:nft-module#recover]: https://research.lisk.com/t/introduce-a-non-fungible-token-module/297/2#recover-75
+[research:smt]: https://research.lisk.com/t/introduce-sparse-merkle-trees/283#proof-verification-12
+[research:smt#proof-construction]: https://research.lisk.com/t/introduce-sparse-merkle-trees/283#proof-construction-11
+[research:token-module]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
+[research:token-module#recover]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295#recover-75
