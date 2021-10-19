@@ -107,7 +107,9 @@ Calling a function `fct` from another module `module` is represented by `module.
 
 ### Processing Stages of Block, Block Assets, and Block Header
 
-<img src="lip-Update_block_schema_and_block_processing/stages.png" width="80%">
+<img src="lip-Update_block_schema_and_block_processing/stages.png" width="70%">
+
+*Figure 1: A schematic depiction of the various stages of a block processing. The steps performed in the framework layer are indicated by green boxes, while the steps performed in the state-machine layers are indicated by red boxes.*
 
 In this section, we specify the order of the various processing stages of a block.
 Note that a genesis block follows different rules specified in the ["Update genesis block schema and processing" LIP][research:genesis-block].
@@ -116,7 +118,7 @@ Note that a genesis block follows different rules specified in the ["Update gene
   These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
 - **Block verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
 In particular, these checks are performed *before* the state transitions implied by the modules are processed.
-- **State-machine processing**: In this stage, the block is processed in the state machine where module-level logic is applied (see [following section][#state-machine-processing-stages]).
+- **State-machine processing**: In this stage, the block is processed in the state machine where module-level logic is applied (see [following section](#state-machine-processing-stages).
 - **Result verification**: In this stage we verify the properties that require access to the state store *after* the block has been executed, i.e. they can be verified only after the state transitions implied by the block execution have been performed.
 In particular, these checks are performed *after* the state transitions implied by the modules are processed.
 
