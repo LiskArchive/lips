@@ -2,11 +2,12 @@
 LIP:
 Title: Introduce sidechain recovery mechanism
 Author: Iker Alustiza <iker@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-sidechain-recovery-mechanism/292
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: Define state and state transitions of Token module LIP, LIP 40
-          Introduce Interoperability module LIP, Introduce cross-chain messages LIP
+Created: 2021-05-22
+Updated: 2021-10-19
+Requires: 0040, 0049, 0051, Introduce Interoperability module
 ```
 
 ## Abstract
