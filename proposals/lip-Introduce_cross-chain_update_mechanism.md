@@ -3,13 +3,11 @@ LIP:
 Title: Introduce cross-chain update mechanism
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-cross-chain-update-mechanism/298
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: Introduce cross-chain messages,
-          Introduce Interoperability module,
-	  Introduce a certificate generation mechanism,
-	  Introduce BFT module
+Created: 2021-05-22
+Updated: 2021-10-19
+Requires: 0045, 0049, Introduce a certificate generation mechanism, Introduce BFT module
 ```
 
 ## Abstract
