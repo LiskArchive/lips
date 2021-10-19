@@ -24,7 +24,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-Motivation for the Lisk Interoperability module and the cross-chain update transaction can be found in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+Motivation for the Lisk Interoperability module and the cross-chain update transaction can be found in [LIP "Introduce Interoperability module"][research:base-interoperability].
 
 ## Rationale
 
@@ -32,11 +32,11 @@ Motivation for the Lisk Interoperability module and the cross-chain update trans
 
 #### sendingChainId
 
-Identifies the chain sending the cross-chain update. Only cross-chain update transactions coming from [registered][registration-LIP] chains are valid, registered chains are the ones with an entry in the interoperability store corresponding to their `chainID`.
+Identifies the chain sending the cross-chain update. Only cross-chain update transactions coming from [registered][research:chain-registration] chains are valid, registered chains are the ones with an entry in the interoperability store corresponding to their `chainID`.
 
 #### certificate
 
-Used to update the cross-chain account. It must be a certificate with an adequate [BLS signature][BLS-LIP]. The signature is always validated against the public key set stored in the sending chain account.
+Used to update the cross-chain account. It must be a certificate with an adequate [BLS signature][lip-0038]. The signature is always validated against the public key set stored in the sending chain account.
 
 It is important to note here that the validation of this signature is done with respect to the network identifier of the sending chain. This network identifier is included in the sending chain account in the interoperability store.
 
@@ -50,11 +50,11 @@ The chain account stores the threshold required to validate the certificate sign
 
 #### inboxUpdate
 
-The `inboxUpdate` contains the information relative to the messages to be included in the sending chain inbox. As specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP], cross-chain messages are stored in the chain outbox on the sending chain and in the corresponding inbox on the receiving chain. This property contains three elements: the cross-chain messages themselves, an inclusion witness into the outbox root, and an inclusion witness of this outbox root into the state root.
+The `inboxUpdate` contains the information relative to the messages to be included in the sending chain inbox. As specified in [LIP "Introduce Interoperability module"][research:base-interoperability], cross-chain messages are stored in the chain outbox on the sending chain and in the corresponding inbox on the receiving chain. This property contains three elements: the cross-chain messages themselves, an inclusion witness into the outbox root, and an inclusion witness of this outbox root into the state root.
 
 ##### crossChainMessages
 
-An array of cross-chain messages. See [LIP "Introduce cross-chain messages"][CCM-LIP] for the general properties and processing of cross-chain messages. The `crossChainMessages` property must contain consecutive messages from the outbox.
+An array of cross-chain messages. See [LIP "Introduce cross-chain messages"][research:ccm] for the general properties and processing of cross-chain messages. The `crossChainMessages` property must contain consecutive messages from the outbox.
 
 ##### messageWitness
 
@@ -89,7 +89,7 @@ Setup to gather the required mainchain information:
 
 Create a cross-chain update transaction for a given height `h1`:
 
-* Find a [signed certificate][certificate-generation-LIP] in the mainchain block headers for a height (say `h2`) higher or equal to `h1`. This will be used as the `certificate` property of the transaction.
+* Find a [signed certificate][research:certificate-generation] in the mainchain block headers for a height (say `h2`) higher or equal to `h1`. This will be used as the `certificate` property of the transaction.
 * The property `inboxUpdate.crossChainMessages` lists all CCMs that have been included in the sidechain outbox up to `h2` (and which have not been included on the sidechain yet). In this case, the `messageWitness` will be empty.
 * Compute the inclusion proof for the outbox root of the sidechain account into the mainchain state root. This proof is then used to compute `inboxUpdate.outboxRootWitness`.
 * Compute the required update to the active validators stored in the chain account and the validators that were used to create `certificate.validatorsHash`. This update can be obtained by following the logic of `getActiveValidatorsDiff` as detailed in the [Appendix](#appendix).
@@ -112,7 +112,7 @@ Those options for partial cross-chain update transactions are not expected to be
 
 #### Malicious Cross-chain Update Transactions
 
-A cross-chain update transaction may have been created with validly signed information according to the [validity rules](#parameters-validity) and hence be included in the blockchain. However, the transaction could include invalid CCMs. Those will be detected when trying to process the `inboxUpdate`. If a CCM is invalid (as specified in the ["Execute Cross-chain Updates" section](#execute-cross-chain-updates)), then the sending chain is [terminated][base-interoperability-LIP-termination].
+A cross-chain update transaction may have been created with validly signed information according to the [validity rules](#parameters-validity) and hence be included in the blockchain. However, the transaction could include invalid CCMs. Those will be detected when trying to process the `inboxUpdate`. If a CCM is invalid (as specified in the ["Execute Cross-chain Updates" section](#execute-cross-chain-updates)), then the sending chain is [terminated][research:base-interoperability#termination].
 
 #### First Cross-chain Update from a Sidechain
 
@@ -145,7 +145,7 @@ The following constants are used throughout the document:
 | **Message Tags**                                         |        |                         |
 | `MESSAGE_TAG_CERTIFICATE `                               | bytes  | "LSK_CE_" ASCII-encoded |
 
-Several of those constants are shared with the other LIPs defining the Interoperability module and all of the needed constants for the Interoperability module are defined in [LIP "Introduce Interoperability module"][base-interoperability-LIP]. That LIP should be considered correct if a value stated here differs.
+Several of those constants are shared with the other LIPs defining the Interoperability module and all of the needed constants for the Interoperability module are defined in [LIP "Introduce Interoperability module"][research:base-interoperability]. That LIP should be considered correct if a value stated here differs.
 
 #### uint32be Function
 
@@ -257,14 +257,14 @@ In the following, let `sendingAccount` be the entry in the interoperability stor
 
 #### Liveness of Sending Chain
 
-A CCU transaction is only valid if the sending chain is not terminated and follows the [liveness rule][base-interoperability-LIP-livenessCondition]. This is done by asserting the two points below:  
+A CCU transaction is only valid if the sending chain is not terminated and follows the [liveness rule][research:base-interoperability#livenessCondition]. This is done by asserting the two points below:  
 
 * `sendingChain.status != CHAIN_TERMINATED`,
-* if `sendingChain.status == CHAIN_ACTIVE` then also validate  `isLive(sendingChainID, timestamp) == True`. The `isLive` function is specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP], and `timestamp` is the timestamp of the block including the CCU.
+* if `sendingChain.status == CHAIN_ACTIVE` then also validate  `isLive(sendingChainID, timestamp) == True`. The `isLive` function is specified in [LIP "Introduce Interoperability module"][research:base-interoperability], and `timestamp` is the timestamp of the block including the CCU.
 
 ##### Liveness Requirement for the First CCU
 
-If `sendingChain.status == CHAIN_REGISTERED`, all proposed CCU must contain a non-empty `certificate` which must follow the schema defined in  [LIP "Introduce a certificate generation mechanism"][certificate-generation-LIP]. In the following, let `certificate` be the deserialized certificate.
+If `sendingChain.status == CHAIN_REGISTERED`, all proposed CCU must contain a non-empty `certificate` which must follow the schema defined in  [LIP "Introduce a certificate generation mechanism"][research:certificate-generation]. In the following, let `certificate` be the deserialized certificate.
 
 Furthermore, if the CCU also contains a non-empty `inboxUpdate`, the certificate is only valid if it allows the sidechain account to remain live for a reasonable amount of time. This is done by checking that:
 
@@ -278,10 +278,10 @@ where `timestamp` is the timestamp of the block including the CCU.
 
 If `params` contains a non-empty `certificate`, it is valid if:
 
-* `params.certificate` follows the schema defined in [LIP "Introduce a certificate generation mechanism"][certificate-generation-LIP]. Again, we write `certificate` for the deserialized certificate.
+* `params.certificate` follows the schema defined in [LIP "Introduce a certificate generation mechanism"][research:certificate-generation]. Again, we write `certificate` for the deserialized certificate.
 * `certificate.height` is greater than `sendingAccount.lastCertifiedHeight`.
 * `certificate.timestamp < timestamp`, where timestamp is the timestamp of the block including the CCU.
-* `certificate.signature` is a valid aggregate signature for the `sendingAccount.validators` property of the cross-chain account. This is done by verifying that the function below defined in the [LIP 0038][BLS-LIP-verifyWeightedAggSig] returns `VALID`.
+* `certificate.signature` is a valid aggregate signature for the `sendingAccount.validators` property of the cross-chain account. This is done by verifying that the function below defined in the [LIP 0038][lip-0038#verifyWeightedAggSig] returns `VALID`.
 
 ```python
 verifyWeightedAggSig(
@@ -303,7 +303,7 @@ If `params` contains a non-empty `activeValidatorsUpdate` property (with deseria
   * for all `activeValidator` in `params.activeValidatorsUpdate` we have that `activeValidator.blsKey` is a BLS public key, hence it is 48 bytes long.
   * every `activeValidator` in `params.activeValidatorsUpdate` has a different `activeValidator.blsKey`.
 * `certificate.validatorsHash == bft.computeValidatorsHash(newActiveValidators, newCertificateThreshold)` where
-  * `newActiveValidators` is obtained as `sendingAccount.activeValidators` updated with `params.activeValidatorsUpdate`, see ["Update Validators" section](#update-validators) below.
+  * `newActiveValidators` is obtained as `sendingAccount.activeValidators` updated with `params.activeValidatorsUpdate`, see ["Update Active Validators" section](#update-active-validators) below.
   * `newCertificateThreshold` is `params.newCertificateThreshold` if it is non-zero, `sendingAccount.certificateThreshold` otherwise.
 
 #### InboxUpdate Validity
@@ -312,7 +312,7 @@ If `params` contains a non-empty `certificate` and an `inboxUpdate`, the validit
 
 * Let `newInboxRoot`, `newInboxAppendPath` and `newInboxSize` be the resulting new root, append path and size of the Merkle tree that would be obtained if all messages from `crossChainMessages` would be appended to the `sendingAccount` inbox. Note that `sendingAccount.inbox` is not updated here.
 * If `inboxUpdate` contains a non-empty `messageWitness`, then update `newInboxRoot` to the output of `calculateRootFromRightWitness(newInboxSize, newInboxAppendPath, inboxUpdate.messageWitness.siblingHashes)` as specified in [LIP 0031](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md).
-* Then validate the newly updated root against the certificate state root using the provided `outboxRootWitness`. Using notation from [LIP 0039][SMT-LIP], this is done via the function `verify(queryKeys, proof, certificate.stateRoot)` with:
+* Then validate the newly updated root against the certificate state root using the provided `outboxRootWitness`. Using notation from [LIP 0039][lip-0039], this is done via the function `verify(queryKeys, proof, certificate.stateRoot)` with:
 
 ```python
 queryKeys = [outboxKey],
@@ -354,18 +354,18 @@ Then, the following is done in the given order:
 
 * For every `CCM` in `inboxUpdate.crossChainMessages`:
   * Validate that `params.sendingChainID == CCM.sendingChainID`.
-  * Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][CCM-LIP-validateFormat].
+  * Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][research:ccm#validateFormat].
 * Validate that the first CCM in `inboxUpdate.crossChainMessages` has `CCM.nonce == partnerChain.inbox.size`.
 * Validate that all CCMs in `inboxUpdate.crossChainMessages` have increasing and sequential nonce property.
-* Validate that the sum of all `CCM.fee` and all amounts for LSK cross-chain transfers is smaller or equal than the escrowed amount for the sending chain. The escrowed amount is obtained with the [token function][token-LIP] `getEscrowAmount(params.sendingChainID,0)`.
+* Validate that the sum of all `CCM.fee` and all amounts for LSK cross-chain transfers is smaller or equal than the escrowed amount for the sending chain. The escrowed amount is obtained with the [token function][research:token-module] `getEscrowAmount(params.sendingChainID,0)`.
 * If `partnerChain.status == CHAIN_REGISTERED` and `inboxUpdate` is non-empty:
-  * If `partnerChain.inbox.size == 0` and the first CCM in `inboxUpdate` is a valid <code>[registration CCM][CCM-LIP-registrationMessage]</code>: set `partnerChain.status = CHAIN_ACTIVE`.
+  * If `partnerChain.inbox.size == 0` and the first CCM in `inboxUpdate` is a valid <code>[registration CCM][research:ccm#registrationMessage]</code>: set `partnerChain.status = CHAIN_ACTIVE`.
   * Else, this point fails.
 * If one of those validation points fails:
-  * `terminateChain(partnerChainID)` as specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+  * `terminateChain(partnerChainID)` as specified in [LIP "Introduce Interoperability module"][research:base-interoperability].
   * Exit the transaction processing, the CCU has no further effect.
 * For every `CCM` in `inboxUpdate.crossChainMessages` where `CCM.receivingChainID` corresponds to an active and live sidechain account:  
-  * transfer `CCM.fee` from the sending sidechain escrowed balance to the receiving sidechain escrowed balance. This is done with the [token function][token-LIP] `transferEscrow(CCM.sendingChainID, CCM.receivingChainID, 0, CCM.fee)`.
+  * transfer `CCM.fee` from the sending sidechain escrowed balance to the receiving sidechain escrowed balance. This is done with the [token function][research:token-module] `transferEscrow(CCM.sendingChainID, CCM.receivingChainID, 0, CCM.fee)`.
 * Continue the processing by executing all steps in the ["Common Processing" section](#common-processing).
 
 #### Cross-chain Updates Posted on Sidechains
@@ -379,12 +379,12 @@ To execute cross-chain updates, the following is done:
 
 * For every `CCM` in `inboxUpdate.crossChainMessages`:
   * Validate that `ownChainID == CCM.receivingChainID`.
-  * Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][CCM-LIP-validateFormat].
+  * Validate the format of `CCM` according to the `validateFormat` function provided in [LIP "Introduce cross-chain messages"][research:ccm#validateFormat].
 * If `partnerChain.status == CHAIN_REGISTERED` and `inboxUpdate` is non-empty:
-  * If `partnerChain.inbox.size == 0` and the first CCM in `inboxUpdate` is a valid <code>[registration CCM][CCM-LIP-registrationMessage]</code>: set `partnerChain.status = CHAIN_ACTIVE`.
+  * If `partnerChain.inbox.size == 0` and the first CCM in `inboxUpdate` is a valid <code>[registration CCM][research:ccm#registrationMessage]</code>: set `partnerChain.status = CHAIN_ACTIVE`.
   * Else, this point fails.
 * If one of those validation points fails:
-  * `terminateChain(partnerChainID)` as specified in [LIP "Introduce Interoperability module"][base-interoperability-LIP].
+  * `terminateChain(partnerChainID)` as specified in [LIP "Introduce Interoperability module"][research:base-interoperability].
   * Exit the transaction processing, the CCU has no further effect.
 * Continue the processing by executing all steps in the ["Common Processing" section](#common-processing).
 
@@ -393,10 +393,10 @@ To execute cross-chain updates, the following is done:
 For CCU transactions posted on the mainchain or on sidechains, once the specific execution steps described above have been completed, the following is done in the given order:
 
 * For every `CCM` in `inboxUpdate.crossChainMessages` with  `CCM.receivingChainID == ownChainID`:
-  * Assign `CCM.fee` to the relayer, here `relayerAddress` is the address corresponding to the sender public key of the CCU. This is done with the [token function][token-LIP] `beforeExecuteCCM(relayerAddress, CCM)`.
+  * Assign `CCM.fee` to the relayer, here `relayerAddress` is the address corresponding to the sender public key of the CCU. This is done with the [token function][research:token-module] `beforeExecuteCCM(relayerAddress, CCM)`.
 * For every `CCM` in `inboxUpdate.crossChainMessages` (respecting the order of the array):
-  * Call <code>[appendToInboxTree][base-interoperability-LIP-appendToInboxTree](partnerChainID, SHA-256(serializedMessage))</code> where `serializedMessage` is the serialized CCM according to the schema given in [LIP "Introduce cross-chain messages"][CCM-LIP].
-  * Process `CCM` as detailed in [LIP "Introduce cross-chain messages"][CCM-LIP-process].
+  * Call <code>[appendToInboxTree][research:base-interoperability#appendToInboxTree](partnerChainID, SHA-256(serializedMessage))</code> where `serializedMessage` is the serialized CCM according to the schema given in [LIP "Introduce cross-chain messages"][research:ccm].
+  * Process `CCM` as detailed in [LIP "Introduce cross-chain messages"][research:ccm#process].
 * Set `partnerChain.activeValidators = updateActiveValidators(partnerChain.activeValidators, activeValidatorsUpdate)` as specified in the ["Update Active Validators" section](#update-active-validators).
 * If `newCertificateThreshold != 0`, update `partnerChain.certificateThreshold` to `newCertificateThreshold`.
 * Set `partnerChain.lastCertifiedStateRoot` to `certificate.stateRoot`.
@@ -406,7 +406,7 @@ For CCU transactions posted on the mainchain or on sidechains, once the specific
   * `inboxUpdate.messageWitness.partnerChainOutboxSize` if `params` contains a non-empty `inboxUpdate.messageWitness`.
   * `partnerChain.inbox.size` otherwise.
 * Set `partnerChain.partnerChainOutboxRoot` to:
-  * `calculateRootFromRightWitness(inbox.size, inbox.appendPath, inboxUpdate.messageWitness.siblingHashes)` if `params` contains a non-empty `inboxUpdate.messageWitness`, this function is defined in [LIP 0031][LIP-31-rightWitness].
+  * `calculateRootFromRightWitness(inbox.size, inbox.appendPath, inboxUpdate.messageWitness.siblingHashes)` if `params` contains a non-empty `inboxUpdate.messageWitness`, this function is defined in [LIP 0031][lip-0031#rightWitness].
   * `partnerChain.inbox.root` otherwise.
 * Append a cross-chain update receipt to the partner chain outbox by calling `addToOutobx(partnerChain, CCUR)` with:
 
@@ -445,7 +445,7 @@ updateActiveValidators(activeValidators, activeValidatorsUpdate)
 
 ## Backwards Compatibility
 
-This proposal, together with [LIP "Introduce chain registration mechanism"][registration-LIP], [LIP "Introduce cross-chain messages"][CCM-LIP], and [LIP "Introduce sidechain recovery mechanism"][recovery-LIP], is part of the Interoperability module. Chains adding this module will need to do so with a hard fork.
+This proposal, together with [LIP "Introduce chain registration mechanism"][research:chain-registration], [LIP "Introduce cross-chain messages"][research:ccm], and [LIP "Introduce sidechain recovery mechanism"][research:sidechain-recovery], is part of the Interoperability module. Chains adding this module will need to do so with a hard fork.
 
 ## Reference Implementation
 
@@ -479,20 +479,20 @@ getActiveValidatorsDiff(currentValidators, newValidators):
     return activeValidatorsUpdate
 ```
 
-[base-interoperability-LIP]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290
-[base-interoperability-LIP-termination]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290#terminatechain-47
-[base-interoperability-LIP-appendToInboxTree]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290#appendtoinboxtree-39
-[base-interoperability-LIP-livenessCondition]: https://research.lisk.com/t/properties-serialization-and-initial-values-of-the-interoperability-module/290#islive-42
-[registration-LIP]: https://research.lisk.com/t/chain-registration/291
-[recovery-LIP]: https://research.lisk.com/t/sidechain-recovery-transactions/292
-[CCM-LIP]: https://research.lisk.com/t/cross-chain-messages/299
-[CCM-LIP-process]: https://research.lisk.com/t/cross-chain-messages/299#process-25
-[CCM-LIP-validateFormat]: https://research.lisk.com/t/introduce-cross-chain-messages/299#validateformat-27
-[CCM-LIP-registrationMessage]: https://research.lisk.com/t/introduce-cross-chain-messages/299#registration-message-38
-[token-LIP]: https://research.lisk.com/t/introduce-an-interoperable-token-module/295
-[certificate-generation-LIP]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/296
-[new-block-header-LIP]: https://research.lisk.com/t/new-block-header-and-block-asset-schema/293
-[SMT-LIP]: https://research.lisk.com/t/introduce-sparse-merkle-trees/283
-[BLS-LIP]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md
-[BLS-LIP-verifyWeightedAggSig]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#aggregate-signatures-and-their-verification
-[LIP-31-rightWitness]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-d-right-witness-implementation
+[research:base-interoperability]: https://research.lisk.com/t/introduce-interoperability-module/290
+[research:base-interoperability#termination]: https://research.lisk.com/t/introduce-interoperability-module/290#terminatechain-71
+[research:base-interoperability#appendToInboxTree]: https://research.lisk.com/t/introduce-interoperability-module/290#appendtoinboxtree-48
+[research:base-interoperability#livenessCondition]: https://research.lisk.com/t/introduce-interoperability-module/290#liveness-condition-12
+[research:chain-registration]: https://research.lisk.com/t/introduce-chain-registration-mechanism/291
+[research:sidechain-recovery]: https://research.lisk.com/t/introduce-sidechain-recovery-mechanism/292
+[research:ccm]: https://research.lisk.com/t/introduce-cross-chain-messages/299
+[research:ccm#process]: https://research.lisk.com/t/introduce-cross-chain-messages/299#process-31
+[research:ccm#validateFormat]: https://research.lisk.com/t/introduce-cross-chain-messages/299#validateformat-30
+[research:ccm#registrationMessage]: https://research.lisk.com/t/introduce-cross-chain-messages/299#registration-message-18
+[research:token-module]: https://research.lisk.com/t/define-state-and-state-transitions-of-token-module/295
+[research:certificate-generation]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296
+[research:update-block-schema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293
+[lip-0031#rightWitness]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#appendix-d-right-witness-implementation
+[lip-0038]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md
+[lip-0038#verifyWeightedAggSig]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md#aggregate-signatures-and-their-verification
+[lip-0039]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0039.md
