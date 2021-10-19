@@ -65,3 +65,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0051](proposals/lip-0051.md) | Define state and state transitions of Token module                                             | Maxime Gagnebin                                        | Standards Track | Draft         |
 | [0052](proposals/lip-0052.md) | Introduce NFT module                                                                           | Maxime Gagnebin                                        | Standards Track | Draft         |
 | [0053](proposals/lip-0053.md) | Introduce cross-chain update mechanism                                                         | Maxime Gagnebin                                        | Standards Track | Draft         |
+| [0054](proposals/lip-0054.md) | Introduce sidechain recovery mechanism                                                         | Iker Alustiza                                          | Standards Track | Draft         |
