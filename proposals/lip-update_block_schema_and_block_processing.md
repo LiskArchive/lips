@@ -16,7 +16,7 @@ Requires: 0040,
 
 This LIP changes the structure of a block, introducing the assets property alongside the block header and payload.
 The block header schema is updated to add new properties introduced by several other LIPs.
-We clarify the mechanism by which modules can include data in the block assets and specify the validation of each block header property.
+We clarify the mechanism by which modules can include data in the block assets and specify the validation of each block header property. Furthermore, we list the steps that are part of the block processing.
 
 ## Copyright
 
@@ -71,7 +71,7 @@ Hence, there is no further drawback in replacing the generatorPublicKey property
 
 The separation between properties in the bock header and properties in the block assets is done according to the following rules:
 
-- Properties created by the framework layer of the Lisk SDK are added to the block header.
+- Properties handled by the consensus domain are added to the block header.
 - Properties created by individual modules are added to the block assets.
 - It should be possible to follow the fork choice consensus rule just with the block header. This implies that the `maxHeightPrevoted` property is part of the block header.
 - Similarly, it should be possible to generate a certificate just with the block header. This implies that the `validatorsHash` property is part of the block header.
@@ -105,38 +105,40 @@ For the rest of this proposal we define the following constants.
 Furthermore, in the following we indicate with `block` be the block under consideration and with `previousBlock` the previous block of the chain.
 Calling a function `fct` from another module `module` is represented by `module.fct`.
 
-### Processing Stages of Block, Block Assets, and Block Header
+### Block Processing Stages
 
 <img src="lip-Update_block_schema_and_block_processing/stages.png" width="70%">
 
-*Figure 1: A schematic depiction of the various stages of a block processing. The steps performed in the framework layer are indicated by green boxes, while the steps performed in the state-machine layers are indicated by red boxes.*
+*Figure 1: A schematic depiction of the various stages of a block processing. The steps performed in the consensus domain are indicated by blue boxes, while the steps performed in the state-machine domain are indicated by red boxes. Within the state-machine domain, the payload processing is indicated by purple boxes. The network domain is indicated by green boxes.*
 
-In this section, we specify the order of the various processing stages of a block.
-Note that a genesis block follows different rules specified in the ["Update genesis block schema and processing" LIP][research:genesis-block].
+In this section, we describe the various processing stages of a block.
+Note that a genesis block follows different rules specified in the ["Update genesis block schema and processing" LIP][research:genesis-block]. 
 
-- **Static validation**: When a new block is received, some initial static checks are done to ensure that the serialized object follows the general structure of a block. 
+The block processing is split between the network, consensus, and state-machine domains (see figure 1). 
+The network domain is responsible for exchanging blocks with other peers in the [P2P network][lip-0004].
+The consensus domain applies the [fork choice rule][lip-0014#fork-choice] and checks the properties contained in the block header.
+The state-machine checks and applies the module-level logic. 
+All the steps that are part of the state-machine domain are repeated for each module registered in the chain. 
+The payload processing is performed on the block payload as part of the state-machine processing.
+The four steps in the payload processing are repeated for each transaction inn the payload.
+
+1. **Block reception**: A new block is received from the P2P network. 
+2. **Fork choice**: Upon receiving a new block, the [fork choice rule][lip-0014#fork-choice] determines whether the block will be discarded or if the processing continues. 
+3. **Static validation**: Some initial static checks are done to ensure that the serialized object follows the general structure of a block. 
   These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
-- **Block verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
+4. **Header verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
 In particular, these checks are performed *before* the state transitions implied by the modules are processed.
-- **State-machine processing**: In this stage, the block is processed in the state machine where module-level logic is applied (see [following section](#state-machine-processing-stages).
-- **Result verification**: In this stage we verify the properties that require access to the state store *after* the block has been executed, i.e. they can be verified only after the state transitions implied by the block execution have been performed.
-In particular, these checks are performed *after* the state transitions implied by the modules are processed.
-
-The static validation, block verification, and result verification are processed in the framework layer, while the state-machine processing is performed in the state-machine layer. 
-
-#### State-machine Processing Stages
-
-In the following, we list the block processing stages performed as part of the state-machine layer. 
-
-- **Block verification**: In this stage, the entry in the block assets relevant to the module is checked. If the checks fail, the block is discarded and has no further effect.
-- **Before block execution**: In this stage, modules can process protocol logic *before* the transactions contained in the block payload are executed. 
-- **Transaction verification**: The transaction is verified, possibly by accessing the state store. If the verification fails, the transaction is invalid and the whole block is discarded.
-- **Before transaction execution**: In this stage, modules can process protocol logic *before* a transaction contained is executed. 
-- **Transaction execution**: Commands belonging to the module (i.e. with `moduleID` property matching the module ID) are executed.
-- **After transaction execution**: In this stage, modules can process protocol logic *after* a transaction contained is executed. 
-- **After block execution**: In this stage, modules can process protocol logic *after* the transactions contained in the block payload are executed.
-
-These steps are performed for each module registered in the blockchain. The transaction verification, before transaction execution, transaction execution, and after transaction execution steps are performed for each transaction in the block payload.
+5. **Assets verification**: Each module verifies the respective entry in the block assets. If any check fails, the block is discarded and has no further effect.
+6. **Block forwarding**: After the initial checks, the block is forwarded to a subset of peers.
+7. **Before payload execution**: Each module can process protocol logic *before* executing the transactions contained in the block payload. 
+8. **Transaction verification**: The transaction is verified, possibly by accessing the state store. If the verification fails, the transaction is invalid and the whole block is discarded.
+9. **Before transaction execution**: Each module processes protocol logic *before* the transaction is executed. 
+10. **Transaction execution**: Commands belonging to the module (i.e. with `moduleID` property matching the module ID) are executed.
+11. **After transaction execution**: Each module can process protocol logic *after* the transaction has been executed. 
+12. **After payload execution**: Each module can process protocol logic *after* the transactions contained in the block payload have been executed.
+13. **Result verification**: Properties that require access to the state store *after* the block has been executed are verified. In particular, this includes the properties that can be verified only after the state transitions implied by the block execution have been performed.
+14. **Block storage**: The block is persisted into the database.
+15. **Peers notification**: Other peers in the P2P network are notified of the new block.
 
 ### Block
 
@@ -515,7 +517,8 @@ Here, the function `verifyMessageSig` verifies the validity of a signature as sp
 
 This LIP results in a hard fork as nodes following the proposed protocol will reject blocks according to the previous protocol, and nodes following the previous protocol will reject blocks according to the proposed protocol.
 
-
+[lip-0004]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md
+[lip-0014#fork-choice]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#applying-blocks-according-to-fork-choice-rule
 [lip-certificate-generation]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
 
 [lip-certificate-generation-aggregate-commits]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
