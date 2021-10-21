@@ -114,13 +114,16 @@ Calling a function `fct` from another module `module` is represented by `module.
 In this section, we describe the various processing stages of a block.
 Note that a genesis block follows different rules specified in the ["Update genesis block schema and processing" LIP][research:genesis-block]. 
 
-The block processing is split between the network, consensus, and state-machine domains (see figure 1). 
-The network domain is responsible for exchanging blocks with other peers in the [P2P network][lip-0004].
-The consensus domain applies the [fork choice rule][lip-0014#fork-choice] and checks the properties contained in the block header.
-The state-machine checks and applies the module-level logic. 
+The block processing is split between the network, consensus, and state-machine domains (see figure 1): 
+
+- The network domain is responsible for exchanging blocks with other peers in the [P2P network][lip-0004].
+- The consensus domain applies the [fork choice rule][lip-0014#fork-choice] and checks the properties contained in the block header.
+- The state-machine checks and applies the module-level logic. 
 All the steps that are part of the state-machine domain are repeated for each module registered in the chain. 
 The payload processing is performed on the block payload as part of the state-machine processing.
 The four steps in the payload processing are repeated for each transaction inn the payload.
+
+The full processing of a block is organized as follows. 
 
 1. **Block reception**: A new block is received from the P2P network. 
 2. **Fork choice**: Upon receiving a new block, the [fork choice rule][lip-0014#fork-choice] determines whether the block will be discarded or if the processing continues. 
