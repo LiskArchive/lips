@@ -178,7 +178,7 @@ blockSchema = {
 
 #### Validation
 
-The block is validated in the [static validation stage](#validation-stages-of-block-block-assets-and-block-header) as follows:
+The block is validated in the [static validation stage](#block-processing-stages) as follows:
 
 - **Static validation**:
   - Check that the total size of the serialized transactions contained in the block payload is at most `MAX_PAYLOAD_SIZE_BYTES`.
@@ -229,7 +229,7 @@ assetSchema = {
 
 #### Validation
 
-The block assets is validated in the [static validation stage](#validation-stages-of-block-block-assets-and-block-header) as follows:
+The general structure of the block assets is checked in the [static validation stage](#block-processing-stages) as follows:
 
 - **Static validation**:
   - Check that each entry in the assets array has `moduleID` set to the ID of a module registered in the chain, while the `data` property has size at most equal to `MAX_ASSET_DATA_SIZE_BYTES`.
@@ -238,6 +238,7 @@ Hence, check that each entry must has a distinct `moduleID` property.
   - Check that the entries are sorted by increasing values of `moduleID`.
 
 These validations are performed before the block is processed and without accessing the state. 
+The individual entries are then checked in the assets verification verification stage.
 
 
 ### Block Header
@@ -343,12 +344,12 @@ blockHeaderSchema = {
 
 In this section, we specify the validation for each property of the block header.
 
-The block header is validated in all three [stages of the block validation](#validation-stages-of-block-block-assets-and-block-header).
+The block header is checked in three [stages of the block processing](#block-processing-stages).
 
 - **Static validation**:
   - Check that the block header follows the block header schema.
   - Validate the `version`, `transactionRoot`, and `assetsRoot` properties. 
-- **Block verification**:
+- **Header verification**:
   - Verify the `timestamp`, `height`, `previousBlockID`, `generatorAddress`, `maxHeightPrevoted`, `maxHeightGenerated`, `aggregateCommit`, and `signature` properties.
 - **Result verification**:
   - Verify the `stateRoot` and `validatorsHash` properties.
