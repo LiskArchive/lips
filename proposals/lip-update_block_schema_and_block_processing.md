@@ -14,7 +14,7 @@ Requires: 0040,
 
 ## Abstract
 
-This LIP changes the structure of a block, introducing the assets property alongside the block header and payload.
+This LIP changes the structure of a block, introducing the assets property alongside the block header and transactions.
 The block header schema is updated to add new properties introduced by several other LIPs.
 We clarify the mechanism by which modules can include data in the block assets and specify the validation of each block header property. Furthermore, we list the steps that are part of the block processing.
 
@@ -24,9 +24,11 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The first change proposed by this LIP is to introduce a new block property, the assets, and to update the block schema accordingly. 
+The first change proposed by this LIP is to introduce a new block property, the assets. 
 This property is an array of objects containing data injected by the modules registered in the chain during the block creation. 
 This change clarifies the general procedure by which modules insert extra data in a block.
+The block assets, together with the transactions, form the block payload.
+The block schema is updated accordingly.
 
 
 The second change is to update the block header schema.
@@ -97,7 +99,7 @@ For the rest of this proposal we define the following constants.
 
 | Name          | Type    | Value       | Description |
 | ------------- |---------| ------------| ------------|
-| `MAX_PAYLOAD_SIZE_BYTES` | integer | TBD | The max size of a block payload in bytes.|
+| `MAX_TRANSACTIONS_SIZE_BYTES` | integer | TBD | The max size of a block transactions in bytes.|
 | `MAX_ASSET_DATA_SIZE_BYTES` | integer | TBD | The max size of an assets entry in bytes.|
 | `SIGNATURE_LENGTH_BYTES`| integer | 64 | The length of a Ed25519 signature.|
 
@@ -109,7 +111,7 @@ Calling a function `fct` from another module `module` is represented by `module.
 
 <img src="lip-Update_block_schema_and_block_processing/stages.png" width="70%">
 
-*Figure 1: A schematic depiction of the various stages of a block processing. The steps performed in the consensus domain are indicated by blue boxes, while the steps performed in the state-machine domain are indicated by red boxes. Within the state-machine domain, the payload processing is indicated by purple boxes. The network domain is indicated by green boxes.*
+*Figure 1: A schematic depiction of the various stages of a block processing. The steps performed in the consensus domain are indicated by blue boxes, while the steps performed in the state-machine domain are indicated by red boxes. Within the state-machine domain, the transactions processing is indicated by purple boxes. The network domain is indicated by green boxes.*
 
 In this section, we describe the various processing stages of a block.
 Note that a genesis block follows different rules specified in the ["Update genesis block schema and processing" LIP][research:genesis-block]. 
@@ -120,8 +122,8 @@ The block processing is split between the network, consensus, and state-machine 
 - The consensus domain applies the [fork choice rule][lip-0014#fork-choice] and checks the properties contained in the block header.
 - The state-machine checks and applies the module-level logic. 
 All the steps that are part of the state-machine domain are repeated for each module registered in the chain. 
-The payload processing is performed on the block payload as part of the state-machine processing.
-The four steps in the payload processing are repeated for each transaction inn the payload.
+The transactions processing is performed on the transactions contained in the block as part of the state-machine processing.
+The four steps in the transactions processing are repeated for each transaction.
 
 The full processing of a block is organized as follows. 
 
@@ -132,13 +134,13 @@ The full processing of a block is organized as follows.
 4. **Header verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
 In particular, these checks are performed *before* the state transitions implied by the modules are processed.
 5. **Assets verification**: Each module verifies the respective entry in the block assets. If any check fails, the block is discarded and has no further effect.
-6. **Block forwarding**: After the initial checks, the block is forwarded to a subset of peers.
-7. **Before payload execution**: Each module can process protocol logic *before* executing the transactions contained in the block payload. 
+6. **Block forwarding**: After the initial checks, the full block is forwarded to a subset of peers.
+7. **Before transactions execution**: Each module can process protocol logic *before* executing the transactions contained in the block. 
 8. **Transaction verification**: The transaction is verified, possibly by accessing the state store. If the verification fails, the transaction is invalid and the whole block is discarded.
-9. **Before transaction execution**: Each module processes protocol logic *before* the transaction is executed. 
-10. **Transaction execution**: Commands belonging to the module (i.e. with `moduleID` property matching the module ID) are executed.
-11. **After transaction execution**: Each module can process protocol logic *after* the transaction has been executed. 
-12. **After payload execution**: Each module can process protocol logic *after* the transactions contained in the block payload have been executed.
+9. **Before command execution**: Each module processes protocol logic *before* the command contained in the transaction is executed. 
+10. **Command execution**: Commands belonging to the module (i.e. with `moduleID` property matching the module ID) are executed.
+11. **After command execution**: Each module can process protocol logic *after* the command contained in the transaction has been executed. 
+12. **After transactions execution**: Each module can process protocol logic *after* the transactions contained in the block have been executed.
 13. **Result verification**: Properties that require access to the state store *after* the block has been executed are verified. In particular, this includes the properties that can be verified only after the state transitions implied by the block execution have been performed.
 14. **Block storage**: The block is persisted into the database.
 15. **Peers notification**: Other peers in the P2P network are notified of the new block.
@@ -152,13 +154,13 @@ Blocks are serialized and deserialized accordingly to the following JSON schema.
 ```java
 blockSchema = {
   "type": "object",
-  "required": ["header", "payload", "assets"],
+  "required": ["header", "transactions", "assets"],
   "properties": {
     "header": {
       "dataType": "bytes",
       "fieldNumber": 1
     },
-    "payload": {
+    "transactions": {
       "type": "array",
       "fieldNumber": 2,
       "items": {
@@ -181,7 +183,7 @@ blockSchema = {
 The block is validated in the [static validation stage](#block-processing-stages) as follows:
 
 - **Static validation**:
-  - Check that the total size of the serialized transactions contained in the block payload is at most `MAX_PAYLOAD_SIZE_BYTES`.
+  - Check that the total size of the serialized transactions contained in the block is at most `MAX_TRANSACTIONS_SIZE_BYTES`.
 
 #### Block ID
 
@@ -201,7 +203,7 @@ blockID():
 
 ### Block Assets
 
-This LIP introduces a new block property, the block assets, which in addition with the header and the payload forms the complete block. 
+This LIP introduces a new block property, the block assets, which in addition with the header and the transactions forms the complete block. 
 
 
 #### JSON Schema
@@ -422,13 +424,13 @@ verifyGeneratorAddress():
 
 ##### Transaction Root
 
-The [transaction root][lip-32] is the root of the Merkle tree built from the ID of the transactions contained in the block payload.
+The [transaction root][lip-32] is the root of the Merkle tree built from the ID of the transactions contained in the block.
 It is validated by calling the `validateTransactionRoot` function.
 This function returns a boolean, indicating the success of the check.
 
 ```python
 validateTransactionRoot():
-  transactionIDs = [transactionID(trs) for trs in block.payload]
+  transactionIDs = [transactionID(trs) for trs in block.transactions]
   return block.header.transactionRoot == merkleRoot(transactionIDs)
 ```
 
