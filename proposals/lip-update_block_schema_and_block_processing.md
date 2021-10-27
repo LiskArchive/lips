@@ -48,7 +48,7 @@ Finally, this LIP specifies the validation of all block header properties in one
 This LIP introduces the following new block header properties:
 
 - `stateRoot`: The root of the sparse Merkle tree that is computed from the state of the blockchain.
-  See the [Define state model and state root][lip-state-model-and-state-root] LIP to see why it needs to be included in a block header.
+  See the [Define state model and state root][lip-state-model-and-state-root] LIP for the reason why it needs to be included in a block header.
 - `assetsRoot`: The root of the Merkle tree computed from the block assets array.
 See [below](#separation-between-block-header-and-block-assets) for more details.
 - `generatorAddress`: The address of the block generator.
@@ -57,9 +57,9 @@ See [below](#separation-between-block-header-and-block-assets) for more details.
 - `aggregateCommit`: This property contains the aggregate signature for a certificate for a certain block height.
   Based on this, any node can create a certificate for the corresponding height.
   See the [Introduce a certificate generation mechanism][lip-certificate-generation] LIP for more details.
-- `maxHeightPrevoted`: This property is related to the [Lisk BFT protocol][lip-weighted-BFT] and is used for the fork choice rule.
-- `maxHeightGenerated`: This property is related to the [Lisk BFT protocol][lip-weighted-BFT] and is used to check for contradicting block headers.
-- `validatorsHash`: This property authenticates the set of validators active from the next block onward. It is used to [generate certificates][lip-certificate-generation] from the block header.
+- `maxHeightPrevoted`: This property is related to the [Lisk-BFT protocol][lip-weighted-BFT] and is used for the fork choice rule.
+- `maxHeightGenerated`: This property is related to the [Lisk-BFT protocol][lip-weighted-BFT] and is used to check for contradicting block headers.
+- `validatorsHash`: This property authenticates the set of validators active from the next block onward. It is important for cross-chain certification and included in certificates.
 
 ### Change Generator Public Key to Generator Address
 
@@ -131,7 +131,7 @@ The full processing of a block is organized as follows.
 2. **Fork choice**: Upon receiving a new block, the [fork choice rule][lip-0014#fork-choice] determines whether the block will be discarded or if the processing continues. 
 3. **Static validation**: Some initial static checks are done to ensure that the serialized object follows the general structure of a block. 
   These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
-4. **Header verification**: Properties that require access to the state store *before* the block has been executed are verified in this stage.
+4. **Header verification**: Block header properties, which require access to the state store *before* any state transitions implied by the block are executed, are verified in this stage.
 In particular, these checks are performed *before* the state transitions implied by the modules are processed.
 5. **Assets verification**: Each module verifies the respective entry in the block assets. If any check fails, the block is discarded and has no further effect.
 6. **Block forwarding**: After the initial checks, the full block is forwarded to a subset of peers.
@@ -141,7 +141,7 @@ In particular, these checks are performed *before* the state transitions implied
 10. **Command execution**: Commands belonging to the module (i.e. with `moduleID` property matching the module ID) are executed.
 11. **After command execution**: Each module can process protocol logic *after* the command contained in the transaction has been executed. 
 12. **After transactions execution**: Each module can process protocol logic *after* the transactions contained in the block have been executed.
-13. **Result verification**: Properties that require access to the state store *after* the block has been executed are verified. In particular, this includes the properties that can be verified only after the state transitions implied by the block execution have been performed.
+13. **Result verification**: Block header properties, which require accessing the state store *after* all state transitions implied by the block have been executed, are verified. 
 14. **Block storage**: The block is persisted into the database.
 15. **Peers notification**: Other peers in the P2P network are notified of the new block.
 
