@@ -134,12 +134,12 @@ The full processing of a block is organized as follows.
 4. **Header verification**: Block header properties, which require access to the state store *before* any state transitions implied by the block are executed, are verified in this stage.
 5. **Assets verification**: Each module verifies the respective entry in the block assets. If any check fails, the block is discarded and has no further effect.
 6. **Block forwarding**: After the initial checks, the full block is forwarded to a subset of peers.
-7. **Before transactions execution**: Each module can process protocol logic *before* executing the transactions contained in the block. 
+7. **Before transactions execution**: Each module can define protocol logic that is executed *before* the transactions contained in the block are processed. 
 8. **Transaction verification**: The transaction is verified, possibly by accessing the state store. If the verification fails, the transaction is invalid and the whole block is discarded.
-9. **Before command execution**: Each module processes protocol logic *before* the command contained in the transaction is executed. 
-10. **Command execution**: Commands belonging to the module (i.e. with `moduleID` property matching the module ID) are executed.
-11. **After command execution**: Each module can process protocol logic *after* the command contained in the transaction has been executed. 
-12. **After transactions execution**: Each module can process protocol logic *after* the transactions contained in the block have been executed.
+9. **Before command execution**: Each module can define protocol logic that is processed *before* the command has been executed. 
+10. **Command execution**: The command belonging to the module (i.e. with `moduleID` property matching the module ID) is executed.
+11. **After command execution**: Each module can define protocol logic that is processed *after* the command has been executed. 
+12. **After transactions execution**: Each module can define protocol logic that is executed *after* all the transactions contained in the block have been processed.
 13. **Result verification**: Block header properties, which require accessing the state store *after* all state transitions implied by the block have been executed, are verified. 
 14. **Block storage**: The block is persisted into the database.
 15. **Peers notification**: Other peers in the P2P network are notified of the new block.
