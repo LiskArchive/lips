@@ -132,7 +132,6 @@ The full processing of a block is organized as follows.
 3. **Static validation**: Some initial static checks are done to ensure that the serialized object follows the general structure of a block. 
   These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
 4. **Header verification**: Block header properties, which require access to the state store *before* any state transitions implied by the block are executed, are verified in this stage.
-In particular, these checks are performed *before* the state transitions implied by the modules are processed.
 5. **Assets verification**: Each module verifies the respective entry in the block assets. If any check fails, the block is discarded and has no further effect.
 6. **Block forwarding**: After the initial checks, the full block is forwarded to a subset of peers.
 7. **Before transactions execution**: Each module can process protocol logic *before* executing the transactions contained in the block. 
