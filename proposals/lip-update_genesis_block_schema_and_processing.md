@@ -1,0 +1,169 @@
+```
+LIP: <LIP number>
+Title: Update genesis block schema and processing
+Author: Iker Alustiza <iker@lightcurve.io>
+        Rishi Mittal <rishi.mittal@lightcurve.io >
+Discussions-To: https://research.lisk.com/t/update-genesis-block-schema-and-processing/325
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+Requires: BFT module LIP, LIP 0040, Update block schema and block processing LIP
+```
+
+## Abstract
+
+This LIP adapts the specifications of the genesis block for blockchains created with Lisk SDK introduced in LIP 0034 to the requirements and characteristics of the new state model introduced in LIP 0040. 
+It does so by following the general block format and processing introduced in the Update block schema and block processing LIP.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+[LIP 0034][LIP34] introduced a block asset schema that allows to directly specify an initial state for blockchains created with Lisk SDK. 
+However, with the specification of the Lisk interoperability solution and [the new state model][LIP40] it introduces, it is necessary to redefine and update the format and processing of a genesis block for blockchains created with Lisk SDK.
+
+## Rationale
+
+### Usage of `assets` property of the block 
+
+The new genesis block format and processing is specified with the rationale of having a compact and self-contained way of initializing a blockchain in the Lisk ecosystem. 
+With this in mind, this LIP defines a genesis block format and processing based on the specifications given in [Update block schema and block processing LIP][BlockLIP]. 
+In particular, the `assets` property contains the necessary information to initialize the state of the blockchain. 
+Each element in the `assets` array contains the information necessary to set the state store for a given module. 
+Hence, each module should define the format and processing logic for this information in the genesis block.
+
+### Processing of the genesis block 
+
+Another distinctive specification of the genesis block is its processing. 
+The blockchain starts with an empty key-value store and in particular, all module stores are empty initially. 
+As part of the genesis block processing modules can add key-value entries to their module store to initialize their state. 
+They should also check the consistency of their state independently and against information provided by other modules. 
+Also, before this is done, the framework layer has to validate the block header and the block format itself. 
+Hence, this LIP defines steps specific to the processing of the genesis block: a step to initialize the state store per each module and the second step to verify this initial state. 
+In particular the processing of the genesis block happens in four steps described in the sections below.
+
+<img src="lip-update_genesis_block_schema_and_processing/stages.png" width="70%">
+
+*Figure 1: A schematic depiction of the steps of the processing of the genesis block.*
+
+#### Static validation of the genesis block
+
+The genesis block has to go through initial static checks to ensure that the serialized object follows the general structure of a block. 
+Also, certain properties of the block header are checked at this stage. 
+All of these checks are stateless since the state of the blockchain is yet to be initialized. 
+The key differences as compared to [the validation for the rest of the blocks][BlockLIPvalidation] in a blockchain are that there is no specific size limit for the genesis block object and that the payload must be empty, i. e., the genesis block should not contain any transaction.
+
+#### Genesis state Initialization
+
+At this stage, the genesis state initialization logic for all registered modules is executed. 
+For this purpose, registered modules can specify processing logic considering the information in their corresponding entry of the `assets` property. 
+Typically, modules will perform format and data consistency checks of their respective element in `assets` and then initialize their state according to the data provided in it. 
+However, modules should not call protocol logic of other modules as the state of the respective module may not be initialized.
+
+#### Genesis state finalization
+
+At this stage, the genesis state finalization logic for all registered modules is executed. 
+As part of the genesis state finalization logic modules may call exposed functions from other modules to cross-check the state information integrity and/or complete their own state. 
+When this step is completed, there should be a valid initial state for our blockchain ready to process state transitions implied by the next block.
+
+#### Result verification of the genesis block
+
+Finally, the verifications for block header properties are performed for which access to the state store is required. 
+For example, in the case of `stateRoot`, it requires the genesis state to be final before being checked.
+
+## Specification
+
+In this section, we specify the schema of the genesis block and its validity and execution rules.
+
+### Constant
+
+| Name          | Type    | Value       | Description |
+| ------------- |---------| ------------| ------------|
+| `EMPTY_HASH`  | bytes   | SHA-256("") | Hash of empty bytes.|
+
+### Processing stages of the genesis block, block assets, and block header
+
+As introduced in [the Rationale section](#processing-of-the-genesis-block), the processing of the genesis block is performed in four different stages:
+
+* _Static validation of the genesis block_: The stateless checks to ensure the structure of the genesis block are performed. 
+Also, the properties in the block header that do not require access to the state store are checked. 
+These checks are defined in the sections below.
+* _Genesis state initialization_: The genesis state initialization logic for the registered modules is executed. 
+* _Genesis state finalization_: The genesis state finalization logic for the registered modules is executed.  
+* _Result verification of the genesis block_: The block header properties that require access to the state store are verified as specified below.
+
+### Genesis block
+
+#### JSON schema
+
+The genesis block schema is the same as the one defined in [Update block schema and block processing LIP][BlockLIPschema].
+
+#### Validation
+
+The genesis block is validated in the static validation stage as follows:
+
+* _Static validation of the genesis block_:
+    * Check that the `payload` property is set to its default value, i.e., empty array.
+
+#### Block ID
+
+The genesis block ID is computed in the same way as for [any other block][blockID].
+
+### Assets property of the genesis block
+
+#### JSON schema
+
+The asset schema is the same as defined in the [Update block schema and block processing LIP][assetsSchema].
+
+#### Validation
+
+The block assets property is validated as follows:
+
+* _Static validation of the genesis block_:
+    * The same validity rules as defined in the [Update block schema and block processing LIP][assetsValidation] apply except for the fact that there is no limitation on the size of the `data` property of every entry.
+
+### Header of the genesis block
+
+#### JSON schema
+
+The genesis block header schema is the same as the one defined in [Update block schema and block processing LIP][headerSchema].
+
+#### Validation
+
+The block header is processed as follows:
+
+* _Static validation of the genesis block_:
+    * Check that the block header follows the block header schema.
+    * The value `b.header.version` can be any `uint32` integer.
+    * The value of `b.header.transactionRoot` is equal to `EMPTY_HASH`.
+    * The value `b.header.assetsRoot` is validated as specified in [Update block schema and block processing LIP][assetsRoot].
+    * The value `b.header.timestamp` is a Unix time in seconds and can be any value in the `uint32` range.
+    * The value `b.header.height` can be any value in the `uint32` range.
+    * The value `b.header.previousBlockID` can be any 32-byte value.
+    * The value of `b.header.generatorAddress` is empty bytes.
+    * The value of `b.header.maxHeightPrevoted` is equal to `b.header.height`.
+    * The value `b.header.maxHeightGenerated`  is equal to 0.
+    * The value of `b.header.aggregateCommit.height` is 0.
+    * The value of `b.header.aggregateCommit.signature` is empty bytes.
+    * The value of `b.header.aggregateCommit.aggregationBits` is empty bytes.
+    * The value of `b.header.signature` is empty bytes.
+* _Result verification of the genesis block_:
+    * Verify the `stateRoot` and `validatorsHash` properties as specified in [Update block schema and block processing LIP][stateRoot].
+
+## Backwards Compatibility
+
+This LIP defines a new block schema and processing, but does not imply a hardfork of Lisk Mainnet.
+
+[LIP34]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md
+[blockLIP]: https://research.lisk.com/t/update-block-schema-and-block-processing/
+[LIP40]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md
+[BlockLIPvalidation]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#validation
+[BlockLIPschema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#d#json-schema
+[blockID]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##block-id
+[assetsSchema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##json-schema-1
+[assetsValidation]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##validation-1
+[headerSchema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##json-schema-2
+[assetsRoot]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##assets-root
+[stateRoot]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##state-root
