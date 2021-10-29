@@ -9,7 +9,7 @@ Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
 Requires: 0040,
-          Introduce a certificate generation mechanism
+          Introduce certificate generation mechanism
 ```
 
 ## Abstract
@@ -29,7 +29,7 @@ The second change is to update the block header schema. In general, it is desira
 - does not need to be changed when modules are added or removed to a running blockchain,
 - is used by every blockchain in the Lisk ecosystem regardless of the modules implemented in the individual chains.
 
-Furthermore, we update the block header schema to include new properties introduced by the ["Define state model and state root"][lip-state-model-and-state-root] LIP, the ["Introduce BFT module"][lip-bft-module] LIP, and the ["Introduce a certificate generation mechanism"][lip-certificate-generation] LIP.
+Furthermore, we update the block header schema to include new properties introduced by the ["Define state model and state root"][lip-0040] LIP, the ["Introduce BFT module"][research:bft-module] LIP, and the ["Introduce certificate generation mechanism"][research:certificate-generation] LIP.
 
 Finally, this LIP specifies the validation of all block header properties in one place.
 
@@ -39,12 +39,12 @@ Finally, this LIP specifies the validation of all block header properties in one
 
 This LIP introduces the following new block header properties:
 
-- `stateRoot`: The root of the sparse Merkle tree that is computed from the state of the blockchain. See the [Define state model and state root][lip-state-model-and-state-root] LIP for the reason why it needs to be included in a block header.
+- `stateRoot`: The root of the sparse Merkle tree that is computed from the state of the blockchain. See the [Define state model and state root][lip-0040] LIP for the reason why it needs to be included in a block header.
 - `assetsRoot`: The root of the Merkle tree computed from the block assets array. See [below](#separation-between-block-header-and-block-assets) for more details.
 - `generatorAddress`: The address of the block generator. It replaces the `generatorPublicKey` property. See [below](#change-generator-public-key-to-generator-address) for more details.
-- `aggregateCommit`: This property contains the aggregate signature for a certificate for a certain block height. Based on this, any node can create a certificate for the corresponding height. See the [Introduce a certificate generation mechanism][lip-certificate-generation] LIP for more details.
-- `maxHeightPrevoted`: This property is related to the [Lisk-BFT protocol][lip-weighted-BFT] and is used for the fork choice rule.
-- `maxHeightGenerated`: This property is related to the [Lisk-BFT protocol][lip-weighted-BFT] and is used to check for contradicting block headers.
+- `aggregateCommit`: This property contains the aggregate signature for a certificate for a certain block height. Based on this, any node can create a certificate for the corresponding height. See the [Introduce certificate generation mechanism][research:certificate-generation] LIP for more details.
+- `maxHeightPrevoted`: This property is related to the [Lisk-BFT protocol][research:weighted-bft] and is used for the fork choice rule.
+- `maxHeightGenerated`: This property is related to the [Lisk-BFT protocol][research:weighted-bft] and is used to check for contradicting block headers.
 - `validatorsHash`: This property authenticates the set of validators active from the next block onward. It is important for cross-chain certification and included in certificates.
 
 ### Change Generator Public Key to Generator Address
@@ -62,7 +62,7 @@ The separation between properties in the block header and properties in the bloc
 - It should be possible to follow the fork choice consensus rule just with the block header. This implies that the `maxHeightPrevoted` property is part of the block header.
 - Similarly, it should be possible to generate a certificate just with the block header. This implies that the `validatorsHash` property is part of the block header. Moreover, the `validatorsHash` property can only be obtained after the state transitions by the modules have been processed. The reason is that the DPoS or PoA modules only set the validators for the next round after the asset of the last block of a round is processed. Therefore, this property needs to be added to the block by the framework layer after the state transitions by the modules are processed.
 
-As an example, blockchains created with the Lisk SDK that implement the [Random module][lip-random-module], will insert the seed reveal property in the block assets, not in the block header.
+As an example, blockchains created with the Lisk SDK that implement the [Random module][research:random-module], will insert the seed reveal property in the block assets, not in the block header.
 
 The schema for the block assets allows each module to include its serialized data individually, which makes the inclusion of module data very flexible. Each module can insert a single entry in the assets. This entry is an object containing a `moduleID` property, indicating the ID of the module handling it, and a generic `data` property that can contain arbitrary serialized data.
 
@@ -88,18 +88,18 @@ Furthermore, in the following we indicate with `block` be the block under consid
 
 *Figure 1: A schematic depiction of the various stages of a block processing. The steps performed in the consensus domain are indicated by blue boxes, while the steps performed in the state-machine domain are indicated by red boxes. Within the state-machine domain, the transactions processing is indicated by purple boxes. The network domain is indicated by green boxes.*
 
-In this section, we describe the various processing stages of a block. Note that a genesis block follows different rules specified in the ["Update genesis block schema and processing" LIP][research:genesis-block].
+In this section, we describe the various processing stages of a block. Note that a genesis block follows different rules specified in the ["Update genesis block schema and processing" LIP][research:update-genesis-block].
 
 The block processing is split between the network, consensus, and state-machine domains (see figure 1):
 
 - The network domain is responsible for exchanging blocks with other peers in the [P2P network][lip-0004].
-- The consensus domain applies the [fork choice rule][lip-0014#fork-choice] and checks the properties contained in the block header.
+- The consensus domain applies the [fork choice rule][lip-0014#fork-choice-rule] and checks the properties contained in the block header.
 - The state-machine checks and applies the module-level logic. All the steps that are part of the state-machine domain are repeated for each module registered in the chain. The transactions processing is performed on the transactions contained in the block as part of the state-machine processing. The four steps in the transactions processing are repeated for each transaction.
 
 The full processing of a block is organized as follows.
 
 1. **Block reception**: A new block is received from the P2P network.
-2. **Fork choice**: Upon receiving a new block, the [fork choice rule][lip-0014#fork-choice] determines whether the block will be discarded or if the processing continues.
+2. **Fork choice**: Upon receiving a new block, the [fork choice rule][lip-0014#fork-choice-rule] determines whether the block will be discarded or if the processing continues.
 3. **Static validation**: Some initial static checks are done to ensure that the serialized object follows the general structure of a block. These checks are performed immediately because they do not require access to the state store and can therefore be done very quickly.
 4. **Header verification**: Block header properties, which require access to the state store *before* any state transitions implied by the block are executed, are verified in this stage.
 5. **Assets verification**: Each module verifies the respective entry in the block assets. If any check fails, the block is discarded and has no further effect.
@@ -361,7 +361,7 @@ verifyPreviousBlockID():
   return block.header.previousBlockID == blockID(previousBlock)
 ```
 
-Here, the function `blockID` calculates the ID of an input block as specified in [LIP 20][block-ID].
+Here, the function `blockID` calculates the ID of an input block as specified in [LIP 0020][lip-0020#specs].
 
 ##### Generator Address
 
@@ -379,7 +379,7 @@ verifyGeneratorAddress():
 
 ##### Transaction Root
 
-The [transaction root][lip-32] is the root of the Merkle tree built from the ID of the transactions contained in the block. It is validated by calling the `validateTransactionRoot` function. This function returns a boolean, indicating the success of the check.
+The [transaction root][lip-0032] is the root of the Merkle tree built from the ID of the transactions contained in the block. It is validated by calling the `validateTransactionRoot` function. This function returns a boolean, indicating the success of the check.
 
 ```python
 validateTransactionRoot():
@@ -387,7 +387,7 @@ validateTransactionRoot():
   return block.header.transactionRoot == merkleRoot(transactionIDs)
 ```
 
-Here, the function `transactionID` calculates the ID of an input transaction as specified in [LIP 19][transaction-ID] and the function `merkleRoot` calculates the Merkle root starting from an input array of bytes values as defined in [LIP 31][merkle-root].
+Here, the function `transactionID` calculates the ID of an input transaction as specified in [LIP 0019][lip-0019#specs] and the function `merkleRoot` calculates the Merkle root starting from an input array of bytes values as defined in [LIP 0031][lip-0031#merkle-root].
 
 ##### Assets Root
 
@@ -408,11 +408,11 @@ verifyStateRoot():
   return block.header.stateRoot == stateRoot(block.header.height)
 ```
 
-Here, the function `stateRoot` calculates the state root of the chain at the input height as specified in [LIP 40][state-root].
+Here, the function `stateRoot` calculates the state root of the chain at the input height as specified in [LIP 0040][lip-0040#specs].
 
 ##### Max Height Prevoted and Max Height Generated
 
-The properties `maxHeightPrevoted` and `maxHeightGenerated` are related to the [Lisk-BFT protocol][lip-bft]. They are verified by calling the `verifyBFTProperties` function. This function returns a boolean, indicating the success of the check.
+The properties `maxHeightPrevoted` and `maxHeightGenerated` are related to the [Lisk-BFT protocol][lip-0014#block-header-properties]. They are verified by calling the `verifyBFTProperties` function. This function returns a boolean, indicating the success of the check.
 
 ```python
 verifyBFTProperties():
@@ -433,7 +433,7 @@ verifyValidatorsHash():
 
 ##### Aggregate Commit
 
-The aggregate commit contains an aggregate BLS signature of a certificate corresponding to the block at the given height. It attests that all signing validators consider the corresponding block final. It is verified by calling the `verifyAggregateCommit` function, defined in LIP ["Introduce a certificate generation mechanism"][verifyAggregateCommit]. This function takes the aggregate commit `block.header.aggregateCommit` as input and returns a boolean, indicating the success of the check.
+The aggregate commit contains an aggregate BLS signature of a certificate corresponding to the block at the given height. It attests that all signing validators consider the corresponding block final. It is verified by calling the `verifyAggregateCommit` function, defined in the LIP ["Introduce certificate generation mechanism"][research:certificate-generation]. This function takes the aggregate commit `block.header.aggregateCommit` as input and returns a boolean, indicating the success of the check.
 
 ##### Signature
 
@@ -454,29 +454,28 @@ verifyBlockSignature():
   return verifyMessageSig(generatorKey, "LSK_BH_", networkIdentifier, serializedUnsignedBlockHeader, signature)
 ```
 
-Here, the function `verifyMessageSig` verifies the validity of a signature as specified in [LIP 37][lip-signature].
+Here, the function `verifyMessageSig` verifies the validity of a signature as specified in [LIP 0037][lip-0037#signing-and-verifying-with-ed25519].
 
 ## Backwards Compatibility
 
 This LIP results in a hard fork as nodes following the proposed protocol will reject blocks according to the previous protocol, and nodes following the previous protocol will reject blocks according to the proposed protocol.
 
 [lip-0004]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0004.md
-[lip-0014#fork-choice]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#applying-blocks-according-to-fork-choice-rule
-[lip-certificate-generation]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
-[lip-certificate-generation-aggregate-commits]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
-[lip-certificate-generation-certificate-threshold]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
-[lip-certificate-generation-chain-of-trust]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
-[lip-certificate-generation-validate-aggregate-commit]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
-[lip-random-module]: https://research.lisk.com/t/define-state-and-state-transitions-of-random-module/311
-[lip-state-model-and-state-root]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md
-[lip-weighted-BFT]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
-[block-ID]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0020.md#specification
-[transaction-ID]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0019.md#specification
-[merkle-root]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#merkle-root
-[state-root]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md#specification
-[lip-bft]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#additional-block-header-properties
-[lip-bft-module]: https://research.lisk.com/t/introduce-bft-module/321
-[lip-signature]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0037.md#signing-and-verifying-with-ed25519
-[verifyAggregateCommit]: https://research.lisk.com/t/introduce-a-certificate-generation-mechanism/
-[lip-32]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0032.md
-[research:genesis-block]: https://research.lisk.com/t/update-genesis-block-schema-and-processing/325
+[lip-0014#block-header-properties]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#additional-block-header-properties
+[lip-0014#fork-choice-rule]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#applying-blocks-according-to-fork-choice-rule
+[lip-0019#specs]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0019.md#specification
+[lip-0020#specs]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0020.md#specification
+[lip-0031#merkle-root]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0031.md#merkle-root
+[lip-0032]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0032.md
+[lip-0037#signing-and-verifying-with-ed25519]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0037.md#signing-and-verifying-with-ed25519
+[lip-0040]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md
+[lip-0040#specs]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md#specification
+[research:bft-module]: https://research.lisk.com/t/introduce-bft-module/321
+[research:certificate-generation]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296
+[research:certificate-generation#aggregate-commits]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296#aggregate-commits-9
+[research:certificate-generation#block-verification]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296#block-verification-48
+[research:certificate-generation#certificate-threshold]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296#certificate-threshold-8
+[research:certificate-generation#chain-of-trust]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296#chain-of-trust-10
+[research:update-genesis-block]: https://research.lisk.com/t/update-genesis-block-schema-and-processing/325
+[research:random-module]: https://research.lisk.com/t/define-state-and-state-transitions-of-random-module/311
+[research:weighted-bft]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
