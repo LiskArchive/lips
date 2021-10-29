@@ -5,9 +5,10 @@ Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
         Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
         Rishi Mittal <rishi.mittal@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/update-block-schema-and-block-processing/293
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-05-22
+Updated: 2021-10-29
 Requires: 0040,
           Introduce certificate generation mechanism
 ```
