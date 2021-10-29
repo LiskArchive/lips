@@ -66,3 +66,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0052](proposals/lip-0052.md) | Introduce NFT module                                                                           | Maxime Gagnebin                                        | Standards Track | Draft         |
 | [0053](proposals/lip-0053.md) | Introduce cross-chain update mechanism                                                         | Maxime Gagnebin                                        | Standards Track | Draft         |
 | [0054](proposals/lip-0054.md) | Introduce sidechain recovery mechanism                                                         | Iker Alustiza                                          | Standards Track | Draft         |
+| [0055](proposals/lip-0055.md) | Update block schema and block processing                                                       | Andreas Kendziorra, Alessandro Ricottone, Rishi Mittal | Standards Track | Draft         |
