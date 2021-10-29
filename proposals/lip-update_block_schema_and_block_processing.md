@@ -55,7 +55,7 @@ Both the generator address or a public key yielding this address fulfill the fir
 
 ### Separation Between Block Header and Block Assets
 
-The separation between properties in the bock header and properties in the block assets is done according to the following rules:
+The separation between properties in the block header and properties in the block assets is done according to the following rules:
 
 - Properties handled by the consensus domain are added to the block header.
 - Properties created by individual modules are added to the block assets.
