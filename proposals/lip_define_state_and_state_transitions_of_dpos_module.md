@@ -690,15 +690,13 @@ An unlock transaction `trs` is valid if the following returns `True`:
 senderAddress = address corresponding to trs.senderPublicKey
 height = height of the block including trs
 
-numAvailableUnlockObjects = number of unlockObject in voterStore(senderAddress).pendingUnlocks 
-                            with hasWaited(unlockObject, senderAddress, height) 
-                            and not isPunished(unlockObject, senderAddress, height)
-                            and isCertificateGenerated(unlockObject)
-        
-if numAvailableUnlockObjects >= 1:
-    return True
-else:
-    return False
+for each unlockObject in voterStore(senderAddress).pendingUnlocks:
+    if (hasWaited(unlockObject, senderAddress, height) 
+        and not isPunished(unlockObject, senderAddress, height)
+        and isCertificateGenerated(unlockObject)):
+        return True
+
+return False
 ```
 
 The definition and rationale for the `isCertificateGenerated` function is part of [LIP "Introduce unlocking condition for incentivizing certificate generation"][LIP-incentivizeCertificateGeneration]. 
