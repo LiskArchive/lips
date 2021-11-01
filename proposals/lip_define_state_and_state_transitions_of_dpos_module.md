@@ -123,11 +123,11 @@ For the rest of this proposal we define the following constants:
 | `PUNISHMENT_WINDOW`          | uint32 | `780,000` |The punishment time for punished delegates.|
 | `ROUND_LENGTH`               | uint32 | `103` |The round length.|
 | `BFT_THRESHOLD`              | uint32 | `68` |The precommit and certificate thresholds used by the BFT module.|
-| `MIN_WEIGHT_STANDBY`         | uint32 | `1000*(10^8)` |The minimum delegate weight required to be eligible as a standby delegate.|
+| `MIN_WEIGHT_STANDBY`         | uint64 | `1000*(10^8)` |The minimum delegate weight required to be eligible as a standby delegate.|
 | `NUMBER_ACTIVE_DELEGATES`    | uint32 | `101` |The number of active delegates. |
 | `NUMBER_STANDBY_DELEGATES`   | uint32 | `2` |The number of standby delegates. This LIP is specified for the number of standby delegates being 0, 1 or 2.|
 | `TOKEN_ID_DPOS`              | object | `TOKEN_ID_LSK` = {<br /> `"chainID": 0`, <br /> `"localID": 0`<br />}  |The token ID of the token used to cast votes. |
-| `DELEGATE_REGISTRATION_FEE`  | uint32 | `10*(10^8)` |The extra command fee of the delegate registration. |
+| `DELEGATE_REGISTRATION_FEE`  | uint64 | `10*(10^8)` |The extra command fee of the delegate registration. |
 
 
 #### uint32be
