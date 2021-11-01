@@ -685,23 +685,20 @@ The `params` property of unlock transactions is empty.
 
 #### Verification
 
-Unlock transactions do not trigger specific verifications.
-
-
-#### Execution
-
-When executing an unlock transaction `trs`, the following is done:
-
+An unlock transaction `trs` is valid if the following returns `True`:
 ```python
 senderAddress = address corresponding to trs.senderPublicKey
 height = height of the block including trs
 
-for each unlockObject in voterStore(senderAddress).pendingUnlocks:
-    if (hasWaited(unlockObject, senderAddress, height) 
-        and not isPunished(unlockObject, senderAddress, height)
-        and isCertificateGenerated(unlockObject)):
-        delete unlockObject from voterStore(senderAddress).pendingUnlocks
-        token.unlock(senderAddress, MODULE_ID_DPOS, TOKEN_ID_DPOS, unlockObject.amount)
+numAvailableUnlockObjects = number of unlockObject in voterStore(senderAddress).pendingUnlocks 
+                            with hasWaited(unlockObject, senderAddress, height) 
+                            and not isPunished(unlockObject, senderAddress, height)
+                            and isCertificateGenerated(unlockObject)
+        
+if numAvailableUnlockObjects >= 1:
+    return True
+else:
+    return False
 ```
 
 The definition and rationale for the `isCertificateGenerated` function is part of [LIP "Introduce unlocking condition for incentivizing certificate generation"][LIP-incentivizeCertificateGeneration]. 
@@ -741,6 +738,23 @@ isPunished(unlockObject, senderAddress, height):
                 return  True
 
    return False
+```
+
+
+#### Execution
+
+When executing an unlock transaction `trs`, the following is done:
+
+```python
+senderAddress = address corresponding to trs.senderPublicKey
+height = height of the block including trs
+
+for each unlockObject in voterStore(senderAddress).pendingUnlocks:
+    if (hasWaited(unlockObject, senderAddress, height) 
+        and not isPunished(unlockObject, senderAddress, height)
+        and isCertificateGenerated(unlockObject)):
+        delete unlockObject from voterStore(senderAddress).pendingUnlocks
+        token.unlock(senderAddress, MODULE_ID_DPOS, TOKEN_ID_DPOS, unlockObject.amount)
 ```
 
 
