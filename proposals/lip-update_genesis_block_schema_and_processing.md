@@ -53,7 +53,7 @@ In particular the processing of the genesis block happens in four steps describe
 The genesis block has to go through initial static checks to ensure that the serialized object follows the general structure of a block. 
 Also, certain properties of the block header are checked at this stage. 
 All of these checks are stateless since the state of the blockchain is yet to be initialized. 
-The key differences as compared to [the validation for the rest of the blocks][BlockLIPvalidation] in a blockchain are that there is no specific size limit for the genesis block object and that the payload must be empty, i. e., the genesis block should not contain any transaction.
+The key differences as compared to [the validation for the rest of the blocks][BlockLIPvalidation] in a blockchain are that there is no specific size limit for the genesis block object and that the genesis block should not contain any transaction.
 
 #### Genesis state Initialization
 
@@ -105,7 +105,7 @@ The genesis block schema is the same as the one defined in [Update block schema 
 The genesis block is validated in the static validation stage as follows:
 
 * _Static validation of the genesis block_:
-    * Check that the `payload` property is set to its default value, i.e., empty array.
+    * Check that the `transactions` property is set to its default value, i.e., empty array.
 
 #### Block ID
 
