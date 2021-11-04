@@ -70,7 +70,7 @@ Apart from the main responsibility, to correctly compute the three heights menti
 
 * The logic for computing the validators hash, a hash value authenticating the BLS keys of the currently active validators, their BFT weights and the certificate threshold.
 * The function `impliesMaximalPrevotes` for the [Reward module][lip-reward-module] to be able to check whether the block reward has to be reduced as the validator is not constructively participating in the Lisk-BFT consensus.
-* Functions that allow to verify the Lisk-BFT related properties in the block header, namely `validatorsHash`, `maxHeightGenerated` and `maxHeightPrevoted`. See also [LIP "Update block schema and block processing"][lip-update-block-processing] for the block header verification.
+* Functions that allow to verify the Lisk-BFT related properties in the block header, namely `validatorsHash`, `maxHeightGenerated` and `maxHeightPrevoted`, see also [LIP 0055][lip-update-block-processing].
 * Functions for other modules to obtain information regarding the current state of the BFT module. For instance, the DPoS module requires the value of `maxHeightCertified` for the [unlock transaction][lip-unlock-condition].
 
 ## Specification
@@ -354,7 +354,7 @@ areDistinctHeadersContradicting(blockHeaderInfo1, blockHeaderInfo2):
 ```
 
 Note that the function above corresponds to the function `checkHeadersContradicting` defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#detecting-contradicting-block-headers), except for not checking whether the two objects `blockHeaderInfo1` and `blockHeaderInfo2` correspond to the same block.
-Additionally, the block header property names are updated according to [LIP "Update block schema and block processing"][lip-update-block-processing].
+Additionally, the block header property names are updated according to [LIP 0055][lip-update-block-processing].
 
 #### computeValidatorsHashInternal
 
@@ -738,39 +738,48 @@ setBFTParameters(precommitThreshold, certificateThreshold, validators):
 
 TBD
 
-### Block Processing
+### Genesis Block Processing
 
-#### Genesis Block
+The following two steps are executed as part of the genesis block processing, see the [“Update genesis block schema and processing” LIP][lip-genesis-block-processing] for details.
 
-As part of processing a genesis block `b`, the BFT module store is initialized as follows:
+#### Genesis State Initialization
+
+As part of the genesis state initialization of a genesis block `b`, the BFT module store is initialized as follows:
 
 * The BFT Parameters substore is empty.
 * The BFT Votes substore is initialized as follows:
-    * `bftVotes.maxHeightPrevoted = b.height,`
-    * `bftVotes.maxHeightPrecommitted = b.height,`
-    * `bftVotes.maxHeightCertified = b.height,`
-    * `bftVotes.blockBFTInfos` is an empty array.
+    * `bftVotes.maxHeightPrevoted = b.height`,
+    * `bftVotes.maxHeightPrecommitted = b.height`,
+    * `bftVotes.maxHeightCertified = b.height`,
+    * `bftVotes.blockBFTInfos` is an empty array,
     * `bftVotes.activeValidatorsVoteInfo` is an empty array.
 
-This initialization must happen before any functions are called by other modules, in particular, before `setBFTParameters` is called by the PoA module or DPoS module.
+#### Genesis State Finalization
 
-#### After Block Execution
+In this step the BFT module does not execute any logic.
+However, the exposed function `setBFTParameters` is expected to be called by the PoA module or DPoS module as part of the genesis state finalization of these modules.
 
-After a block `b` is executed, the following logic is executed:
+### Block Processing
+
+The following steps are executed as part of the (non-genesis) block processing, see [LIP 0055][lip-block-processing] for details.
+
+#### After Transactions Execution
+
+After the transactions of a block `b` are executed, the following logic is executed:
 
 1. The object `getBlockBFTProperties(b.header)` is added to the beginning of the array `bftVotes.blockBFTInfos`.
 2. If `bftVotes.blockBFTInfos[MAX_LENGTH_BLOCK_BFT_INFOS]` exists, then the corresponding value is removed from the array.
 3. The function `applyPrevotesPrecommits` from the LIP ["Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] is executed to update the prevote and precommit weights.
 4. The value of `bftVotes.maxHeightPrevoted` is updated by calling the function `updateMaxHeightPrevoted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
 5. The value of `bftVotes.maxHeightPrecommitted` is updated by calling the function `updateMaxHeightPrecommitted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
-6. Let `m` be the aggregate commit included in block `b`. If `m` has only default values (`m.height == 0`, `m.aggregationBits` is empty bytes and `m.signature` is empty bytes), do nothing.
+6. Let `m` be the aggregate commit included in block `b`. If `m` has default values (`m.height == 0`, `m.aggregationBits` is empty bytes and `m.signature` is empty bytes), do nothing.
 Otherwise, set `bftVotes.maxHeightCertified` to `m.height`.
 7. Let `h` be the largest integer such that `h <= min(bftVotes.maxHeightCertified+1, bftVotes.blockBFTInfos[-1].height)` and there is an entry in the BFT Parameters store with key `h`.
 Then remove any key-value pair from BFT Parameters with a key strictly smaller than `h`.
 
 ### Block Creation
 
-During the block creation process, the properties `maxHeightPrevoted`, `maxHeightGenerated` and `validatorsHash` in the block header related to the BFT module (see also [LIP "Update block schema and block processing"][lip-update-block-processing]) have to be set as follows:
+During the block creation process, the properties `maxHeightPrevoted`, `maxHeightGenerated` and `validatorsHash` in the block header related to the BFT module (see also [LIP 0055][lip-update-block-processing]) have to be set as follows:
 
 * The value of `maxHeightPrevoted` is obtained by calling `getBFTHeights().maxHeightPrevoted` before executing any of the state transitions defined by the BFT module in the section "Block Processing" above.
 * The value of `maxHeightGenerated` must come from outside the state machine.
@@ -790,6 +799,7 @@ TBD
 [lip-poa]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0047.md
 [lip-reward-module]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0042.md
 [lip-unlock-condition]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
-[lip-update-block-processing]: https://research.lisk.com/t/update-block-schema-and-block-processing/293
+[lip-update-block-processing]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md
+[lip-update-genesis-block-processing]: https://research.lisk.com/t/update-genesis-block-schema-and-processing/325
 [lip-weighted-lisk-bft]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
 [lip-weighted-lisk-bft-bft-paper]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289#comparison-to-the-lisk-bft-paper-7
