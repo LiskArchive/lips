@@ -772,7 +772,7 @@ After the transactions of a block `b` are executed, the following logic is execu
 3. The function `applyPrevotesPrecommits` from the LIP ["Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] is executed to update the prevote and precommit weights.
 4. The value of `bftVotes.maxHeightPrevoted` is updated by calling the function `updateMaxHeightPrevoted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
 5. The value of `bftVotes.maxHeightPrecommitted` is updated by calling the function `updateMaxHeightPrecommitted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
-6. Let `m` be the aggregate commit included in block `b`. If `m` has default values (`m.height == 0`, `m.aggregationBits` is empty bytes and `m.signature` is empty bytes), do nothing.
+6. Let `m` be the aggregate commit included in block `b`. If `m.aggregationBits` is empty bytes and `m.signature` is empty bytes, do nothing.
 Otherwise, set `bftVotes.maxHeightCertified` to `m.height`.
 7. Let `h` be the largest integer such that `h <= min(bftVotes.maxHeightCertified+1, bftVotes.blockBFTInfos[-1].height)` and there is an entry in the BFT Parameters store with key `h`.
 Then remove any key-value pair from BFT Parameters with a key strictly smaller than `h`.
