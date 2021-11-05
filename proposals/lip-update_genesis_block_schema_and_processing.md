@@ -37,7 +37,7 @@ Hence, each module should define the format and processing logic for this inform
 ### Processing of the genesis block 
 
 Another distinctive specification of the genesis block is its processing. 
-The blockchain starts with an empty key-value store and in particular, all module stores are empty initially. 
+The blockchain starts with an empty key-value store and in particular, all module stores are initially empty. 
 As part of the genesis block processing modules can add key-value entries to their module store to initialize their state. 
 They should also check the consistency of their state independently and against information provided by other modules. 
 Also, before this is done, the framework layer has to validate the block header and the block format itself. 
@@ -59,23 +59,23 @@ The key differences as compared to [the validation for the rest of the blocks][B
 
 At this stage, the genesis state initialization logic for all registered modules is executed. 
 For this purpose, registered modules can specify processing logic considering the information in their corresponding entry of the `assets` property. 
-Typically, modules will perform format and data consistency checks of their respective element in `assets` and then initialize their state according to the data provided in it. 
+Typically, modules will perform format and data consistency checks on their corresponding entry in `assets` and then initialize their state according to the data provided in it. 
 However, modules should not call protocol logic of other modules as the state of the respective module may not be initialized.
 
 #### Genesis state finalization
 
 At this stage, the genesis state finalization logic for all registered modules is executed. 
-As part of the genesis state finalization logic modules may call exposed functions from other modules to cross-check the state information integrity and/or complete their own state. 
-When this step is completed, there should be a valid initial state for our blockchain ready to process state transitions implied by the next block.
+As part of the genesis state finalization logic modules may call exposed functions from other modules to cross-check the state information integrity and/or complete their own state information. 
+Once this step is completed, there should be a valid initial state ready for a blockchain to process state transitions implied by the next block.
 
 #### Result verification of the genesis block
 
 Finally, the verifications for block header properties are performed for which access to the state store is required. 
-For example, in the case of `stateRoot`, it requires the genesis state to be final before being checked.
+For example, in the case of `stateRoot`, it requires the genesis state to be final before being verified.
 
 ## Specification
 
-In this section, we specify the schema of the genesis block and its validity and execution rules.
+In this section, we specify the schema for the genesis block and its validity and execution rules.
 
 ### Constant
 
@@ -87,7 +87,7 @@ In this section, we specify the schema of the genesis block and its validity and
 
 As introduced in [the Rationale section](#processing-of-the-genesis-block), the processing of the genesis block is performed in four different stages:
 
-* _Static validation of the genesis block_: The stateless checks to ensure the structure of the genesis block are performed. 
+* _Static validation of the genesis block_: The stateless checks that ensure the structure of the genesis block are performed. 
 Also, the properties in the block header that do not require access to the state store are checked. 
 These checks are defined in the sections below.
 * _Genesis state initialization_: The genesis state initialization logic for the registered modules is executed. 
@@ -139,7 +139,7 @@ The block header is processed as follows:
     * The value `b.header.version` can be any `uint32` integer.
     * The value of `b.header.transactionRoot` is equal to `EMPTY_HASH`.
     * The value `b.header.assetsRoot` is validated as specified in [Update block schema and block processing LIP][assetsRoot].
-    * The value `b.header.timestamp` is a Unix time in seconds and can be any value in the `uint32` range.
+    * The value `b.header.timestamp` is Unix time in seconds and can be any value in the `uint32` range.
     * The value `b.header.height` can be any value in the `uint32` range.
     * The value `b.header.previousBlockID` can be any 32-byte value.
     * The value of `b.header.generatorAddress` is empty bytes.
