@@ -6,9 +6,7 @@ Discussions-To: https://research.lisk.com/t/introduce-certificate-generation-mec
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
-Requires: Introduce BFT module LIP,
-          0044,
-          Update block schema and block processing LIP
+Requires: Introduce BFT module LIP, 0044, 0055
 ```
 
 ## Abstract
