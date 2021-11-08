@@ -7,7 +7,7 @@ Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
 Requires: Introduce BFT module LIP,
-          Introduce Validators module LIP,
+          0044,
           Update block schema and block processing LIP
 ```
 
@@ -54,7 +54,7 @@ In this section, we define the main terms used throughout this LIP.
 Certificates are the key object for transferring information about the state of one chain to another chain.
 Every certificate is derived from a finalized block and contains the minimal subset of the block header properties required for interoperability.
 In this section, we explain why each of the certificate properties is required.
-For context, see the [Introduce cross-chain update mechanism LIP][ccu-lip] on how the properties are used in the validation and processing of cross-chain update transactions.
+For context, see [LIP 0053][ccu-lip] on how the properties are used in the validation and processing of cross-chain update transactions.
 
 * `blockID`: This property uniquely identifies which block a certificate is derived from.
 * `height`: This property is used to check that certificates are submitted sequentially, i.e., in increasing order of height, when included in cross-chain updates.
@@ -115,8 +115,7 @@ During the commit phase an additional threshold is used, called **certificate th
 * Commit messages are aggregated to aggregate commits, which are then included in blocks.
   The sum of BFT weights of the validators signing an aggregate commit has to be at least the certificate threshold value.
   Here the validators are those that are active at the height of the certificate and the BFT weights are the corresponding weights at that height.
-* When submitting a certificate via a cross-chain update transaction, the weights of all signers have to be above the certificate threshold value that is currently known to the other chain.
-  See the [Introduce cross-chain update mechanism LIP][ccu-lip] for details.
+* When submitting a certificate via a cross-chain update transaction, the weights of all signers have to be above the certificate threshold value that is currently known to the other chain, see [LIP 0053][ccu-lip] for details.
 
 The certificate threshold is stored as part of the BFT Parameters substore of the BFT module, see the [BFT module LIP][bft-module-lip] for details.
 The value of this parameters is set by the DPoS or PoA module via the `setBFTParameters` functions.
@@ -584,7 +583,7 @@ selectAggregateCommit():
 
 #### Block Verification
 
-As part of the verification of a block header `blockHeader` as described in the [LIP "Update block schema and block processing"][block-header-lip], the property `aggregateCommit` has to be verified, i.e., the following function has to return `True`.
+As part of the verification of a block header `blockHeader` as described in [LIP 0055][block-header-lip], the property `aggregateCommit` has to be verified, i.e., the following function has to return `True`.
 
 ```python
 verifyAggregateCommit(aggregateCommit):
@@ -650,7 +649,7 @@ In particular, given the height `lastCertifiedHeight` of the last certificate su
 In order to minimize the fees paid for submitting cross-chain updates, the new certificate should have the maximum possible height while still maintaining the chain of trust.
 This means that it should not be necessary to submit intermediate certificates authenticating only minor validator changes, but skip over as many intermediate certificates as possible.
 This is, in particular, important if the previously submitted certificate at height `lastCertifiedHeight` was created days or even weeks ago.
-Note that due to the liveness requirement, there has to be at least one certificate submitted in any 30 day period, see the ["Introduce cross-chain update mechanism" LIP][ccu-lip] for details.
+Note that due to the liveness requirement, there has to be at least one certificate submitted in any 30 day period, see  [LIP 0053][ccu-lip] for details.
 
 In this section, we describe the following two approaches for nodes to provide certificates:
 
@@ -833,11 +832,11 @@ computeEligibleSingleCommits(addressToBFTWeight, lastCertificateThreshold, singl
 ```
 
 
-[ccu-lip]: https://research.lisk.com/t/introduce-cross-chain-update-transactions/298
-[bft-module-lip]: https://research.lisk.com/
-[block-header-lip]:  https://research.lisk.com/t/update-block-schema-and-block-processing/293
+[ccu-lip]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0053.md
+[bft-module-lip]: https://research.lisk.com/t/introduce-bft-module/321
+[block-header-lip]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md
 [dpos-lip]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
-[poa-lip]: https://research.lisk.com/t/proof-of-authority-validator-selection-mechanism/288
+[poa-lip]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0047.md
 [unlock-lip]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
-[validator-module-lip]: https://research.lisk.com/t/introduce-validators-module/317
+[validator-module-lip]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0044.md
 [weighted-lisk-bft-lip]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
