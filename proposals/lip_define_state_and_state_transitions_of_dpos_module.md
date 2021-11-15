@@ -932,18 +932,18 @@ validators.setGeneratorList(initDelegates)
 ```
 
 
-#### After Block Execution
+#### After Transactions Execution
 
-After a block `newBlock` is executed, the properties related to missed blocks are updated according to [Delegate Productivity][LIP-0023-delegateProductivity]. This logic is recapitulated below:
+After the transactions in a block `b` are executed, the properties related to missed blocks are updated according to [Delegate Productivity][LIP-0023-delegateProductivity]. This logic is recapitulated below:
 
 ```python
-newHeight = newBlock.header.height
+newHeight = b.header.height
 # previousTimestamp is the value in the previous timestamp substore
-missedBlocks = validators.getGeneratorsBetweenTimestamps(previousTimestamp, newBlock.header.timestamp)
+missedBlocks = validators.getGeneratorsBetweenTimestamps(previousTimestamp, b.header.timestamp)
 
 # remove the start and end blocks, as those are not missed
 missedBlocks[validators.getGeneratorAtTimestamp(previousTimestamp)] -= 1
-missedBlocks[validators.getGeneratorAtTimestamp(newBlock.header.timestamp)] -= 1
+missedBlocks[validators.getGeneratorAtTimestamp(b.header.timestamp)] -= 1
 
 for address in missedBlocks:
     delegateStore(address).consecutiveMissedBlocks += missedBlocks[address]
@@ -953,13 +953,13 @@ for address in missedBlocks:
         and newHeight - delegateStore(address).lastGeneratedHeight > FAIL_SAFE_INACTIVE_WINDOW):
         delegateStore(address).isBanned = True
 
-delegateStore(newBlock.header.generatorAddress).consecutiveMissedBlocks = 0
-delegateStore(newBlock.header.generatorAddress).lastGeneratedHeight = newHeight
+delegateStore(b.header.generatorAddress).consecutiveMissedBlocks = 0
+delegateStore(b.header.generatorAddress).lastGeneratedHeight = newHeight
 
-previousTimestamp = newBlock.header.timestamp
+previousTimestamp = b.header.timestamp
 ```
 
-After an end-of-round block `b` is executed (`isEndOfRound(b.header.height) == True`), the following logic is executed (this must be done after the properties related to missed blocks are updated):
+If the block `b` is an end-of-round block (`isEndOfRound(b.header.height) == True`), the following logic is executed (this must be done after the properties related to missed blocks are updated):
 
 ```python
 roundNumber = roundNumber(b.header.height)
