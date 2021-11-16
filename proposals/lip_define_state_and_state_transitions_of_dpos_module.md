@@ -1217,38 +1217,6 @@ where:
 
 ### Block Processing
 
-
-#### After Genesis Block Execution
-
-After the genesis block `b` is executed, the following logic is executed:
-
-```python
-create the entry in the genesis data substore with 
-store value = {
-    "height": b.header.height, 
-    "initRounds": b.header.assets.initRounds, 
-    "initDelegates": b.header.assets.initDelegates
-} serialized using genesisDataStoreSchema
-
-# set the initial delegates in the BFT module
-bftWeights = [
-    {"address": address, "bftWeight": 1} 
-    for address in initDelegates
-    sorted by lexicographically by address
-]
-
-# compute the initial BFT threshold 
-initBFTThreshold = floor(2/3 * length(initDelegates)) + 1
-
-BFT.setBFTParameters(initBFTThreshold,
-                     initBFTThreshold,
-                     bftWeights)
-                     
-# set the inititial delegates in the validators module                 
-validators.setGeneratorList(initDelegates)
-```
-
-
 #### After Transactions Execution
 
 After the transactions in a block `b` are executed, the properties related to missed blocks are updated according to [Delegate Productivity][LIP-0023-delegateProductivity]. This logic is recapitulated below:
