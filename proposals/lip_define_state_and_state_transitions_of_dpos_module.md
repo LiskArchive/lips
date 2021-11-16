@@ -1088,24 +1088,24 @@ During the genesis state initialization stage, the following steps are executed.
 Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets for the DPoS module and let `genesisBlockAssetObject` be the deserialization of `genesisBlockAssetBytes` according to the `genesisDPoSStoreSchema` schema, given above.
 
 * Initial checks on the properties of `genesisBlockAssetObject`:
-   * Accross elements of the `validators` array, all `address` values must be unique, all `name` values must also be unique.
-   * For all elements of the `validators` array:
-      * `address` values must have length `ADDRESS_LENGTH`.
-      * `name` values must have length between `1` and `MAX_LENGTH_NAME` (included), and must contain only characters from the set `abcdefghijklmnopqrstuvwxyz0123456789!@$&_.`.
-      * `generatorKey` values must have length 32.
-      * `blsKey` values must have length 48.
-      * `proofOfPossession` values must have length 96.
-   * Accross elements of the `voters` array, all `address` values must be unique, and must have length `ADDRESS_LENGTH`.
-   * For all elements of the `voters` array:
-      * Accross elements of the `sentVotes` array, all `delegateAddress` values must be unique, and must have length `ADDRESS_LENGTH`. 
-      * `sentVotes` has size is at most `MAX_NUMBER_SENT_VOTES`.
-      * `sentVotes` must be in lexicographic order of `delegateAddress`.
-      * `pendingUnlocks` has size is at most `MAX_NUMBER_PENDING_UNLOCKS`.
-      * `pendingUnlocks` must be ordered by lexicographical order of `delegateAddress`, ties broken by increasing `amount`, ties broken by increasing `unvoteHeight`. 
-   * Accross elements of the `snapshots` array, `roundNumber` values must be unique.
-   * Accross elements of the `snapshots` array, the `activeDelegates` array must only contain unique entries, all of them must have length `ADDRESS_LENGTH` and they must be in lexicographic order.
-   * Accross elements of the `snapshots` array, the `delegateWeightSnapshot` array must only contain unique entries for the `delegateAddress` property and all `delegateAddress` property must have length `ADDRESS_LENGTH`.
-   * All values of the `bootstrapPeriod.initDelegate` array must be unique, must have length `ADDRESS_LENGTH` and must be in lexicographic order.
+    * Accross elements of the `validators` array, all `address` values must be unique, all `name` values must also be unique.
+    * For all elements of the `validators` array:
+        * `address` values must have length `ADDRESS_LENGTH`.
+        * `name` values must have length between `1` and `MAX_LENGTH_NAME` (included), and must contain only characters from the set `abcdefghijklmnopqrstuvwxyz0123456789!@$&_.`.
+        * `generatorKey` values must have length 32.
+        * `blsKey` values must have length 48.
+        * `proofOfPossession` values must have length 96.
+    * Accross elements of the `voters` array, all `address` values must be unique, and must have length `ADDRESS_LENGTH`.
+    * For all elements of the `voters` array:
+        * Accross elements of the `sentVotes` array, all `delegateAddress` values must be unique, and must have length `ADDRESS_LENGTH`. 
+        * `sentVotes` has size is at most `MAX_NUMBER_SENT_VOTES`.
+        * `sentVotes` must be in lexicographic order of `delegateAddress`.
+        * `pendingUnlocks` has size is at most `MAX_NUMBER_PENDING_UNLOCKS`.
+        * `pendingUnlocks` must be ordered by lexicographical order of `delegateAddress`, ties broken by increasing `amount`, ties broken by increasing `unvoteHeight`. 
+    * Accross elements of the `snapshots` array, `roundNumber` values must be unique.
+    * Accross elements of the `snapshots` array, the `activeDelegates` array must only contain unique entries, all of them must have length `ADDRESS_LENGTH` and they must be in lexicographic order.
+    * Accross elements of the `snapshots` array, the `delegateWeightSnapshot` array must only contain unique entries for the `delegateAddress` property and all `delegateAddress` property must have length `ADDRESS_LENGTH`.
+    * All values of the `bootstrapPeriod.initDelegate` array must be unique, must have length `ADDRESS_LENGTH` and must be in lexicographic order.
 
 * For each entry `validator` in `genesisBlockAssetObject.validators`, create an entry in the delegate substore with
     ```python
