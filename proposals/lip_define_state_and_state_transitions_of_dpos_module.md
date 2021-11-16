@@ -898,6 +898,20 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
 ```
 
 
+### Genesis Block Processing
+
+
+#### Genesis Assets Schema
+
+```java
+```
+
+
+#### Genesis State Initialization
+
+#### Genesis State Finalization
+
+
 ### Block Processing
 
 
