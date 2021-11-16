@@ -1060,7 +1060,7 @@ genesisDPoSStoreSchema = {
                 }
             }
         },
-        "bootstrapPeriod": {
+        "GenesisData": {
             "type": "object",
             "fieldNumber": 4,
             "required": ["height", "initRounds", "initDelegates"],
@@ -1101,6 +1101,63 @@ Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets fo
    * Accross elements of the `snapshots` array, the `activeDelegates` array must only contain unique entries and all of them must have length `ADDRESS_LENGTH`.
    * Accross elements of the `snapshots` array, the `delegateWeightSnapshot` array must only contain unique entries for the `delegateAddress` property and all `delegateAddress` property must have length `ADDRESS_LENGTH`.
    * All values of the `bootstrapPeriod.initDelegate` array must be unique, and must have length `ADDRESS_LENGTH`.
+
+* For each entry `validator` in `genesisBlockAssetObject.validators`, create an entry in the delegate substore with
+    ```python
+    totalVotesReceived = 0
+    for voter in genesisBlockAssetObject.voters:
+        for sentVote in voter.sentVotes:
+            if sentVote.delegateAddress == validator.address:
+                totalVotesReceived += sentVote.amount
+                if voter.address == validator.address:
+                    selfVotes = sentVote.amount
+  
+    storeKey = validator.address
+    storeValue = {
+        "name": validator.name,
+        "totalVotesReceived": totalVotesReceived,
+        "selfVotes": selfVotes,
+        "lastGeneratedHeight": validator.lastGeneratedHeight,
+        "isBanned": validator.isBanned,
+        "pomHeights": validator.pomHeight,
+        "consecutiveMissedBlocks": validator.consecutiveMissedBlocks
+    } serialized using delegateStoreSchema.
+    ```
+    Further, for every entry `validator` in `genesisBlockAssetObject.validators`, also create an entry in the name substore with 
+    ```python
+    storeKey = validator.name utf8-encoded
+    storeValue = {
+        "delegateAddress": validator.address
+    } serialized using nameStoreSchema.
+    ```
+
+* For each entry `voter` in `genesisBlockAssetObject.voters`, create an entry in the voter substore  with
+    ```python
+    storeKey = uint32be(voter.address)
+    storeValue = {
+        "sentVotes": voter.sentVotes,
+        "pendingUnlocks": voter.pendingUnlocks
+    } serialized using voterStoreSchema.
+    ```
+
+* For each entry `snapshot` in `genesisBlockAssetObject.snapshots`, create an entry in the snapshot substore  with
+    ```python
+    storeKey = uint32be(snapshot.roundNumber)
+    storeValue = {
+        "activeDelegates": snapshot.activeDelegates,
+        "delegateWeightSnapshot": snapshot.delegateWeightSnapshot
+    } serialized using snapshotStoreSchema.
+    ```
+
+* Create an entry in the genesis data substore with
+    ```python
+    storeKey = EMPTY_BYTES
+    storeValue = {
+        "height": genesisBlockAssetObject.GenesisData.height,
+        "initRounds": genesisBlockAssetObject.GenesisData.initRounds,
+        "initDelegates": genesisBlockAssetObject.GenesisData.initDelegates
+    } serialized using availableLocalIDStoreSchema.
+    ```
 
 #### Genesis State Finalization
 
