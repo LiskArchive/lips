@@ -904,7 +904,7 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
 #### Genesis Assets Schema
 
 ```java
-{
+genesisDPoSStoreSchema = {
     "type": "object",
     "required": ["validators", "voters", "snapshots", "bootstrapPeriod"],
     "properties": {
@@ -1039,7 +1039,7 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
                         "fieldNumber": 2,
                         "items": { "dataType": "bytes" }
                     },
-                    "pendingUnlocks": {
+                    "delegateWeightSnapshot": {
                         "type": "array",
                         "fieldNumber": 3,
                         "items": {
@@ -1086,6 +1086,21 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
 
 
 #### Genesis State Initialization
+
+During the genesis state initialization stage, the following steps are executed. If any step fails, the block is discarded and has no further effect.
+
+Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets for the DPoS module and let `genesisBlockAssetObject` be the deserialization of `genesisBlockAssetBytes` according to the `genesisDPoSStoreSchema` schema, given above.
+
+* Initial checks on the properties of `genesisBlockAssetObject`:
+   * Accross elements of the `validators` array, all `address` values must be unique, all `name` values must also be unique.
+   * For all elements of the `validators` array, `address` values must have length `ADDRESS_LENGTH`. 
+   * For all elements of the `validators` array, `name` values must have length between `1` and `MAX_LENGTH_NAME` (included), and must contain only characters from the set `abcdefghijklmnopqrstuvwxyz0123456789!@$&_.`.
+   * Accross elements of the `voters` array, all `address` values must be unique, and must have length `ADDRESS_LENGTH`.
+   * Accross elements `sentVotes` of a given `voters` array element, all `delegateAddress` values must be unique, and must have length `ADDRESS_LENGTH`.
+   * Accross elements of the `snapshots` array, `roundNumber` values must be unique.
+   * Accross elements of the `snapshots` array, the `activeDelegates` array must only contain unique entries and all of them must have length `ADDRESS_LENGTH`.
+   * Accross elements of the `snapshots` array, the `delegateWeightSnapshot` array must only contain unique entries for the `delegateAddress` property and all `delegateAddress` property must have length `ADDRESS_LENGTH`.
+   * All values of the `bootstrapPeriod.initDelegate` array must be unique, and must have length `ADDRESS_LENGTH`.
 
 #### Genesis State Finalization
 
