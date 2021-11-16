@@ -904,6 +904,184 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
 #### Genesis Assets Schema
 
 ```java
+{
+    "type": "object",
+    "required": ["validators", "voters", "snapshots", "bootstrapPeriod"],
+    "properties": {
+        "validators": {
+            "type": "array",
+            "fieldNumber": 1,
+            "items": {
+                "type": "object",
+                "required": [
+                    "address",
+                    "name",
+                    "blsKey",
+                    "proofOfPossession",
+                    "generatorKey"
+                ],
+                "properties": {
+                    "name": {
+                        "dataType": "string",
+                        "fieldNumber": 1
+                    },
+                    "address": {
+                        "dataType": "bytes",
+                        "fieldNumber": 2
+                    },
+                    "blsKey": {
+                        "dataType": "bytes",
+                        "fieldNumber": 3
+                    },
+                    "proofOfPossession": {
+                        "dataType": "bytes",
+                        "fieldNumber": 4
+                    },
+                    "generatorKey": {
+                        "dataType": "bytes",
+                        "fieldNumber": 5
+                    },
+                    "lastGeneratedHeight": {
+                        "dataType": "uint32",
+                        "fieldNumber": 6
+                    },
+                    "isBanned": {
+                        "dataType": "boolean",
+                        "fieldNumber": 7
+                    },
+                    "pomHeights": {
+                        "type": "array",
+                        "fieldNumber": 8,
+                        "items": { "dataType": "uint32" }
+                    },
+                    "consecutiveMissedBlocks": {
+                        "dataType": "uint32",
+                        "fieldNumber": 9
+                    }
+                }
+            }
+        },
+        "voters": {
+            "type": "array",
+            "fieldNumber": 2,
+            "items": {
+                "type": "object",
+                "required": ["address", "sentVotes", "pendingUnlocks"],
+                "properties": {
+                    "address": {
+                        "dataType": "uint32",
+                        "fieldNumber": 1
+                    },
+                    "sentVotes": {
+                        "type": "array",
+                        "fieldNumber": 2,
+                        "items": {
+                            "type": "object",
+                            "required": ["delegateAddress", "amount"],
+                            "properties": {
+                                "delegateAddress": {
+                                    "dataType": "bytes",
+                                    "fieldNumber": 1
+                                },
+                                "amount": {
+                                    "dataType": "uint64",
+                                    "fieldNumber": 2
+                                }
+                            }
+                        }
+                    },
+                    "pendingUnlocks": {
+                        "type": "array",
+                        "fieldNumber": 3,
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "delegateAddress",
+                                "amount",
+                                "unvoteHeight"
+                            ],
+                            "properties": {
+                                "delegateAddress": {
+                                    "dataType": "bytes",
+                                    "fieldNumber": 1
+                                },
+                                "amount": {
+                                    "dataType": "uint64",
+                                    "fieldNumber": 2
+                                },
+                                "unvoteHeight": {
+                                    "dataType": "uint32",
+                                    "fieldNumber": 3
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "snapshots": {
+            "type": "array",
+            "fieldNumber": 3,
+            "items": {
+                "type": "object",
+                "required": [
+                    "roundNumber",
+                    "activeDelegates",
+                    "delegateWeightSnapshot"
+                ],
+                "properties": {
+                    "roundNumber": {
+                        "dataType": "uint32",
+                        "fieldNumber": 1
+                    },
+                    "activeDelegates": {
+                        "type": "array",
+                        "fieldNumber": 2,
+                        "items": { "dataType": "bytes" }
+                    },
+                    "pendingUnlocks": {
+                        "type": "array",
+                        "fieldNumber": 3,
+                        "items": {
+                            "type": "object",
+                            "required": ["delegateAddress", "delegateWeight"],
+                            "properties": {
+                                "delegateAddress": {
+                                    "dataType": "bytes",
+                                    "fieldNumber": 1
+                                },
+                                "delegateWeight": {
+                                    "dataType": "uint64",
+                                    "fieldNumber": 2
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "bootstrapPeriod": {
+            "type": "object",
+            "fieldNumber": 4,
+            "required": ["height", "initRounds", "initDelegates"],
+            "properties": {
+                "height": {
+                    "dataType": "uint32",
+                    "fieldNumber": 1
+                },
+                "initRounds": {
+                    "dataType": "uint32",
+                    "fieldNumber": 2
+                },
+                "initDelegates": {
+                    "type": "array",
+                    "fieldNumber": 3,
+                    "items": { "dataType": "bytes" }
+                }
+            }
+        }
+    }
+}
 ```
 
 
