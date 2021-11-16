@@ -1063,19 +1063,15 @@ genesisDPoSStoreSchema = {
         "GenesisData": {
             "type": "object",
             "fieldNumber": 4,
-            "required": ["height", "initRounds", "initDelegates"],
+            "required": ["initRounds", "initDelegates"],
             "properties": {
-                "height": {
+                "initRounds": {
                     "dataType": "uint32",
                     "fieldNumber": 1
                 },
-                "initRounds": {
-                    "dataType": "uint32",
-                    "fieldNumber": 2
-                },
                 "initDelegates": {
                     "type": "array",
-                    "fieldNumber": 3,
+                    "fieldNumber": 2,
                     "items": { "dataType": "bytes" }
                 }
             }
@@ -1153,13 +1149,70 @@ Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets fo
     ```python
     storeKey = EMPTY_BYTES
     storeValue = {
-        "height": genesisBlockAssetObject.GenesisData.height,
+        "height": block header height of the genesis block,
         "initRounds": genesisBlockAssetObject.GenesisData.initRounds,
         "initDelegates": genesisBlockAssetObject.GenesisData.initDelegates
     } serialized using availableLocalIDStoreSchema.
     ```
 
 #### Genesis State Finalization
+
+To finalize the state of the genesis block the following logic is executed.  If any step fails, the block is discarded and has no further effect.
+
+As in the previous point, let `genesisBlockAssetBytes` be the `data` bytes included in the block assets for the DPoS module and let `genesisBlockAssetObject` be the deserialization of `genesisBlockAssetBytes` according to the `genesisDPoSStoreSchema` schema, given above. Then:
+
+```python
+# register all validators in the Validators module
+for validator in genesisBlockAssetObject.validators:
+    registerValidatorKeys(
+        validator.address,
+        validator.proofOfPossession,
+        validator.generatorKey,
+        validator.blsKey
+    )
+
+# check that all sentVotes and pendingUnlocks correspond to locked tokens
+for address a key of the voter substore:
+    votedAmount = 0
+    for sentVote in voter(address).sentVotes:
+        votedAmount += sentVote.amount
+    for pendingUnlock in voter(address).pendingUnlocks:
+        votedAmount += pendingUnlock.amount
+
+    if getLockedAmount(address, MODULE_ID_DPOS, TOKEN_ID_DPOS) < votedAmount:
+        fail
+
+# set the initial delegates in the BFT module
+bftWeights = [
+    {"address": address, "bftWeight": 1} 
+    for address in genesisBlockAssetObject.GensisData.initDelegates
+    sorted by lexicographically by address
+]
+
+# compute the initial BFT threshold 
+initBFTThreshold = floor(2/3 * length(genesisBlockAssetObject.GensisData.initDelegates)) + 1
+
+setBFTParameters(initBFTThreshold,
+                     initBFTThreshold,
+                     bftWeights)
+                     
+# set the inititial delegates in the validators module                 
+setGeneratorList(initDelegates)
+
+# check that the snapshot only correspond to the last three rounds
+let h be the header height of the genesis block
+genesisRound = roundNumber(h)
+snapshotKeys = store keys (converted to uint32) of the snapshot substore ordered increasingly
+if snapshotKeys != [genesisRound-2, genesisRound-1, genesisRound]:
+    fail
+```
+
+where:
+
+* `getLockedAmount` is defined in the [Token module][LIP-0051]
+* `registerValidatorKeys` is defined in the [Validators module][LIP-validators].
+* `setBFTParameters` is a function exposed by the [BFT module][LIP-bft_module].
+* `setGeneratorList`is a function exposed by the [Validators module][LIP-validators].
 
 
 ### Block Processing
@@ -1438,3 +1491,5 @@ TBA
 [LIP-newBlockHeader]: https://research.lisk.com/t/new-block-header-and-block-asset-schema/293
 [LIP-incentivizeCertificateGeneration]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
 [LIP-validators]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0044.md
+[LIP-0051]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md
+[LIP-bft_module]: https://research.lisk.com/t/introduce-bft-module/321
