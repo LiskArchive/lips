@@ -906,7 +906,7 @@ shuffleValidatorsList(validatorsAddresses, randomSeed):
 ```java
 genesisDPoSStoreSchema = {
     "type": "object",
-    "required": ["validators", "voters", "snapshots", "bootstrapPeriod"],
+    "required": ["validators", "voters", "snapshots", "genesisData"],
     "properties": {
         "validators": {
             "type": "array",
@@ -918,15 +918,19 @@ genesisDPoSStoreSchema = {
                     "name",
                     "blsKey",
                     "proofOfPossession",
-                    "generatorKey"
+                    "generatorKey",
+                    "lastGeneratedHeight",
+                    "isBanned",
+                    "pomHeights",
+                    "consecutiveMissedBlocks"
                 ],
                 "properties": {
-                    "name": {
-                        "dataType": "string",
-                        "fieldNumber": 1
-                    },
                     "address": {
                         "dataType": "bytes",
+                        "fieldNumber": 1
+                    },
+                    "name": {
+                        "dataType": "string",
                         "fieldNumber": 2
                     },
                     "blsKey": {
@@ -1060,7 +1064,7 @@ genesisDPoSStoreSchema = {
                 }
             }
         },
-        "GenesisData": {
+        "genesisData": {
             "type": "object",
             "fieldNumber": 4,
             "required": ["initRounds", "initDelegates"],
@@ -1102,10 +1106,13 @@ Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets fo
         * `sentVotes` must be in lexicographic order of `delegateAddress`.
         * `pendingUnlocks` has size is at most `MAX_NUMBER_PENDING_UNLOCKS`.
         * `pendingUnlocks` must be ordered by lexicographical order of `delegateAddress`, ties broken by increasing `amount`, ties broken by increasing `unvoteHeight`. 
+    * The `snapshots` array must have length less than or equal to 3.
     * Accross elements of the `snapshots` array, `roundNumber` values must be unique.
-    * Accross elements of the `snapshots` array, the `activeDelegates` array must only contain unique entries, all of them must have length `ADDRESS_LENGTH` and they must be in lexicographic order.
-    * Accross elements of the `snapshots` array, the `delegateWeightSnapshot` array must only contain unique entries for the `delegateAddress` property and all `delegateAddress` property must have length `ADDRESS_LENGTH`.
-    * All values of the `bootstrapPeriod.initDelegate` array must be unique, must have length `ADDRESS_LENGTH` and must be in lexicographic order.
+    * Accross elements of the `snapshots` array, 
+        * All values of the `activeDelegates` array must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`. 
+        * Accross elements of the `delegateWeightSnapshot` array, all values for the `delegateAddress` property must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`.  
+    * All values of the `genesisData.initDelegates` array must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`.
+    * The `genesisData.initDelegates` array must have length less than `NUMBER_ACTIVE_DELEGATES`.
 
 * For each entry `validator` in `genesisBlockAssetObject.validators`, create an entry in the delegate substore with
     ```python
@@ -1159,9 +1166,9 @@ Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets fo
     storeKey = EMPTY_BYTES
     storeValue = {
         "height": block header height of the genesis block,
-        "initRounds": genesisBlockAssetObject.GenesisData.initRounds,
-        "initDelegates": genesisBlockAssetObject.GenesisData.initDelegates
-    } serialized using availableLocalIDStoreSchema.
+        "initRounds": genesisBlockAssetObject.genesisData.initRounds,
+        "initDelegates": genesisBlockAssetObject.genesisData.initDelegates
+    } serialized using genesisDataStoreSchema.
     ```
 
 #### Genesis State Finalization
@@ -1173,12 +1180,14 @@ As in the previous point, let `genesisBlockAssetBytes` be the `data` bytes inclu
 ```python
 # register all validators in the Validators module
 for validator in genesisBlockAssetObject.validators:
-    registerValidatorKeys(
+    validators.registerValidatorKeys(
         validator.address,
         validator.proofOfPossession,
         validator.generatorKey,
         validator.blsKey
     )
+    if the above returns False:
+        fail
 
 # check that all sentVotes and pendingUnlocks correspond to locked tokens
 for address a key of the voter substore:
@@ -1188,40 +1197,34 @@ for address a key of the voter substore:
     for pendingUnlock in voter(address).pendingUnlocks:
         votedAmount += pendingUnlock.amount
 
-    if getLockedAmount(address, MODULE_ID_DPOS, TOKEN_ID_DPOS) < votedAmount:
+    if token.getLockedAmount(address, MODULE_ID_DPOS, TOKEN_ID_DPOS) < votedAmount:
         fail
 
 # set the initial delegates in the BFT module
+initDelegates = genesisBlockAssetObject.genesisData.initDelegates
 bftWeights = [
     {"address": address, "bftWeight": 1} 
-    for address in genesisBlockAssetObject.GensisData.initDelegates
-    sorted by lexicographically by address
+    for address in initDelegates sorted by lexicographically by address
 ]
 
 # compute the initial BFT threshold 
-initBFTThreshold = floor(2/3 * length(genesisBlockAssetObject.GensisData.initDelegates)) + 1
+initBFTThreshold = floor(2/3 * length(initDelegates)) + 1
 
-setBFTParameters(initBFTThreshold,
+# initialize the BFT module store
+bft.setBFTParameters(initBFTThreshold,
                      initBFTThreshold,
                      bftWeights)
                      
-# set the inititial delegates in the validators module                 
-setGeneratorList(initDelegates)
+# set the initial delegates in the validators module                 
+validators.setGeneratorList(initDelegates)
 
 # check that the snapshot only correspond to the last three rounds
 let h be the header height of the genesis block
 genesisRound = roundNumber(h)
 snapshotKeys = store keys (converted to uint32) of the snapshot substore ordered increasingly
-if snapshotKeys != [genesisRound-2, genesisRound-1, genesisRound]:
+if snapshotKeys is not an incrementing array or snapshotKeys[-1] != genesisRound:
     fail
 ```
-
-where:
-
-* `getLockedAmount` is defined in the [Token module][LIP-0051]
-* `registerValidatorKeys` is defined in the [Validators module][LIP-validators].
-* `setBFTParameters` is a function exposed by the [BFT module][LIP-bft_module].
-* `setGeneratorList`is a function exposed by the [Validators module][LIP-validators].
 
 
 ### Block Processing
