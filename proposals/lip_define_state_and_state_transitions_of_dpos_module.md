@@ -1092,25 +1092,25 @@ During the genesis state initialization stage, the following steps are executed.
 Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets for the DPoS module and let `genesisBlockAssetObject` be the deserialization of `genesisBlockAssetBytes` according to the `genesisDPoSStoreSchema` schema, given above.
 
 * Initial checks on the properties of `genesisBlockAssetObject`:
-    * Accross elements of the `validators` array, all `address` values must be unique, all `name` values must also be unique.
+    * Across elements of the `validators` array, all `address` values must be unique, all `name` values must also be unique.
     * For all elements of the `validators` array:
         * `address` values must have length `ADDRESS_LENGTH`.
         * `name` values must have length between `1` and `MAX_LENGTH_NAME` (included), and must contain only characters from the set `abcdefghijklmnopqrstuvwxyz0123456789!@$&_.`.
         * `generatorKey` values must have length 32.
         * `blsKey` values must have length 48.
         * `proofOfPossession` values must have length 96.
-    * Accross elements of the `voters` array, all `address` values must be unique, and must have length `ADDRESS_LENGTH`.
+    * Across elements of the `voters` array, all `address` values must be unique, and must have length `ADDRESS_LENGTH`.
     * For all elements of the `voters` array:
-        * Accross elements of the `sentVotes` array, all `delegateAddress` values must be unique, and must have length `ADDRESS_LENGTH`. 
+        * Across elements of the `sentVotes` array, all `delegateAddress` values must be unique, and must have length `ADDRESS_LENGTH`. 
         * `sentVotes` has size is at most `MAX_NUMBER_SENT_VOTES`.
         * `sentVotes` must be in lexicographic order of `delegateAddress`.
         * `pendingUnlocks` has size is at most `MAX_NUMBER_PENDING_UNLOCKS`.
         * `pendingUnlocks` must be ordered by lexicographical order of `delegateAddress`, ties broken by increasing `amount`, ties broken by increasing `unvoteHeight`. 
     * The `snapshots` array must have length less than or equal to 3.
-    * Accross elements of the `snapshots` array, `roundNumber` values must be unique.
-    * Accross elements of the `snapshots` array, 
+    * Across elements of the `snapshots` array, `roundNumber` values must be unique.
+    * Across elements of the `snapshots` array, 
         * All values of the `activeDelegates` array must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`. 
-        * Accross elements of the `delegateWeightSnapshot` array, all values for the `delegateAddress` property must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`.  
+        * Across elements of the `delegateWeightSnapshot` array, all values for the `delegateAddress` property must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`.  
     * All values of the `genesisData.initDelegates` array must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`.
     * The `genesisData.initDelegates` array must have length less than `NUMBER_ACTIVE_DELEGATES`.
 
