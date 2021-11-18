@@ -1123,6 +1123,8 @@ Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets fo
                 totalVotesReceived += sentVote.amount
                 if voter.address == validator.address:
                     selfVotes = sentVote.amount
+            if totalVotesReceived >= 2^64:
+                fail
   
     storeKey = validator.address
     storeValue = {
