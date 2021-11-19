@@ -973,7 +973,7 @@ genesisDPoSStoreSchema = {
                 "required": ["address", "sentVotes", "pendingUnlocks"],
                 "properties": {
                     "address": {
-                        "dataType": "uint32",
+                        "dataType": "bytes",
                         "fieldNumber": 1
                     },
                     "sentVotes": {
@@ -1101,18 +1101,22 @@ Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets fo
         * `proofOfPossession` values must have length 96.
     * Across elements of the `voters` array, all `address` values must be unique, and must have length `ADDRESS_LENGTH`.
     * For all elements of the `voters` array:
-        * Across elements of the `sentVotes` array, all `delegateAddress` values must be unique, and must have length `ADDRESS_LENGTH`. 
+        * Across elements of the `sentVotes` array, all `delegateAddress` values must be unique, and must have length `ADDRESS_LENGTH`.
+        * For each element `sentVote` in the `sentVotes` array, there is an element `validator` in the `validators` array with `validator.address == sentVote.delegateAddress`.  
         * `sentVotes` has size is at most `MAX_NUMBER_SENT_VOTES`.
         * `sentVotes` must be in lexicographic order of `delegateAddress`.
         * `pendingUnlocks` has size is at most `MAX_NUMBER_PENDING_UNLOCKS`.
-        * `pendingUnlocks` must be ordered by lexicographical order of `delegateAddress`, ties broken by increasing `amount`, ties broken by increasing `unvoteHeight`. 
+        * `pendingUnlocks` must be ordered by lexicographical order of `delegateAddress`, ties then broken by increasing `amount`, ties finally broken by increasing `unvoteHeight`. 
+        * For each element `pendingUnlock` in the `pendingUnlocks` array, there is an element `validator` in the `validators` array with `validator.address == pendingUnlock.delegateAddress`. 
     * The `snapshots` array must have length less than or equal to 3.
     * Across elements of the `snapshots` array, `roundNumber` values must be unique.
     * Across elements of the `snapshots` array, 
-        * All values of the `activeDelegates` array must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`. 
-        * Across elements of the `delegateWeightSnapshot` array, all values for the `delegateAddress` property must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`.  
+        * All values of the `activeDelegates` array must be unique, and must have length `ADDRESS_LENGTH`.
+        * For each element `activeDelegate` in the `activeDelegates` array, there is an element `validator` in the `validators` array with `validator.address == activeAddress`.
+        * Across elements of the `delegateWeightSnapshot` array, all values for the `delegateAddress` property must be unique, must have length `ADDRESS_LENGTH`.
+        * For each element `weightSnapshot` in the `delegateWeightSnapshot` array, there is an element `validator` in the `validators` array with `validator.address == weightSnapshot.delegateAddress`.   
     * All values of the `genesisData.initDelegates` array must be unique, must have length `ADDRESS_LENGTH`, and must be equal to `validator.address` for `validator` an element of `validators`.
-    * The `genesisData.initDelegates` array must have length less than `NUMBER_ACTIVE_DELEGATES`.
+    * The `genesisData.initDelegates` array must have length less than or equal to `NUMBER_ACTIVE_DELEGATES`.
 
 * For each entry `validator` in `genesisBlockAssetObject.validators`, create an entry in the delegate substore with
     ```python
@@ -1199,7 +1203,7 @@ for address a key of the voter substore:
     for pendingUnlock in voter(address).pendingUnlocks:
         votedAmount += pendingUnlock.amount
 
-    if token.getLockedAmount(address, MODULE_ID_DPOS, TOKEN_ID_DPOS) < votedAmount:
+    if token.getLockedAmount(address, MODULE_ID_DPOS, TOKEN_ID_DPOS) != votedAmount:
         fail
 
 # set the initial delegates in the BFT module
@@ -1223,7 +1227,7 @@ validators.setGeneratorList(initDelegates)
 # check that the snapshot only correspond to the last three rounds
 let h be the header height of the genesis block
 genesisRound = roundNumber(h)
-snapshotKeys = store keys (converted to uint32) of the snapshot substore ordered increasingly
+snapshotKeys = array of the store keys (converted to uint32) of the snapshot substore ordered increasingly
 if snapshotKeys is not an incrementing array or snapshotKeys[-1] != genesisRound:
     fail
 ```
