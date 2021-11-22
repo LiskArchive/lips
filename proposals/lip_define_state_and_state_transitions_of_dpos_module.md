@@ -1274,7 +1274,7 @@ previousTimestamp = b.header.timestamp
 If the block `b` is an end-of-round block (`isEndOfRound(b.header.height) == True`), the following logic is executed (this must be done after the properties related to missed blocks are updated):
 
 ```python
-roundNumber = roundNumber(b.header.height)
+roundNumber = roundNumber(b.header.height - genesisHeight)
 currentWeights = {}
 for address being a storeKey in delegate substore and delegateStore(address).isBanned == False:
     currentWeights[address] = delegateWeight(address, b.header.height)
@@ -1311,11 +1311,10 @@ if roundNumber > initRounds:
     validatorsTwoRoundsAgo = deserialized value of the snapshot substore entry with storeKey == uint32be(roundNumber-2)
     activeDelegates = validatorsTwoRoundsAgo.activeDelegates
     
-    bftWeights = [
-        {"address": address, "bftWeight": 1}
-        for address in activeDelegates
-        sorted by lexicographically by address
-    ]
+    bftWeights = [{
+        "address": address, 
+        "bftWeight": 1
+    } for address in activeDelegates, sorted by lexicographically by address]
                   
     # get the last stored BFT parameters, and update them if needed
     currentBFTParameters = BFT.getBFTParameters(b.header.height)
