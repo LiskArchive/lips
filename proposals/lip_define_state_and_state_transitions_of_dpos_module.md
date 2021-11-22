@@ -1151,7 +1151,7 @@ Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets fo
 
 * For each entry `voter` in `genesisBlockAssetObject.voters`, create an entry in the voter substore  with
     ```python
-    storeKey = uint32be(voter.address)
+    storeKey = voter.address
     storeValue = {
         "sentVotes": voter.sentVotes,
         "pendingUnlocks": voter.pendingUnlocks
@@ -1175,6 +1175,14 @@ Let `genesisBlockAssetBytes` be the `data` bytes included in the block assets fo
         "initRounds": genesisBlockAssetObject.genesisData.initRounds,
         "initDelegates": genesisBlockAssetObject.genesisData.initDelegates
     } serialized using genesisDataStoreSchema.
+    ```
+    
+* Create an entry in the previous timestamp substore with
+    ```python
+    storeKey = EMPTY_BYTES
+    storeValue = {
+        "timestamp": block header height of the genesis block
+    } serialized using previousTimestampStoreSchema
     ```
 
 #### Genesis State Finalization
@@ -1225,6 +1233,7 @@ bft.setBFTParameters(initBFTThreshold,
 validators.setGeneratorList(initDelegates)
 
 # check that the snapshot only correspond to the last three rounds
+# note that if the genesis height == 0 and the snapshot store is non-empty, this will fail
 let h be the header height of the genesis block
 genesisRound = roundNumber(h)
 snapshotKeys = array of the store keys (converted to uint32) of the snapshot substore ordered increasingly
