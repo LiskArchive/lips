@@ -21,36 +21,21 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The [“Introduce certificate generation mechanism” LIP][certificate-generation-lip] specifies a mechanism for blockchains in the Lisk ecosystem to generate certificates.
-Certificates are the key object facilitating interoperability and every blockchain in the Lisk ecosystem has to regularly generate certificates so that new outgoing cross-chain messages can be submitted to other chains via cross-chain updates, see the ["Introduce cross-chain update transactions" LIP][ccu-lip] for details.
-In particular, the minimum requirement for any sidechain is to submit at least one certificate to the Lisk mainchain in any 30 day period.
-Otherwise, the connection of the sidechain to the mainchain is terminated and the submission of further cross-chain updates from that sidechain is no longer possible.
-Similarly, at least one certificate from the Lisk mainchain has to be submitted to a sidechain in every 30 day period as otherwise the connection of the Lisk mainchain on the sidechain is terminated.
+The [“Introduce certificate generation mechanism” LIP][certificate-generation-lip] specifies a mechanism for blockchains in the Lisk ecosystem to generate certificates. Certificates are the key object facilitating interoperability and every blockchain in the Lisk ecosystem has to regularly generate certificates so that new outgoing cross-chain messages can be submitted to other chains via cross-chain updates, see the ["Introduce cross-chain update transactions" LIP][ccu-lip] for details. In particular, the minimum requirement for any sidechain is to submit at least one certificate to the Lisk mainchain in any 30 day period. Otherwise, the connection of the sidechain to the mainchain is terminated and the submission of further cross-chain updates from that sidechain is no longer possible. Similarly, at least one certificate from the Lisk mainchain has to be submitted to a sidechain in every 30 day period as otherwise the connection of the Lisk mainchain on the sidechain is terminated.
 
-It is therefore crucial for the usability of cross-chain messaging and maintaining interoperability that every chain in the Lisk ecosystem continuously generates certificates.
-In order to ensure the certificate generation for blockchains utilizing DPoS, this LIP introduces the requirement of generating a certificate for a certain height before tokens previously used for voting can be unlocked.
+It is therefore crucial for the usability of cross-chain messaging and maintaining interoperability that every chain in the Lisk ecosystem continuously generates certificates. In order to ensure the certificate generation for blockchains utilizing DPoS, this LIP introduces the requirement of generating a certificate for a certain height before tokens previously used for voting can be unlocked.
 
 ## Rationale
 
-In the DPoS system introduced in [LIP 0023](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md) any tokens used for voting are locked.
-After unvoting an amount of tokens, the account holder has to wait a certain number of blocks before being able to unlock this amount.
-The purpose of the locking period is to disincentivize malicious behavior by delegates or voters as they have a certain amount of tokens at stake that cannot be quickly transferred and sold.
+In the DPoS system introduced in [LIP 0023](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md) any tokens used for voting are locked. After unvoting an amount of tokens, the account holder has to wait a certain number of blocks before being able to unlock this amount. The purpose of the locking period is to disincentivize malicious behavior by delegates or voters as they have a certain amount of tokens at stake that cannot be quickly transferred and sold.
 
-Using a similar approach we want to ensure that delegates constructively participate in the certificate generation, i.e., they generate and share certificate signatures for heights where they are active.
-In particular, we want to prevent a group of delegates from leaving the set of active delegates, but refusing to sign a certificate that attests this change.
-We want to achieve this by only letting a delegate and its voters unlock, after the delegate was voted out of the active set, if a certificate is generated for the last height where the delegate was active.
-This certificate will attest that the respective delegate is no longer part of the active set of delegates of the chain.
+Using a similar approach we want to ensure that delegates constructively participate in the certificate generation, i.e., they generate and share certificate signatures for heights where they are active. In particular, we want to prevent a group of delegates from leaving the set of active delegates, but refusing to sign a certificate that attests this change. We want to achieve this by only letting a delegate and its voters unlock, after the delegate was voted out of the active set, if a certificate is generated for the last height where the delegate was active. This certificate will attest that the respective delegate is no longer part of the active set of delegates of the chain.
 
 ![Example of an unvote transaction](lip-introduce_unlocking_condition/example_unvote.png)
 
 *Figure 1: The result of an unvote transaction `t` included in round `r` only comes into effect in round `r+3` as the vote snapshots for delegate selection are taken from two rounds ago.*
 
-More concretely, consider one unvote transaction `t` included at height `h` in round `r` that results in a delegate `d` leaving the set of active delegates, see also the figure above as illustration.
-The vote snapshots used for selecting the active delegates at the beginning of a round are taken from two rounds ago.
-This means that the last block `b` of round `r+2` is the last block when delegate `d` is active.
-In particular, the `validatorsHash` property in block `b` attests a validator set not including `d`.
-As certificates are generated for all end-of-round blocks, we require that the certificate signature for the certificate derived from block `b` is included in the chain, before the account submitting the unvote transaction can unlock.
-This means that the following inequality has to hold for the unlock included at height `h` to be valid:
+More concretely, consider one unvote transaction `t` included at height `h` in round `r` that results in a delegate `d` leaving the set of active delegates, see also the figure above as illustration. The vote snapshots used for selecting the active delegates at the beginning of a round are taken from two rounds ago. This means that the last block `b` of round `r+2` is the last block when delegate `d` is active. In particular, the `validatorsHash` property in block `b` attests a validator set not including `d`. As certificates are generated for all end-of-round blocks, we require that the certificate signature for the certificate derived from block `b` is included in the chain, before the account submitting the unvote transaction can unlock. This means that the following inequality has to hold for the unlock included at height `h` to be valid:
 
 ```
 lastHeightOfRound(h + 2 * ROUND_LENGTH) <= maxHeightCertified.
@@ -84,19 +69,16 @@ Here `roundNumber` is a function defined in the [LIP "Define state and state tra
 
 ### New Unlocking Condition
 
-In this section, we define a new additional condition for unlocking an amount previously used for voting.
-This condition is checked during the execution of the unlock command as defined in the [LIP "Define state and state transitions of DPoS module"][dpos-module-lip].
-A locked amount from an unvote is identified by an unlock object `unlockObject` that contains the relevant properties about the unvote that happened before, in particular, the amount and unvote height.
-The new additional condition is that the function `isCertificateGenerated` defined below has to return `True` for unlocking the locked amount identified by the unlock object given as input.
+In this section, we define a new additional condition for unlocking an amount previously used for voting. This condition is checked during the execution of the unlock command as defined in the [LIP "Define state and state transitions of DPoS module"][dpos-module-lip]. A locked amount from an unvote is identified by an unlock object `unlockObject` that contains the relevant properties about the unvote that happened before, in particular, the amount and unvote height. The new additional condition is that the function `isCertificateGenerated` defined below has to return `True` for unlocking the locked amount identified by the unlock object given as input.
 
 ```python
 isCertificateGenerated(unlockObject):
-  maxHeightCertified = bftModule.getBFTHeights().maxHeightCertified
+    maxHeightCertified = bftModule.getBFTHeights().maxHeightCertified
 
-  if lastHeightOfRound(unlockObject.unvoteHeight + 2 * ROUND_LENGTH) <= maxHeightCertified:
-    return True
-  else:
-    return False
+    if lastHeightOfRound(unlockObject.unvoteHeight + 2 * ROUND_LENGTH) <= maxHeightCertified:
+        return True
+      else:
+        return False
 ```
 
 Note that the property `maxHeightCertified` is only updated by the BFT module after processing all transactions in a block, so the function here uses the value of the property `maxHeightCertified` before this update.
