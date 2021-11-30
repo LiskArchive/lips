@@ -28,17 +28,17 @@ The Lisk-BFT consensus protocol introduced in [LIP 0014](https://github.com/Lisk
 
 The main purpose of the BFT module is to compute the following three properties:
 
-* `maxHeightPrevoted`: The maximum height of a block for which the weight of prevotes is at least a certain threshold value, see LIP [“Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] for details. This value is important for the block verification and fork choice rule.
-* `maxHeightPrecommitted`: The maximum height of a block for which the weight of precommits is at least a certain threshold value, see LIP [“Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] for details. This value is important for knowing up to which height the chain is finalized.
-* `maxHeightCertified`: The maximum height of a block for which a certificate has been generated and included in the chain, see [LIP “Introduce certificate generation mechanism”][lip-certificate-generation]. This value is important for validating aggregate commits and for the [unlock transaction in DPoS][lip-unlock-condition].
+* `maxHeightPrevoted`: The maximum height of a block for which the weight of prevotes is at least a certain threshold value, see LIP [“Add weights to Lisk-BFT consensus protocol"][research:weighted-bft] for details. This value is important for the block verification and fork choice rule.
+* `maxHeightPrecommitted`: The maximum height of a block for which the weight of precommits is at least a certain threshold value, see LIP [“Add weights to Lisk-BFT consensus protocol"][research:weighted-bft] for details. This value is important for knowing up to which height the chain is finalized.
+* `maxHeightCertified`: The maximum height of a block for which a certificate has been generated and included in the chain, see [LIP “Introduce certificate generation mechanism”][research:certificate-generation]. This value is important for validating aggregate commits and for the [unlock transaction in DPoS][research:unlock-condition].
 
 For computing the three values above, the following inputs are required:
 
-* **Prevote threshold**: This threshold value is required for correctly updating the property `maxHeightPrevoted`. This threshold can be computed from the sum of BFT weights of the active validators, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details
-* **Precommit threshold**: This threshold value is required for correctly updating the property `maxHeightPrecommitted`, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details.
-* **Certificate threshold**: This threshold value is important for validating aggregate commits included in blocks and then updating the value of `maxHeightCertified`, see [LIP “Introduce certificate generation mechanism”][lip-certificate-generation].
+* **Prevote threshold**: This threshold value is required for correctly updating the property `maxHeightPrevoted`. This threshold can be computed from the sum of BFT weights of the active validators, see LIP [“Add weights to Lisk-BFT consensus protocol][research:weighted-bft]” for details
+* **Precommit threshold**: This threshold value is required for correctly updating the property `maxHeightPrecommitted`, see LIP [“Add weights to Lisk-BFT consensus protocol][research:weighted-bft]” for details.
+* **Certificate threshold**: This threshold value is important for validating aggregate commits included in blocks and then updating the value of `maxHeightCertified`, see [LIP “Introduce certificate generation mechanism”][research:certificate-generation].
 * **BFT weights of consensus participants**: For computing the prevote and precommit weight of a block, the BFT weight of the active validators at that block height is required.
-* **Block headers information**: A subset of the properties of the recent block headers in the current chain is required to update the prevote and precommits weights. The reason is that validators cast prevotes and precommits as part of their block header, see LIP [“Add weights to Lisk-BFT consensus protocol][lip-weighted-lisk-bft]” for details.
+* **Block headers information**: A subset of the properties of the recent block headers in the current chain is required to update the prevote and precommits weights. The reason is that validators cast prevotes and precommits as part of their block header, see LIP [“Add weights to Lisk-BFT consensus protocol][research:weighted-bft]” for details.
 
 We call the first four inputs above the **BFT parameters**. For the BFT module, we assume that these BFT parameters are provided from another module via the `setBFTParameters` function defined below. For a DPoS chain, the DPoS module would need to call the BFT module with the correct parameters, in particular, notifying the BFT module about any changes of validators. Similarly, for a PoA chain, it is the responsibility of the PoA module to provide the correct parameters as input to the BFT module. The block header information can be obtained by the module itself as part of the block processing.
 
@@ -51,9 +51,9 @@ As auxiliary information for fast updates of the prevotes and precommits, we add
 Apart from the main responsibility, to correctly compute the three heights mentioned at the beginning, the BFT module includes the following additional logic:
 
 * The logic for computing the validators hash, a hash value authenticating the BLS keys of the currently active validators, their BFT weights and the certificate threshold.
-* The function `impliesMaximalPrevotes` for the [Reward module][lip-reward-module] to be able to check whether the block reward has to be reduced as the validator is not constructively participating in the Lisk-BFT consensus.
-* Functions that allow to verify the Lisk-BFT related properties in the block header, namely `validatorsHash`, `maxHeightGenerated` and `maxHeightPrevoted`, see also [LIP 0055][lip-update-block-processing].
-* Functions for other modules to obtain information regarding the current state of the BFT module. For instance, the DPoS module requires the value of `maxHeightCertified` for the [unlock transaction][lip-unlock-condition].
+* The function `impliesMaximalPrevotes` for the [Reward module][lip-0042] to be able to check whether the block reward has to be reduced as the validator is not constructively participating in the Lisk-BFT consensus.
+* Functions that allow to verify the Lisk-BFT related properties in the block header, namely `validatorsHash`, `maxHeightGenerated` and `maxHeightPrevoted`, see also [LIP 0055][lip-0055].
+* Functions for other modules to obtain information regarding the current state of the BFT module. For instance, the DPoS module requires the value of `maxHeightCertified` for the [unlock transaction][research:unlock-condition].
 
 ## Specification
 
@@ -67,7 +67,7 @@ Apart from the main responsibility, to correctly compute the three heights menti
 | `LSK_BFT_BATCH_SIZE`          |`uint32`  | configurable per chain | This constant determines the value of `MAX_LENGTH_BLOCK_BFT_INFOS` and thereby the range of prevotes and precommits. Additionally, it is used in the block synchronization mechanism and fast chain switching mechanism defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md).                      |
 | `MAX_LENGTH_BLOCK_BFT_INFOS`  |`uint32`  | `3*LSK_BFT_BATCH_SIZE` | The maximum length of the array `blockBFTInfos` in the BFT Votes substore. |
 
-As explained in [LIP "Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft-bft-paper], the constant `LSK_BFT_BATCH_SIZE` should never smaller than the maximum round length of the chain. For a blockchain using the [DPoS module][lip-dpos], it is therefore recommended to use `LSK_BFT_BATCH_SIZE = NUMBER_ACTIVE_DELEGATES + NUMBER_STANDBY_DELEGATES`, where `NUMBER_ACTIVE_DELEGATES` and `NUMBER_STANDBY_DELEGATES` are constants defined in the DPoS module. For a blockchain using the [PoA module][lip-poa], a safe choice is `LSK_BFT_BATCH_SIZE = MAX_NUM_VALIDATORS`, where `MAX_NUM_VALIDATORS` is a constant defined in the PoA module. If the maximum number of authorities is known to be smaller, it is recommended to use a smaller value for `LSK_BFT_BATCH_SIZE` for improved efficiency.
+As explained in [LIP "Add weights to Lisk-BFT consensus protocol"][lisk-bft-paper], the constant `LSK_BFT_BATCH_SIZE` should never smaller than the maximum round length of the chain. For a blockchain using the [DPoS module][research:dpos-module], it is therefore recommended to use `LSK_BFT_BATCH_SIZE = NUMBER_ACTIVE_DELEGATES + NUMBER_STANDBY_DELEGATES`, where `NUMBER_ACTIVE_DELEGATES` and `NUMBER_STANDBY_DELEGATES` are constants defined in the DPoS module. For a blockchain using the [PoA module][lip-poa], a safe choice is `LSK_BFT_BATCH_SIZE = MAX_NUM_VALIDATORS`, where `MAX_NUM_VALIDATORS` is a constant defined in the PoA module. If the maximum number of authorities is known to be smaller, it is recommended to use a smaller value for `LSK_BFT_BATCH_SIZE` for improved efficiency.
 
 ### Notation and Functions
 
@@ -326,7 +326,7 @@ areDistinctHeadersContradicting(blockHeaderInfo1, blockHeaderInfo2):
   	    return False
 ```
 
-Note that the function above corresponds to the function `checkHeadersContradicting` defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#detecting-contradicting-block-headers), except for not checking whether the two objects `blockHeaderInfo1` and `blockHeaderInfo2` correspond to the same block. Additionally, the block header property names are updated according to [LIP 0055][lip-update-block-processing].
+Note that the function above corresponds to the function `checkHeadersContradicting` defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#detecting-contradicting-block-headers), except for not checking whether the two objects `blockHeaderInfo1` and `blockHeaderInfo2` correspond to the same block. Additionally, the block header property names are updated according to [LIP 0055][lip-0055].
 
 #### computeValidatorsHashInternal
 
@@ -701,7 +701,7 @@ TBD
 
 ### Genesis Block Processing
 
-The following two steps are executed as part of the genesis block processing, see the [“Update genesis block schema and processing” LIP][lip-genesis-block-processing] for details.
+The following two steps are executed as part of the genesis block processing, see the [“Update genesis block schema and processing” LIP][research:update-genesis-block] for details.
 
 #### Genesis State Initialization
 
@@ -721,7 +721,7 @@ In this step the BFT module does not execute any logic. However, the exposed fun
 
 ### Block Processing
 
-The following steps are executed as part of the (non-genesis) block processing, see [LIP 0055][lip-block-processing] for details.
+The following steps are executed as part of the (non-genesis) block processing, see [LIP 0055][lip-0055] for details.
 
 #### After Transactions Execution
 
@@ -729,15 +729,15 @@ After the transactions of a block `b` are executed, the following logic is execu
 
 1. The object `getBlockBFTProperties(b.header)` is added to the beginning of the array `bftVotes.blockBFTInfos`.
 2. If `bftVotes.blockBFTInfos[MAX_LENGTH_BLOCK_BFT_INFOS]` exists, then the corresponding value is removed from the array.
-3. The function `updatePrevotesPrecommits` from the LIP ["Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] is executed to update the prevote and precommit weights.
-4. The value of `bftVotes.maxHeightPrevoted` is updated by calling the function `updateMaxHeightPrevoted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
-5. The value of `bftVotes.maxHeightPrecommitted` is updated by calling the function `updateMaxHeightPrecommitted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
+3. The function `updatePrevotesPrecommits` from the LIP ["Add weights to Lisk-BFT consensus protocol"][research:weighted-bft] is executed to update the prevote and precommit weights.
+4. The value of `bftVotes.maxHeightPrevoted` is updated by calling the function `updateMaxHeightPrevoted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][research:weighted-bft].
+5. The value of `bftVotes.maxHeightPrecommitted` is updated by calling the function `updateMaxHeightPrecommitted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][research:weighted-bft].
 6. Let `m` be the aggregate commit included in block `b`. If `m.aggregationBits` is empty bytes and `m.signature` is empty bytes, do nothing. Otherwise, set `bftVotes.maxHeightCertified` to `m.height`.
 7. Let `h` be the largest integer such that `h <= min(bftVotes.maxHeightCertified+1, bftVotes.blockBFTInfos[-1].height)` and there is an entry in the BFT Parameters store with key `h`. Then remove any key-value pair from BFT Parameters with a key strictly smaller than `h`.
 
 ### Block Creation
 
-During the block creation process, the properties `maxHeightPrevoted`, `maxHeightGenerated` and `validatorsHash` in the block header related to the BFT module (see also [LIP 0055][lip-update-block-processing]) have to be set as follows:
+During the block creation process, the properties `maxHeightPrevoted`, `maxHeightGenerated` and `validatorsHash` in the block header related to the BFT module (see also [LIP 0055][lip-0055]) have to be set as follows:
 
 * The value of `maxHeightPrevoted` is obtained by calling `getBFTHeights().maxHeightPrevoted` before executing any of the state transitions defined by the BFT module in the section "Block Processing" above.
 * The value of `maxHeightGenerated` must come from outside the state machine. As defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#processing-blocks), this value must be the maximum height at which the respective validator previously has generated a block, which is stored as private information for every validator.
@@ -751,12 +751,12 @@ This LIP defines a new module and specifies its store, which in turn will become
 
 TBD
 
-[lip-certificate-generation]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296
-[lip-dpos]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
-[lip-poa]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0047.md
-[lip-reward-module]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0042.md
-[lip-unlock-condition]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
-[lip-update-block-processing]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md
-[lip-update-genesis-block-processing]: https://research.lisk.com/t/update-genesis-block-schema-and-processing/325
-[lip-weighted-lisk-bft]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
-[lip-weighted-lisk-bft-bft-paper]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289#comparison-to-the-lisk-bft-paper-7
+[lip-0042]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0042.md
+[lip-0047]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0047.md
+[lip-0055]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md
+[lisk-bft-paper]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289#comparison-to-the-lisk-bft-paper-7
+[research:certificate-generation]: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296
+[research:dpos-module]: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
+[research:unlock-condition]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
+[research:update-genesis-block]: https://research.lisk.com/t/update-genesis-block-schema-and-processing/325
+[research:weighted-bft]: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
