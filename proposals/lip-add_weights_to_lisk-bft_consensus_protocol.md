@@ -3,9 +3,10 @@ LIP: <LIP number>
 Title: Add weights to Lisk-BFT consensus protocol
 Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/add-weights-to-lisk-bft-consensus-protocol/289
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-05-06
+Updated: 2021-11-30
 Requires: Introduce BFT module LIP
 ```
 
