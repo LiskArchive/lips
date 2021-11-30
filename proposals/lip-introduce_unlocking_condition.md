@@ -31,7 +31,7 @@ In the DPoS system introduced in [LIP 0023](https://github.com/LiskHQ/lips/blob/
 
 Using a similar approach we want to ensure that delegates constructively participate in the certificate generation, i.e., they generate and share certificate signatures for heights where they are active. In particular, we want to prevent a group of delegates from leaving the set of active delegates, but refusing to sign a certificate that attests this change. We want to achieve this by only letting a delegate and its voters unlock, after the delegate was voted out of the active set, if a certificate is generated for the last height where the delegate was active. This certificate will attest that the respective delegate is no longer part of the active set of delegates of the chain.
 
-![Example of an unvote transaction](lip-introduce_unlocking_condition/example_unvote.png)
+![Example of an unvote transaction](lip-introduce_unlocking_condition/unvote_example.png)
 
 *Figure 1: The result of an unvote transaction `t` included in round `r` only comes into effect in round `r+3` as the vote snapshots for delegate selection are taken from two rounds ago.*
 
