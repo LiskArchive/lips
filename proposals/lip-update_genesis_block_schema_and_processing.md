@@ -12,7 +12,7 @@ Requires: BFT module LIP, LIP 0040, Update block schema and block processing LIP
 
 ## Abstract
 
-This LIP adapts the specifications of the genesis block for blockchains created with Lisk SDK introduced in LIP 0034 to the requirements and characteristics of the new state model introduced in [LIP 0040][LIP40].  It does so by following the general block format and processing introduced in the Update block schema and block processing LIP.
+This LIP adapts the specifications of the genesis block for blockchains created with Lisk SDK introduced in LIP 0034 to the requirements and characteristics of the new state model introduced in [LIP 0040][lip-0040].  It does so by following the general block format and processing introduced in the Update block schema and block processing LIP.
 
 ## Copyright
 
@@ -20,13 +20,13 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-[LIP 0034][LIP34] introduced a block asset schema that allows to directly specify an initial state for blockchains created with Lisk SDK. However, with the specification of the Lisk interoperability solution and [the new state model][LIP40] it introduces, it is necessary to redefine and update the format and processing of a genesis block for blockchains created with Lisk SDK.
+[LIP 0034][lip-0034] introduced a block asset schema that allows to directly specify an initial state for blockchains created with Lisk SDK. However, with the specification of the Lisk interoperability solution and [the new state model][lip-0040] it introduces, it is necessary to redefine and update the format and processing of a genesis block for blockchains created with Lisk SDK.
 
 ## Rationale
 
 ### Usage of `assets` property of the block
 
-The new genesis block format and processing is specified with the rationale of having a compact and self-contained way of initializing a blockchain in the Lisk ecosystem. With this in mind, this LIP defines a genesis block format and processing based on the specifications given in [Update block schema and block processing LIP][BlockLIP]. In particular, the `assets` property contains the necessary information to initialize the state of the blockchain. Each element in the `assets` array contains the information necessary to set the state store for a given module. Hence, each module should define the format and processing logic for this information in the genesis block.
+The new genesis block format and processing is specified with the rationale of having a compact and self-contained way of initializing a blockchain in the Lisk ecosystem. With this in mind, this LIP defines a genesis block format and processing based on the specifications given in [Update block schema and block processing LIP][research:update-block-schema]. In particular, the `assets` property contains the necessary information to initialize the state of the blockchain. Each element in the `assets` array contains the information necessary to set the state store for a given module. Hence, each module should define the format and processing logic for this information in the genesis block.
 
 ### Processing of the genesis block
 
@@ -38,7 +38,7 @@ Another distinctive specification of the genesis block is its processing. The bl
 
 #### Static validation of the genesis block
 
-The genesis block has to go through initial static checks to ensure that the serialized object follows the general structure of a block. Also, certain properties of the block header are checked at this stage. All of these checks are stateless since the state of the blockchain is yet to be initialized. The key differences as compared to [the validation for the rest of the blocks][BlockLIPvalidation] in a blockchain are that there is no specific size limit for the genesis block object and that the genesis block should not contain any transaction.
+The genesis block has to go through initial static checks to ensure that the serialized object follows the general structure of a block. Also, certain properties of the block header are checked at this stage. All of these checks are stateless since the state of the blockchain is yet to be initialized. The key differences as compared to [the validation for the rest of the blocks][research:update-block-schema#validation] in a blockchain are that there is no specific size limit for the genesis block object and that the genesis block should not contain any transaction.
 
 #### Genesis state Initialization
 
@@ -75,7 +75,7 @@ As introduced in [the Rationale section](#processing-of-the-genesis-block), the 
 
 #### JSON schema
 
-The genesis block schema is the same as the one defined in [Update block schema and block processing LIP][BlockLIPschema].
+The genesis block schema is the same as the one defined in [Update block schema and block processing LIP][research:update-block-schema#block-schema].
 
 #### Validation
 
@@ -86,26 +86,26 @@ The genesis block is validated in the static validation stage as follows:
 
 #### Block ID
 
-The genesis block ID is computed in the same way as for [any other block][blockID].
+The genesis block ID is computed in the same way as for [any other block][research:update-block-schema#block-id].
 
 ### Assets property of the genesis block
 
 #### JSON schema
 
-The asset schema is the same as defined in the [Update block schema and block processing LIP][assetsSchema].
+The asset schema is the same as defined in the [Update block schema and block processing LIP][research:update-block-schema#asset-schema].
 
 #### Validation
 
 The block assets property is validated as follows:
 
 * _Static validation of the genesis block_:
-  * The same validity rules as defined in the [Update block schema and block processing LIP][assetsValidation] apply except for the fact that there is no limitation on the size of the `data` property of every entry.
+  * The same validity rules as defined in the [Update block schema and block processing LIP][research:update-block-schema#asset-validation] apply except for the fact that there is no limitation on the size of the `data` property of every entry.
 
 ### Header of the genesis block
 
 #### JSON schema
 
-The genesis block header schema is the same as the one defined in [Update block schema and block processing LIP][headerSchema].
+The genesis block header schema is the same as the one defined in [Update block schema and block processing LIP][research:update-block-schema#header-schema].
 
 #### Validation
 
@@ -115,7 +115,7 @@ The block header is processed as follows:
   * Check that the block header follows the block header schema.
   * The value `b.header.version` can be any `uint32` integer.
   * The value of `b.header.transactionRoot` is equal to `EMPTY_HASH`.
-  * The value `b.header.assetsRoot` is validated as specified in [Update block schema and block processing LIP][assetsRoot].
+  * The value `b.header.assetsRoot` is validated as specified in [Update block schema and block processing LIP][research:update-block-schema#assets-root].
   * The value `b.header.timestamp` is Unix time in seconds and can be any value in the `uint32` range.
   * The value `b.header.height` can be any value in the `uint32` range.
   * The value `b.header.previousBlockID` can be any 32-byte value.
@@ -127,20 +127,20 @@ The block header is processed as follows:
   * The value of `b.header.aggregateCommit.aggregationBits` is empty bytes.
   * The value of `b.header.signature` is empty bytes.
 * _Result verification of the genesis block_:
-  * Verify the `stateRoot` and `validatorsHash` properties as specified in [Update block schema and block processing LIP][stateRoot].
+  * Verify the `stateRoot` and `validatorsHash` properties as specified in [Update block schema and block processing LIP][research:update-block-schema#state-root].
 
 ## Backwards Compatibility
 
 This LIP defines a new block schema and processing, but does not imply a hardfork of Lisk Mainnet.
 
-[LIP34]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md
-[blockLIP]: https://research.lisk.com/t/update-block-schema-and-block-processing/
-[LIP40]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md
-[BlockLIPvalidation]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#validation
-[BlockLIPschema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#d#json-schema
-[blockID]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##block-id
-[assetsSchema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##json-schema-1
-[assetsValidation]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##validation-1
-[headerSchema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##json-schema-2
-[assetsRoot]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##assets-root
-[stateRoot]: https://research.lisk.com/t/update-block-schema-and-block-processing/293##state-root
+[lip-0034]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md
+[lip-0040]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0040.md
+[research:update-block-schema]: https://research.lisk.com/t/update-block-schema-and-block-processing/
+[research:update-block-schema#asset-schema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#json-schema-15
+[research:update-block-schema#asset-validation]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#validation-16
+[research:update-block-schema#assets-root]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#assets-root-26
+[research:update-block-schema#block-id]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#block-id-13
+[research:update-block-schema#block-schema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#json-schema-11
+[research:update-block-schema#header-schema]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#json-schema-18
+[research:update-block-schema#state-root]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#state-root-27
+[research:update-block-schema#validation]: https://research.lisk.com/t/update-block-schema-and-block-processing/293#validation-19
