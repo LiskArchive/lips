@@ -4,12 +4,11 @@ Title: Introduce BFT module
 Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
         Mitsuaki Uchimoto <mitsuaki.uchimoto@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-bft-module/321
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: Add weights to Lisk-BFT consensus protocol LIP,
-          Introduce certificate generation mechanism LIP,
-          Update block schema and block processing LIP
+Created: 2021-09-07
+Updated: 2021-11-30
+Requires: 0055, 0056, Introduce certificate generation mechanism LIP
 ```
 
 ## Abstract
