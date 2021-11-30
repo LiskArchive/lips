@@ -4,10 +4,11 @@ Title: Update genesis block schema and processing
 Author: Iker Alustiza <iker@lightcurve.io>
         Rishi Mittal <rishi.mittal@lightcurve.io >
 Discussions-To: https://research.lisk.com/t/update-genesis-block-schema-and-processing/325
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: BFT module LIP, LIP 0040, Update block schema and block processing LIP
+Created: 2021-10-08
+Updated: 2021-11-30
+Requires: 0040, 0058, 0055
 ```
 
 ## Abstract
