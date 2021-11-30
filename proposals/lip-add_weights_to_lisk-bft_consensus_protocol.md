@@ -40,7 +40,7 @@ In this section, we briefly define the main terms used throughout this LIP. For 
 
 ### Changes Compared to LIP 0014
 
-The general goal of the update of the Lisk-BFT consensus protocol specified in this LIP is to allow more flexibility while keeping as much of the specification in [LIP 0014][lisk-bft-lip] as possible. Therefore, many part of the Lisk-BFT protocol, such as the fork choice rule, the fast chain switching mechanism or the block synchronization mechanism stay unchanged.
+The general goal of the update of the Lisk-BFT consensus protocol specified in this LIP is to allow more flexibility while keeping as much of the specification in [LIP 0014][lisk-bft-lip] as possible. Therefore, many parts of the Lisk-BFT protocol, such as the fork choice rule, the fast chain switching mechanism or the block synchronization mechanism stay unchanged.
 
 The generalization of the Lisk-BFT consensus protocol to allow for different BFT weights of the participating validators implies the following changes:
 
