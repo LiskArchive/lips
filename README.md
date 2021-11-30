@@ -69,3 +69,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0055](proposals/lip-0055.md) | Update block schema and block processing                                                       | Andreas Kendziorra, Alessandro Ricottone, Rishi Mittal | Standards Track | Draft         |
 | [0056](proposals/lip-0056.md) | Add weights to Lisk-BFT consensus protocol                                                     | Jan Hackfeld                                           | Standards Track | Draft         |
 | [0057](proposals/lip-0057.md) | Define state and state transitions of DPoS module                                              | Maxime Gagnebin, Nazar Hussain, Mehmet Egemen Albayrak | Standards Track | Draft         |
+| [0058](proposals/lip-0058.md) | Introduce BFT module                                                                           | Jan Hackfeld, Mitsuaki Uchimoto                        | Standards Track | Draft         |
