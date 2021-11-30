@@ -89,7 +89,7 @@ The BFT module store is organized in the two substores described below.
 
 ##### JSON Schema
 
-```json
+```java
 bftParametersSchema = {
     "type": "object",
     "required": [
@@ -161,7 +161,7 @@ If `aggregateBFTWeight` is the sum of BFT weights of all validators stored, then
 
 ##### JSON Schema
 
-```json
+```java
 bftVotesSchema = {
     "type": "object",
     "required": [
@@ -344,7 +344,7 @@ The value of the validators hash corresponding to the validator information and 
 
 We use the following JSON schema for the computation of the validators hash.
 
-```json
+```java
 validatorsHashInputSchema = {
     "type": "object",
     "required": ["validators", "certificateThreshold"],
