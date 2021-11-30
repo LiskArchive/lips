@@ -5,9 +5,10 @@ Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
         Nazar Hussain <nazar@lightcurve.io>
         Mehmet Egemen Albayrak <mehmet.albayrak@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/define-state-and-state-transitions-of-dpos-module/320
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2021-09-03
+Updated: 2021-11-30
 Required: 0022, 0023, 0024, 0040, 0044, 0046,
           Introduce BFT module,
           Introduce unlocking condition for incentivizing certificate generation
