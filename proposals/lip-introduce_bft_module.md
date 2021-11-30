@@ -66,7 +66,7 @@ Apart from the main responsibility, to correctly compute the three heights menti
 | `LSK_BFT_BATCH_SIZE`          |`uint32`  | configurable per chain | This constant determines the value of `MAX_LENGTH_BLOCK_BFT_INFOS` and thereby the range of prevotes and precommits. Additionally, it is used in the block synchronization mechanism and fast chain switching mechanism defined in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md).                      |
 | `MAX_LENGTH_BLOCK_BFT_INFOS`  |`uint32`  | `3*LSK_BFT_BATCH_SIZE` | The maximum length of the array `blockBFTInfos` in the BFT Votes substore. |
 
-As explained in [LIP "Add weights to Lisk-BFT consensus protocol"][lisk-bft-paper], the constant `LSK_BFT_BATCH_SIZE` should never smaller than the maximum round length of the chain. For a blockchain using the [DPoS module][research:dpos-module], it is therefore recommended to use `LSK_BFT_BATCH_SIZE = NUMBER_ACTIVE_DELEGATES + NUMBER_STANDBY_DELEGATES`, where `NUMBER_ACTIVE_DELEGATES` and `NUMBER_STANDBY_DELEGATES` are constants defined in the DPoS module. For a blockchain using the [PoA module][lip-poa], a safe choice is `LSK_BFT_BATCH_SIZE = MAX_NUM_VALIDATORS`, where `MAX_NUM_VALIDATORS` is a constant defined in the PoA module. If the maximum number of authorities is known to be smaller, it is recommended to use a smaller value for `LSK_BFT_BATCH_SIZE` for improved efficiency.
+As explained in [LIP "Add weights to Lisk-BFT consensus protocol"][lisk-bft-paper], the constant `LSK_BFT_BATCH_SIZE` should never be smaller than the maximum round length of the chain. For a blockchain using the [DPoS module][research:dpos-module], it is therefore recommended to use `LSK_BFT_BATCH_SIZE = NUMBER_ACTIVE_DELEGATES + NUMBER_STANDBY_DELEGATES`, where `NUMBER_ACTIVE_DELEGATES` and `NUMBER_STANDBY_DELEGATES` are constants defined in the DPoS module. For a blockchain using the [PoA module][lip-poa], a safe choice is `LSK_BFT_BATCH_SIZE = MAX_NUM_VALIDATORS`, where `MAX_NUM_VALIDATORS` is a constant defined in the PoA module. If the maximum number of authorities is known to be smaller, it is recommended to use a smaller value for `LSK_BFT_BATCH_SIZE` for improved efficiency.
 
 ### Notation and Functions
 
@@ -145,7 +145,7 @@ All properties below are valid starting from the height given as key:
 * `prevoteThreshold`: This property stores the prevote threshold. For casting a precommit for a block, the sum of BFT weights of all validators casting a prevote for this block has to be at least the prevote threshold. If `aggregateBFTWeight` is the sum of BFT weights of all validators stored, then the property value must be `floor(2/3*aggregateBFTWeight(h))+1`.
 * `precommitThreshold`: This property stores the precommit threshold. For considering a block final, the sum of BFT weights of all validators casting a precommit for this block has to be at least the precommit threshold.
 If `aggregateBFTWeight` is the sum of BFT weights of all validators stored, then the value of this property must satisfy `floor(1/3*aggregateBFTWeight)+1 <= precommitThreshold <= aggregateBFTWeight`.
-* `certificateThreshold`: This property stores the certificate threshold. For considering a certificate or aggregate commit for a block valid, the sum of BFT weights of all validators signing the certificate has to be at least the certificate threshold.
+* `certificateThreshold`: This property stores the certificate threshold. For considering a certificate or aggregate commit for a valid block, the sum of BFT weights of all validators signing the certificate has to be at least the certificate threshold.
 If `aggregateBFTWeight` is the sum of BFT weights of all validators stored, then the value of this property must satisfy `floor(1/3*aggregateBFTWeight)+1 <= certificateThreshold <= aggregateBFTWeight.`
 * `validators`: Each element in the array `validators` corresponds to a validator and stores its address and BFT weight property as positive integer. It is an array of all validators active starting at the height given as key. The elements in the array must be sorted lexicographically by address property.
 * `validatorsHash`: A 32-byte value authenticating the BLS keys and BFT weights of the validators and the certificate threshold of the same store entry.
@@ -329,7 +329,7 @@ Note that the function above corresponds to the function `checkHeadersContradict
 
 #### computeValidatorsHashInternal
 
-The following function computes the validators hash value from the provided input parameters. The validators hash is 32-byte value authenticating the BLS keys and BFT weights of the validators and the certificate threshold.
+The following function computes the validators hash value from the provided input parameters. The validators hash is a 32-byte value authenticating the BLS keys and BFT weights of the validators and the certificate threshold.
 
 ##### Parameters
 
