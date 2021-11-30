@@ -3,12 +3,11 @@ LIP: <LIP number>
 Title: Introduce unlocking condition for incentivizing certificate generation
 Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: Introduce certificate generation mechanism LIP,
-          Define state and state transitions of DPoS module LIP,
-          Introduce BFT module LIP
+Created: 2021-05-21
+Updated: 2021-11-30
+Requires: 0057, 0058, Introduce certificate generation mechanism LIP
 ```
 
 ## Abstract
