@@ -30,9 +30,9 @@ In this LIP we specify the properties, serialization, initialization, and expose
 
 ## Rationale
 
-This new LIP does not introduce significant protocol changes to the generator selection mechanism proposed in [LIP 0022][LIP-0022] and [LIP 0023][LIP-0023]. It only defines how the commands and processes defined in those LIPs are integrated in the state model used in Lisk. Please see [LIP 0022][LIP-0022] and [LIP 0023][LIP-0023] for a thorough rationale regarding the choice of voting system and the inclusion of standby delegates.
+This new LIP does not introduce significant protocol changes to the generator selection mechanism proposed in [LIP 0022][lip-0022] and [LIP 0023][lip-0023]. It only defines how the commands and processes defined in those LIPs are integrated in the state model used in Lisk. Please see [LIP 0022][lip-0022] and [LIP 0023][lip-0023] for a thorough rationale regarding the choice of voting system and the inclusion of standby delegates.
 
-[LIP 0022][LIP-0022] defines a selection mechanism for 2 standby delegates. In this LIP, we slightly extend the specifications to support 0 or 1 standby delegate, however, we do not specify how to extend the protocol to more than 2 delegates. Introducing more standby delegates might require a different source of randomness and it is not the aim of this LIP to describe this topic.
+[LIP 0022][lip-0022] defines a selection mechanism for 2 standby delegates. In this LIP, we slightly extend the specifications to support 0 or 1 standby delegate, however, we do not specify how to extend the protocol to more than 2 delegates. Introducing more standby delegates might require a different source of randomness and it is not the aim of this LIP to describe this topic.
 
 ### DPoS Store
 
@@ -373,7 +373,7 @@ genesisDataStoreSchema = {
 The genesis data substore stores information from the genesis block. It is initialized when processing the genesis block.
 
 * `height`: height of the genesis block.
-* `initRounds`: the length of the [bootstrap period][LIP-0034-bootstrapPeriod], also called initial rounds. This property must have a value greater than 3.
+* `initRounds`: the length of the [bootstrap period][lip-0034#bootstrap-period], also called initial rounds. This property must have a value greater than 3.
 * `initDelegates`: the addresses of the validators to be used during the bootstrap period. This property must have a non-empty value.
 
 #### Previous Timestamp Substore
@@ -497,7 +497,7 @@ create an entry in the name substore with
 
 #### Update Generator Key
 
-This command is used to update the generator key (from the [validators module][LIP-validators]) for a specific validator. Transaction executing this command have:
+This command is used to update the generator key (from the [validators module][lip-0044]) for a specific validator. Transaction executing this command have:
 
 * `moduleID = MODULE_ID_DPOS`,
 * `commandID = COMMAND_ID_UPDATE_GENERATOR_KEY`.
@@ -564,7 +564,7 @@ voteTransactionParams = {
 }
 ```
 
-The verification and execution of this transaction is specified in [LIP 0023][LIP-0023-voteTrs]. This specification is followed to implement the vote command with the following additional point:
+The verification and execution of this transaction is specified in [LIP 0023][lip-0023#new-vote-transaction]. This specification is followed to implement the vote command with the following additional point:
 
 * when executing a self-vote (a vote with the `delegateAddress` equal to the address derived from the transaction public key), modify the `delegateStore(delegateAddress).selfVotes` property and the `voterStore(delegateAddress).sentVotes` entry corresponding to `delegateAddress` identically.
 
@@ -596,7 +596,7 @@ for each unlockObject in voterStore(senderAddress).pendingUnlocks:
 return False
 ```
 
-The definition and rationale for the `isCertificateGenerated` function is part of [LIP "Introduce unlocking condition for incentivizing certificate generation"][LIP-incentivizeCertificateGeneration]. The `hasWaited` and `isPunished` functions are defined below and are rationalized in [LIP 0023][LIP-0023-unlockRationale] and [LIP 0024][LIP-0024-rationale] respectively. Both functions have the following input parameters:
+The definition and rationale for the `isCertificateGenerated` function is part of [LIP "Introduce unlocking condition for incentivizing certificate generation"][research:introduce-unlocking]. The `hasWaited` and `isPunished` functions are defined below and are rationalized in [LIP 0023][lip-0023#explicit-unlock-mechanism] and [LIP 0024][lip-0024#rationale] respectively. Both functions have the following input parameters:
 
 * `unlockObject`: an object with properties `delegateAddress` (the address of the previously voted delegate), `amount` (the unvote amount) and `unvoteHeight` (the height of the unvote).
 * `senderAddress`: 20-byte address of the user sending the unlock transaction.
@@ -679,11 +679,11 @@ pomParams = {
 
 ##### Verification
 
-Both properties of the parameters must follow the block header schema as defined in [LIP "New block header and block asset schema"][LIP-newBlockHeader]. Validity of this transaction is then specified in [LIP 0024][LIP-0024-verifyPOM].
+Both properties of the parameters must follow the block header schema as defined in [LIP "New block header and block asset schema"][research:new-block-header]. Validity of this transaction is then specified in [LIP 0024][lip-0024#validity-of-a-pom-transaction].
 
 ##### Execution
 
-Execution of this transaction is specified in [LIP 0024][LIP-0024-applyingPOM].
+Execution of this transaction is specified in [LIP 0024][lip-0024#applying-a-pom-transaction].
 
 ### Internal Functions
 
@@ -741,7 +741,7 @@ delegateWeight(address, height):
 
 #### shuffleValidatorsList
 
-A function to reorder the list of validators as specified in [LIP 0003][LIP-0003].
+A function to reorder the list of validators as specified in [LIP 0003][lip-0003].
 
 ##### Parameters
 
@@ -1111,7 +1111,7 @@ if snapshotKeys is not an incrementing array or snapshotKeys[-1] != genesisRound
 
 #### After Transactions Execution
 
-After the transactions in a block `b` are executed, the properties related to missed blocks are updated according to [Delegate Productivity][LIP-0023-delegateProductivity]. This logic is recapitulated below:
+After the transactions in a block `b` are executed, the properties related to missed blocks are updated according to [Delegate Productivity][lip-0023#delegate-productivity]. This logic is recapitulated below:
 
 ```python
 newHeight = b.header.height
@@ -1314,19 +1314,17 @@ This LIP defines a new store interface for the DPoS module, which in turn will b
 
 TBA
 
-[LIP-0022]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md
-[LIP-0023]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md
-[LIP-0023-unlockTrs]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#new-unlock-transaction
-[LIP-0023-voteTrs]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#new-vote-transaction-1
-[LIP-0023-delegateProductivity]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#delegate-productivity-1
-[LIP-0023-unlockRationale]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#explicit-unlock-mechanism
-[LIP-0003]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0003.md
-[LIP-0024-applyingPOM]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#applying-a-pom-transaction
-[LIP-0024-verifyPOM]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#validity-of-a-pom-transaction
-[LIP-0024-rationale]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#rationale
-[LIP-0034-bootstrapPeriod]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md#bootstrap-period
-[LIP-newBlockHeader]: https://research.lisk.com/t/new-block-header-and-block-asset-schema/293
-[LIP-incentivizeCertificateGeneration]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
-[LIP-validators]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0044.md
-[LIP-0051]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md
-[LIP-bft_module]: https://research.lisk.com/t/introduce-bft-module/321
+[lip-0003]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0003.md
+[lip-0022]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0022.md
+[lip-0023]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md
+[lip-0023#delegate-productivity]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#delegate-productivity-1
+[lip-0023#explicit-unlock-mechanism]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#explicit-unlock-mechanism
+[lip-0023#new-unlock-transaction]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#new-unlock-transaction
+[lip-0023#new-vote-transaction]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0023.md#new-vote-transaction-1
+[lip-0024#applying-a-pom-transaction]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#applying-a-pom-transaction
+[lip-0024#rationale]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#rationale
+[lip-0024#validity-of-a-pom-transaction]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0024.md#validity-of-a-pom-transaction
+[lip-0034#bootstrap-period]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md#bootstrap-period
+[lip-0044]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0044.md
+[research:introduce-unlocking]: https://research.lisk.com/t/introduce-unlocking-condition-for-incentivizing-certificate-generation/300
+[research:new-block-header]: https://research.lisk.com/t/new-block-header-and-block-asset-schema/293
