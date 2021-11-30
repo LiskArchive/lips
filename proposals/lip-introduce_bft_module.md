@@ -769,7 +769,7 @@ After the transactions of a block `b` are executed, the following logic is execu
 
 1. The object `getBlockBFTProperties(b.header)` is added to the beginning of the array `bftVotes.blockBFTInfos`.
 2. If `bftVotes.blockBFTInfos[MAX_LENGTH_BLOCK_BFT_INFOS]` exists, then the corresponding value is removed from the array.
-3. The function `applyPrevotesPrecommits` from the LIP ["Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] is executed to update the prevote and precommit weights.
+3. The function `updatePrevotesPrecommits` from the LIP ["Add weights to Lisk-BFT consensus protocol"][lip-weighted-lisk-bft] is executed to update the prevote and precommit weights.
 4. The value of `bftVotes.maxHeightPrevoted` is updated by calling the function `updateMaxHeightPrevoted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
 5. The value of `bftVotes.maxHeightPrecommitted` is updated by calling the function `updateMaxHeightPrecommitted` specified in [LIP “Add weights to Lisk-BFT consensus protocol”][lip-weighted-lisk-bft].
 6. Let `m` be the aggregate commit included in block `b`. If `m.aggregationBits` is empty bytes and `m.signature` is empty bytes, do nothing.
