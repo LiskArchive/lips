@@ -19,11 +19,11 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The Lisk-BFT consensus protocol introduced in [LIP 0014][lisk-bft-lip] was specified for the Lisk mainchain and sidechains that use Delegated Proof-of-Stake with fixed configuration parameters that only change in rare cases as part of a hard fork. In these blockchains, there is a fixed number of active delegates, i.e., those delegates participating in finalizing blocks, and all of them have equal weight. One exception to that is the bootstrap period introduced as part of the new genesis block format in [LIP 0034][lip-34]. During the bootstrap period none of the bootstrap delegates contributes to finalizing blocks, so that blocks can only be finalized after the bootstrap period is over.
+The Lisk-BFT consensus protocol introduced in [LIP 0014][lip-0014] was specified for the Lisk mainchain and sidechains that use Delegated Proof-of-Stake with fixed configuration parameters that only change in rare cases as part of a hard fork. In these blockchains, there is a fixed number of active delegates, i.e., those delegates participating in finalizing blocks, and all of them have equal weight. One exception to that is the bootstrap period introduced as part of the new genesis block format in [LIP 0034][lip-0034]. During the bootstrap period none of the bootstrap delegates contributes to finalizing blocks, so that blocks can only be finalized after the bootstrap period is over.
 
-For more flexibility and to also support other validator selection mechanisms, we want to allow for different BFT weights of the active validators, i.e., different weights attributed to the prevotes and precommits cast by a validator. These weights and the threshold for finalizing a block should also not be constant, but should be allowed to change over time. This is, in particular, required in conjunction with the Proof-of-Authority validator selection mechanism introduced in the [PoA module][poa-lip] where validators can be added and removed or their weights changed with a simple transaction and without a hard fork.
+For more flexibility and to also support other validator selection mechanisms, we want to allow for different BFT weights of the active validators, i.e., different weights attributed to the prevotes and precommits cast by a validator. These weights and the threshold for finalizing a block should also not be constant, but should be allowed to change over time. This is, in particular, required in conjunction with the Proof-of-Authority validator selection mechanism introduced in the [PoA module][lip-0047] where validators can be added and removed or their weights changed with a simple transaction and without a hard fork.
 
-Additionally, as part of the new state architecture, the consensus votes are stored as part of the state as described in the [BFT module LIP][bft-module-lip]. In this LIP, we therefore describe how the consensus votes and associated properties need to be updated as part of the block processing, using the notation and state structure introduced in the [BFT module LIP][bft-module-lip].
+Additionally, as part of the new state architecture, the consensus votes are stored as part of the state as described in the [BFT module LIP][research:bft-module]. In this LIP, we therefore describe how the consensus votes and associated properties need to be updated as part of the block processing, using the notation and state structure introduced in the [BFT module LIP][research:bft-module].
 
 ## Rationale
 
@@ -40,30 +40,30 @@ In this section, we briefly define the main terms used throughout this LIP. For 
 
 ### Changes Compared to LIP 0014
 
-The general goal of the update of the Lisk-BFT consensus protocol specified in this LIP is to allow more flexibility while keeping as much of the specification in [LIP 0014][lisk-bft-lip] as possible. Therefore, many parts of the Lisk-BFT protocol, such as the fork choice rule, the fast chain switching mechanism or the block synchronization mechanism stay unchanged.
+The general goal of the update of the Lisk-BFT consensus protocol specified in this LIP is to allow more flexibility while keeping as much of the specification in [LIP 0014][lip-0014] as possible. Therefore, many parts of the Lisk-BFT protocol, such as the fork choice rule, the fast chain switching mechanism or the block synchronization mechanism stay unchanged.
 
 The generalization of the Lisk-BFT consensus protocol to allow for different BFT weights of the participating validators implies the following changes:
 
 * Instead of a BFT weight of `1`, the BFT weight of a validator can be any `uint64` value.
-* Instead of having a fixed BFT weight, the BFT weight of validators can change over time. The [BFT module LIP][bft-module-lip] defines how the BFT weights can be changed. For instance, the DPoS module or PoA module can call the BFT module in case of validator changes and adjust the BFT weights accordingly.
+* Instead of having a fixed BFT weight, the BFT weight of validators can change over time. The [BFT module LIP][research:bft-module] defines how the BFT weights can be changed. For instance, the DPoS module or PoA module can call the BFT module in case of validator changes and adjust the BFT weights accordingly.
 * The prevote threshold is always computed from the sum of BFT weights of all validators. Therefore, the prevote threshold can change if the sum of BFT weights changes.
-* Instead of having a fixed precommit threshold, the precommit threshold can change within a range depending on the sum of BFT weights of all validators. The [BFT module LIP][bft-module-lip] defines how the precommit threshold can be changed.
+* Instead of having a fixed precommit threshold, the precommit threshold can change within a range depending on the sum of BFT weights of all validators. The [BFT module LIP][research:bft-module] defines how the precommit threshold can be changed.
 
-Additionally, this LIP uses a different notation and assumes a different way of storing consensus-related information due to the new state structure introduced in the [BFT module LIP][bft-module-lip]. In particular, we introduce the following changes to the BFT-related properties:
+Additionally, this LIP uses a different notation and assumes a different way of storing consensus-related information due to the new state structure introduced in the [BFT module LIP][research:bft-module]. In particular, we introduce the following changes to the BFT-related properties:
 
 * The property `chainMaxHeightPrevoted` is renamed to `maxHeightPrevoted`.
 * The property `chainMaxHeightFinalized` is renamed to `maxHeightFinalized`.
 * The property `maxHeightPreviouslyForged` is renamed to `maxHeightGenerated`.
-* As part of the consensus vote computations, we also update a new property `maxHeightPrecommitted` which is introduced in the [BFT module LIP][bft-module-lip]. The property denotes the largest height `h` such that the BFT weight of precommits for the block at height `h` in the current chain is above or equal to the precommit threshold. Note that this value is completely determined by the current tip of the chain and can decrease if blocks are reverted. Therefore, the property can also be stored as part of the state. This is in contrast to the value of `maxHeightFinalized`, which is the maximum value of `maxHeightPrecommitted` a node has computed for any block at its tip so far. It is important to observe that two nodes may have the same tip of the chain and thus the same current value of `maxHeightPrecommitted`, but different values of `maxHeightFinalized` due to a different history of reverted blocks. The variable `maxHeightPrecommitted` is introduced as it will be important for certificate generation.
+* As part of the consensus vote computations, we also update a new property `maxHeightPrecommitted` which is introduced in the [BFT module LIP][research:bft-module]. The property denotes the largest height `h` such that the BFT weight of precommits for the block at height `h` in the current chain is above or equal to the precommit threshold. Note that this value is completely determined by the current tip of the chain and can decrease if blocks are reverted. Therefore, the property can also be stored as part of the state. This is in contrast to the value of `maxHeightFinalized`, which is the maximum value of `maxHeightPrecommitted` a node has computed for any block at its tip so far. It is important to observe that two nodes may have the same tip of the chain and thus the same current value of `maxHeightPrecommitted`, but different values of `maxHeightFinalized` due to a different history of reverted blocks. The variable `maxHeightPrecommitted` is introduced as it will be important for certificate generation.
 
-Below you find a list of the main functions in [LIP 0014][lisk-bft-lip] that define the computation of prevotes, precommits and properties `maxHeightPrevoted` and `maxHeightFinalized` and the corresponding function in this LIP.
+Below you find a list of the main functions in [LIP 0014][lip-0014] that define the computation of prevotes, precommits and properties `maxHeightPrevoted` and `maxHeightFinalized` and the corresponding function in this LIP.
 
-* The function `getHeightNotPrevoted` in [LIP 0014][lisk-bft-lip-comp] is the same in this LIP.
-* The function `applyPrevotesPrecommits` in [LIP 0014][lisk-bft-lip-comp] corresponds to the function `updatePrevotesPrecommits` in this LIP.
-* The function `computeChainMaxHeightPrevoted` in [LIP 0014][lisk-bft-lip-comp] corresponds to the function `updateMaxHeightPrevoted` in this LIP.
-* The function `computeChainMaxHeightFinalized` in [LIP 0014][lisk-bft-lip-comp] corresponds to the function `updateMaxHeightPrecommitted` in this LIP.
+* The function `getHeightNotPrevoted` in [LIP 0014][lip-0014#computing-prevotes-and-precommits] is the same in this LIP.
+* The function `applyPrevotesPrecommits` in [LIP 0014][lip-0014#computing-prevotes-and-precommits] corresponds to the function `updatePrevotesPrecommits` in this LIP.
+* The function `computeChainMaxHeightPrevoted` in [LIP 0014][lip-0014#computing-prevotes-and-precommits] corresponds to the function `updateMaxHeightPrevoted` in this LIP.
+* The function `computeChainMaxHeightFinalized` in [LIP 0014][lip-0014#computing-prevotes-and-precommits] corresponds to the function `updateMaxHeightPrecommitted` in this LIP.
 
-The changes in these functions are due to the fact that all prevotes and precommits have an associated weight as described above and to account for the state structure defined in the [BFT module LIP][bft-module-lip].
+The changes in these functions are due to the fact that all prevotes and precommits have an associated weight as described above and to account for the state structure defined in the [BFT module LIP][research:bft-module].
 
 ### Comparison to the Lisk-BFT paper
 
@@ -71,7 +71,7 @@ The main technical difference between the Lisk-BFT protocol specified in the pap
 
 The Lisk-BFT protocol introduced in Definition 4.1 of the [Lisk-BFT paper][lisk-bft-paper] allows to choose two protocol parameters, `τ ∈ (1/3, 1]` and a natural number `ρ`. The decision threshold `τ` in the paper corresponds to the precommit threshold used in this LIP up to rescaling and the subtle difference that the weight of precommits in the paper has to be strictly more than `τ` but in these specifications it only has to be greater or equal than `precommitThreshold(h)` (as we restrict the range of `precommitThreshold(h)` such that `precommitThreshold(h) / aggregateBFTWeight(h) > 1/3`). Similarly, we choose `prevoteThreshold(h)` such that `prevoteThreshold(h) / aggregateBFTWeight(h) > 2/3`.
 
-The parameter `ρ`, which determines how many blocks a block can imply prevotes for, is given by `3*LSK_BFT_BATCH_SIZE` in the specifications in this LIP, as also in LIP 0014. Here `LSK_BFT_BATCH_SIZE` is a constant of the  [BFT module LIP][bft-module-lip]. As the round length in a PoA chain can vary, we require that the maximum possible round length in a PoA chain, given by the constant `MAX_NUM_VALIDATORS` defined in the [PoA module][poa-lip], is always at most the constant `LSK_BFT_BATCH_SIZE`. As we have `ρ=3*LSK_BFT_BATCH_SIZE`, this ensures that `ρ` is at least three times the maximum number of active validators, which is required by Definition 4.1 in the [Lisk-BFT paper][lisk-bft-paper] for the liveness of the protocol. Additionally, we need to assume that the block proposal is done in a round-robin fashion so that the condition in Definition 4.1 in the [Lisk-BFT paper][lisk-bft-paper] is satisfied. In the Lisk SDK the [Validators module][validator-module-lip] is responsible for the block slot assignment. It assigns block slots round-robin and therefore satisfies this requirement.
+The parameter `ρ`, which determines how many blocks a block can imply prevotes for, is given by `3*LSK_BFT_BATCH_SIZE` in the specifications in this LIP, as also in LIP 0014. Here `LSK_BFT_BATCH_SIZE` is a constant of the  [BFT module LIP][research:bft-module]. As the round length in a PoA chain can vary, we require that the maximum possible round length in a PoA chain, given by the constant `MAX_NUM_VALIDATORS` defined in the [PoA module][lip-0047], is always at most the constant `LSK_BFT_BATCH_SIZE`. As we have `ρ=3*LSK_BFT_BATCH_SIZE`, this ensures that `ρ` is at least three times the maximum number of active validators, which is required by Definition 4.1 in the [Lisk-BFT paper][lisk-bft-paper] for the liveness of the protocol. Additionally, we need to assume that the block proposal is done in a round-robin fashion so that the condition in Definition 4.1 in the [Lisk-BFT paper][lisk-bft-paper] is satisfied. In the Lisk SDK the [Validators module][lip-0044] is responsible for the block slot assignment. It assigns block slots round-robin and therefore satisfies this requirement.
 
 ### Validator Changes
 
@@ -81,13 +81,13 @@ In order to guarantee the safety property, not too many validators, in terms of 
 
 ### Notation
 
-In this LIP, we use the following notation that is introduced in the [BFT module LIP][bft-module-lip]:
+In this LIP, we use the following notation that is introduced in the [BFT module LIP][research:bft-module]:
 
-- `LSK_BFT_BATCH_SIZE`: a constant of the [BFT module LIP][bft-module-lip] that was already introduced in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md),
+- `LSK_BFT_BATCH_SIZE`: a constant of the [BFT module LIP][research:bft-module] that was already introduced in [LIP 0014](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md),
 - `bftParameters(height)`: denotes the deserialized object stored in the BFT Parameters substore with store key equal to `uint32be(height)`, i.e., the big endian unsigned integer serialization of `height`,
 - `bftVotes`: denotes the deserialized object stored in the BFT Votes substore with store key equal to empty bytes,
 
-For details regarding the BFT module store and schemas of the stored objects, see the [BFT module LIP][bft-module-lip].
+For details regarding the BFT module store and schemas of the stored objects, see the [BFT module LIP][research:bft-module].
 
 ### Internal Functions
 
@@ -116,7 +116,7 @@ getBFTWeight(validatorAddress, height):
     return validatorInfo.bftWeight
 ```
 
-Note that the function `getBFTParametersInternal` is an internal function defined in the [BFT module LIP][bft-module-lip].
+Note that the function `getBFTParametersInternal` is an internal function defined in the [BFT module LIP][research:bft-module].
 
 #### setLargestHeightPrecommit
 
@@ -270,12 +270,12 @@ In particular, it only needs to be updated if `bftVotes.maxHeightPrecommitted` i
 
 ## Backwards Compatibility
 
-This LIP defines a part of the state transition logic of the BFT module introduced in the [BFT module LIP][bft-module-lip]. The LIP therefore requires a hard fork as introducing the BFT module implies a hardfork.
+This LIP defines a part of the state transition logic of the BFT module introduced in the [BFT module LIP][research:bft-module]. The LIP therefore requires a hard fork as introducing the BFT module implies a hardfork.
 
-[bft-module-lip]: https://research.lisk.com/t/introduce-bft-module/321
-[lip-34]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md
-[lisk-bft-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md
-[lisk-bft-lip-comp]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#computing-prevotes-and-precommits
+[lip-0014]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md
+[lip-0014#computing-prevotes-and-precommits]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0014.md#computing-prevotes-and-precommits
+[lip-0034]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0034.md
+[lip-0044]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0044.md
+[lip-0047]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0047.md
 [lisk-bft-paper]: https://arxiv.org/abs/1903.11434
-[poa-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0047.md
-[validator-module-lip]: https://github.com/LiskHQ/lips/blob/master/proposals/lip-0044.md
+[research:bft-module]: https://research.lisk.com/t/introduce-bft-module/321
