@@ -11,11 +11,7 @@ Requires: Introduce BFT module LIP, 0044, 0055
 
 ## Abstract
 
-This LIP defines the schema for certificates, how unsigned certificates can be computed from blocks and how they are signed using BLS signatures.
-We further specify commit messages, which are messages containing BLS signatures of certificates.
-We describe how validators create unsigned certificates for blocks they consider final and share the signatures of such certificates by gossiping commit messages via the P2P network.
-The certificate signatures shared via commit messages are subsequently aggregated and included in blocks.
-From the aggregate certificate signatures included in blocks, any node in the blockchain network can create signed certificates which can be used in cross-chain update transactions to facilitate interoperability.
+This LIP defines the schema for certificates, how unsigned certificates can be computed from blocks and how they are signed using BLS signatures. We further specify commit messages, which are messages containing BLS signatures of certificates. We describe how validators create unsigned certificates for blocks they consider final and share the signatures of such certificates by gossiping commit messages via the P2P network. The certificate signatures shared via commit messages are subsequently aggregated and included in blocks. From the aggregate certificate signatures included in blocks, any node in the blockchain network can create signed certificates which can be used in cross-chain update transactions to facilitate interoperability.
 
 ## Copyright
 
@@ -23,8 +19,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The interoperability solution for the Lisk ecosystem, which is based on the paradigm of cross-chain certification, requires the consensus algorithm to generate certificates which can be used in cross-chain update transactions.
-The certificates should attest all information required for the cross-chain update, including the state root, which allows authenticating cross-chain messages, and the validators hash, which authenticates changes of the validators and therefore signers of future certificates.
+The interoperability solution for the Lisk ecosystem, which is based on the paradigm of cross-chain certification, requires the consensus algorithm to generate certificates which can be used in cross-chain update transactions. The certificates should attest all information required for the cross-chain update, including the state root, which allows authenticating cross-chain messages, and the validators hash, which authenticates changes of the validators and therefore signers of future certificates.
 
 ## Rationale
 
@@ -34,91 +29,54 @@ In this section, we explain the main aspects and design choices for the specific
 
 In this section, we define the main terms used throughout this LIP.
 
-* **active validator:** A validator that can propose blocks and contribute to block finality by casting consensus votes for blocks.
-  Active validators are defined per round and may change from round to round.
+* **active validator:** A validator that can propose blocks and contribute to block finality by casting consensus votes for blocks. Active validators are defined per round and may change from round to round.
 * **BFT weight**: The weight with which a validator contributes to finalizing blocks and signing certificates.
-* **single commit**: A message containing a BLS signature of a certificate, which corresponds to a block in the current chain.
-  The single commit message signals that the signing validator considers the corresponding block final.
-* **aggregate commit**: A message containing an aggregate BLS signature of a certificate, which corresponds to a block in the current chain.
-  It attests that all signing validators consider the corresponding block final.
-* **certificate**: Object that authenticates the relevant information for cross-chain communication.
-  It uniquely corresponds to a block header of a chain and contains a subset of properties of that block header.
-  The aggregate BLS signature provided in a certificate attests the finality of the block.
-  Single commits and aggregate commits are messages for communicating certificate signatures.
-
+* **single commit**: A message containing a BLS signature of a certificate, which corresponds to a block in the current chain. The single commit message signals that the signing validator considers the corresponding block final.
+* **aggregate commit**: A message containing an aggregate BLS signature of a certificate, which corresponds to a block in the current chain. It attests that all signing validators consider the corresponding block final.
+* **certificate**: Object that authenticates the relevant information for cross-chain communication. It uniquely corresponds to a block header of a chain and contains a subset of properties of that block header. The aggregate BLS signature provided in a certificate attests the finality of the block. Single commits and aggregate commits are messages for communicating certificate signatures.
 
 ### Certificates
 
-Certificates are the key object for transferring information about the state of one chain to another chain.
-Every certificate is derived from a finalized block and contains the minimal subset of the block header properties required for interoperability.
-In this section, we explain why each of the certificate properties is required.
-For context, see [LIP 0053][ccu-lip] on how the properties are used in the validation and processing of cross-chain update transactions.
+Certificates are the key object for transferring information about the state of one chain to another chain. Every certificate is derived from a finalized block and contains the minimal subset of the block header properties required for interoperability. In this section, we explain why each of the certificate properties is required. For context, see [LIP 0053][ccu-lip] on how the properties are used in the validation and processing of cross-chain update transactions.
 
 * `blockID`: This property uniquely identifies which block a certificate is derived from.
 * `height`: This property is used to check that certificates are submitted sequentially, i.e., in increasing order of height, when included in cross-chain updates.
-* `timestamp`: This property is used to check the liveness requirement as part of the cross-chain update validation.
-  The liveness check prevents that certificates that are older than 30 days can be submitted.
-  For this, the timestamp of the certificate is compared with the timestamp of the current block and cross-chain updates with certificates older than 30 days are rejected.
+* `timestamp`: This property is used to check the liveness requirement as part of the cross-chain update validation. The liveness check prevents that certificates that are older than 30 days can be submitted. For this, the timestamp of the certificate is compared with the timestamp of the current block and cross-chain updates with certificates older than 30 days are rejected.
 * `stateRoot`: The state root is used to authenticate cross-chain messages.
 * `validatorsHash`: The validators hash is used to authenticate changes of the validators and the threshold required for certificate signatures.
-* `aggregationBits` and `signature`: The value of `aggregationBits` is a bitmap defining which validators signed the certificate and the signature property contains the corresponding aggregate BLS signature.
-  These properties are used to validate that indeed the required threshold of validators signed the certificate.
-
+* `aggregationBits` and `signature`: The value of `aggregationBits` is a bitmap defining which validators signed the certificate and the signature property contains the corresponding aggregate BLS signature. These properties are used to validate that indeed the required threshold of validators signed the certificate.
 
 ### Single Commits
 
-Single commits are objects used to share BLS signatures of certificates via the P2P layer.
-Instead of including single commits on-chain as part of a block, we propose to share them off-chain via the P2P layer for the following main reasons:
+Single commits are objects used to share BLS signatures of certificates via the P2P layer. Instead of including single commits on-chain as part of a block, we propose to share them off-chain via the P2P layer for the following main reasons:
 
 * Including non-aggregated BLS signatures by every validator for every block would significantly increase the block size.
 * Validating additional BLS signatures included in blocks slows down the block processing.
 * The single commits can be broadcast directly as soon as a block is considered final, allowing for faster sharing of certificate signatures as they do not first have to be included in a block.
 
-Note that it is always possible to generate certificates only from on-chain data (block headers) and the BLS signatures shared as part of the single commit messages are not required for it.
-This means that data availability is not an issue for this solution.
+Note that it is always possible to generate certificates only from on-chain data (block headers) and the BLS signatures shared as part of the single commit messages are not required for it. This means that data availability is not an issue for this solution.
 
-It further is important that the protocol provides enough incentives for validators to create single commits and to share them via the P2P layer.
-To ensure such incentives for a DPoS blockchain, we propose to add an additional condition for unlocking votes in a [separate LIP][unlock-lip].
-For delegates and users to be able to unlock their tokens used for voting, this LIP will require that certificates are regularly created and therefore a sufficient threshold of active delegates has to regularly create single commits so these can be aggregated for the certificate.
-For a blockchain using Proof-of-Authority, the validators have their reputation at stake and we believe that this is sufficient incentive for them to participate in the certificate creation, which is required for interoperability.
+It further is important that the protocol provides enough incentives for validators to create single commits and to share them via the P2P layer. To ensure such incentives for a DPoS blockchain, we propose to add an additional condition for unlocking votes in a [separate LIP][unlock-lip]. For delegates and users to be able to unlock their tokens used for voting, this LIP will require that certificates are regularly created and therefore a sufficient threshold of active delegates has to regularly create single commits so these can be aggregated for the certificate. For a blockchain using Proof-of-Authority, the validators have their reputation at stake and we believe that this is sufficient incentive for them to participate in the certificate creation, which is required for interoperability.
 
-The goal of the P2P gossip mechanism for single commits is to  ensure that the validators have the necessary data to generate aggregate commits which satisfy the chain of trust (see section below) as quickly and reliably as possible.
-In particular, we want to share single commits as fast as possible while being robust in case of adverse network conditions, such as a temporary network split, a longer time without finalized blocks or a significant number of validators not sharing single commits.
-The design decisions and choice of parameters explained in the list below are based on this overarching goal.
+The goal of the P2P gossip mechanism for single commits is to  ensure that the validators have the necessary data to generate aggregate commits which satisfy the chain of trust (see section below) as quickly and reliably as possible. In particular, we want to share single commits as fast as possible while being robust in case of adverse network conditions, such as a temporary network split, a longer time without finalized blocks or a significant number of validators not sharing single commits. The design decisions and choice of parameters explained in the list below are based on this overarching goal.
 
-- For the `COMMIT_RANGE_STORED+1` most recent blocks of height at most `bftModule.getBFTHeights().maxHeightPrecommitted` we store and gossip all single commits, while for older blocks we only store single commits for blocks for which the `validatorsHash` property is different from that of its parent block.
-The reason is that certificates or aggregate commits are only required to be generated for blocks that authenticate a change of [BFT parameters][bft-module-lip], see Section "Chain of Trust" for details.
-For more recent blocks we want to create and gossip single commits as soon as possible so we store and gossip them for all blocks.
+- For the `COMMIT_RANGE_STORED+1` most recent blocks of height at most `bftModule.getBFTHeights().maxHeightPrecommitted` we store and gossip all single commits, while for older blocks we only store single commits for blocks for which the `validatorsHash` property is different from that of its parent block. The reason is that certificates or aggregate commits are only required to be generated for blocks that authenticate a change of [BFT parameters][bft-module-lip], see Section "Chain of Trust" for details. For more recent blocks we want to create and gossip single commits as soon as possible so we store and gossip them for all blocks.
 - For blocks of height at most `bftModule.getBFTHeights().maxHeightCertified` we do not need to store any single commits, as an aggregate commit has been already generated for the height `bftModule.getBFTHeights().maxHeightCertified`.
 - We gossip single commits every `BLOCK_TIME/2` seconds. This means single commits are shared at a higher frequency than blocks so that ideally after a block is finalized, an aggregate commit for that block is included in the chain only one or two blocks later.
-- An aggregate commit requires single commits by a certain subset of the active validators, depending on the value of the certificate threshold described in the next section. One P2P message can contain up to `2*numActiveValidators` single commits, where `numActiveValidators` is the number of active validators at that height.
-Such a message can therefore contain enough single commits to create two aggregate commits.
-Together with the gossiping frequency of `BLOCK_TIME/2` seconds this allows to share single commits four times faster than blocks are created, allowing for a significant buffer.
+- An aggregate commit requires single commits by a certain subset of the active validators, depending on the value of the certificate threshold described in the next section. One P2P message can contain up to `2*numActiveValidators` single commits, where `numActiveValidators` is the number of active validators at that height. Such a message can therefore contain enough single commits to create two aggregate commits. Together with the gossiping frequency of `BLOCK_TIME/2` seconds this allows to share single commits four times faster than blocks are created, allowing for a significant buffer.
 - In normal operation, aggregate commits for a block will be generated and included in the chain shortly after that block is finalized.
-This implies that the value of `bftModule.getBFTHeights().maxHeightCertified` will be only a bit smaller than `bftModule.getBFTHeights().maxHeightPrecommitted`.
-In particular, the difference between the two values will be at most `COMMIT_RANGE_STORED`.
-In that case, single commits are only gossiped once and those of largest height are gossiped first so that aggregate commits for the last finalized block can be created as soon as possible.
-On the other hand, if the difference between `bftModule.getBFTHeights().maxHeightCertified` and `bftModule.getBFTHeights().maxHeightPrecommitted` is larger than `COMMIT_RANGE_STORED`, aggregate commits have not been generated for a significant number of blocks.
-In this case, single commits of smaller height are prioritized so that the aggregate commits can catch up to the current finalized height.
+This implies that the value of `bftModule.getBFTHeights().maxHeightCertified` will be only a bit smaller than `bftModule.getBFTHeights().maxHeightPrecommitted`. In particular, the difference between the two values will be at most `COMMIT_RANGE_STORED`. In that case, single commits are only gossiped once and those of largest height are gossiped first so that aggregate commits for the last finalized block can be created as soon as possible. On the other hand, if the difference between `bftModule.getBFTHeights().maxHeightCertified` and `bftModule.getBFTHeights().maxHeightPrecommitted` is larger than `COMMIT_RANGE_STORED`, aggregate commits have not been generated for a significant number of blocks. In this case, single commits of smaller height are prioritized so that the aggregate commits can catch up to the current finalized height.
 
 ### Certificate Threshold
 
-The commit messages can be viewed as a third round of BFT consensus votes for blocks, after prevotes and precommits.
-For proceeding from the prevote to the precommit phase for a block, the sum of BFT weights of validators prevoting for the block has to be at least a certain value called **prevote threshold**.
-Similarly, for proceeding to the **commit phase** for a block, the phase introduced by this LIP where validators generate commit messages, the sum of BFT weights of validators precommitting for the block or a descendant of it has to be at least a certain value called **precommit threshold**, see the [Add weights to Lisk-BFT consensus protocol LIP][weighted-lisk-bft-lip] for details.
-Note that if the sum of BFT weights is at least the precommit threshold, then the respective block is considered **final** and will not be reverted.
+The commit messages can be viewed as a third round of BFT consensus votes for blocks, after prevotes and precommits. For proceeding from the prevote to the precommit phase for a block, the sum of BFT weights of validators prevoting for the block has to be at least a certain value called **prevote threshold**. Similarly, for proceeding to the **commit phase** for a block, the phase introduced by this LIP where validators generate commit messages, the sum of BFT weights of validators precommitting for the block or a descendant of it has to be at least a certain value called **precommit threshold**, see the [Add weights to Lisk-BFT consensus protocol LIP][weighted-lisk-bft-lip] for details. Note that if the sum of BFT weights is at least the precommit threshold, then the respective block is considered **final** and will not be reverted.
 
 During the commit phase an additional threshold is used, called **certificate threshold**. It is used in the following parts of the protocol:
 
-* Commit messages are aggregated to aggregate commits, which are then included in blocks.
-  The sum of BFT weights of the validators signing an aggregate commit has to be at least the certificate threshold value.
-  Here the validators are those that are active at the height of the certificate and the BFT weights are the corresponding weights at that height.
+* Commit messages are aggregated to aggregate commits, which are then included in blocks. The sum of BFT weights of the validators signing an aggregate commit has to be at least the certificate threshold value. Here the validators are those that are active at the height of the certificate and the BFT weights are the corresponding weights at that height.
 * When submitting a certificate via a cross-chain update transaction, the weights of all signers have to be above the certificate threshold value that is currently known to the other chain, see [LIP 0053][ccu-lip] for details.
 
-The certificate threshold is stored as part of the BFT Parameters substore of the BFT module, see the [BFT module LIP][bft-module-lip] for details.
-The value of this parameters is set by the DPoS or PoA module via the `setBFTParameters` functions.
-Both for [Lisk DPoS][dpos-lip] and [Lisk PoA][poa-lip], we propose to use the same values for the certificate threshold as for the precommit threshold.
-This means that the same threshold is required for finality as for cross-chain certification.
+The certificate threshold is stored as part of the BFT Parameters substore of the BFT module, see the [BFT module LIP][bft-module-lip] for details. The value of this parameters is set by the DPoS or PoA module via the `setBFTParameters` functions. Both for [Lisk DPoS][dpos-lip] and [Lisk PoA][poa-lip], we propose to use the same values for the certificate threshold as for the precommit threshold. This means that the same threshold is required for finality as for cross-chain certification.
 
 In general, for a height `h`, the certificate threshold could be chosen within the following range:
 
@@ -126,53 +84,30 @@ In general, for a height `h`, the certificate threshold could be chosen within t
 floor(1/3*aggregateBFTWeight(h))+1 <= certificateThreshold(h) <= aggregateBFTWeight(h),
 ```
 
-where `aggregateBFTWeight(h)` is the sum of BFT weights at height `h` and `certificateThreshold(h)` is the certificate threshold at height `h`.
-This allows for a sidechain to choose different trade-offs between satisfying certification liveness (generating certificates with enough signatures) and state transition validity (certificates attest a valid sidechain history):
+where `aggregateBFTWeight(h)` is the sum of BFT weights at height `h` and `certificateThreshold(h)` is the certificate threshold at height `h`. This allows for a sidechain to choose different trade-offs between satisfying certification liveness (generating certificates with enough signatures) and state transition validity (certificates attest a valid sidechain history):
 
-* A sidechain prioritizing certification liveness can choose a certificate threshold of `floor(1/3* aggregateBFTWeight(h))+1`.
-  This ensures that as long as `floor(2/3*aggregateBFTWeight(h))+1` of the sidechain validators in terms of BFT weight are always honest, no invalid state transition will be certified.
-  On the other hand, more than half of the sidechain validators could go permanently offline (and be replaced by other delegates in a Lisk DPoS chain, for instance) without endangering certification liveness.
-* A sidechain prioritizing state transition validity may even choose a threshold higher than the precommit threshold if they view the danger of invalid state transitions being certified as higher than contradicting blocks to be finalized.
-  Such a chain may accept that the connection to the Lisk Mainchain is terminated in case of a certification liveness failure and would have to be re-established afterwards.
+* A sidechain prioritizing certification liveness can choose a certificate threshold of `floor(1/3* aggregateBFTWeight(h))+1`. This ensures that as long as `floor(2/3*aggregateBFTWeight(h))+1` of the sidechain validators in terms of BFT weight are always honest, no invalid state transition will be certified. On the other hand, more than half of the sidechain validators could go permanently offline (and be replaced by other delegates in a Lisk DPoS chain, for instance) without endangering certification liveness.
+* A sidechain prioritizing state transition validity may even choose a threshold higher than the precommit threshold if they view the danger of invalid state transitions being certified as higher than contradicting blocks to be finalized. Such a chain may accept that the connection to the Lisk Mainchain is terminated in case of a certification liveness failure and would have to be re-established afterwards.
 
 ### Aggregate Commits
 
-Aggregate commits are created from single commits by aggregating the BLS signatures.
-The aggregate commits are then added to blocks in order to ensure that certificates can be obtained from on-chain data and they also enable adding the additional unlocking condition for DPoS blockchains.
-Aggregate commits are basically the same as certificates with the properties `blockID`, `timestamp`, `stateRoot` and `validatorsHash` removed as these properties are already included in previous blocks and are thus redundant.
+Aggregate commits are created from single commits by aggregating the BLS signatures. The aggregate commits are then added to blocks in order to ensure that certificates can be obtained from on-chain data and they also enable adding the additional unlocking condition for DPoS blockchains. Aggregate commits are basically the same as certificates with the properties `blockID`, `timestamp`, `stateRoot` and `validatorsHash` removed as these properties are already included in previous blocks and are thus redundant.
 
 ### Chain of Trust
 
-We say that the chain of trust property is satisfied for a sequence of certificates *c<sub>1</sub>*, ..., *c<sub>k</sub>* with *c<sub>1</sub>.height* < *c<sub>2</sub>.height* < ... < *c<sub>k</sub>.height*, if the following holds for any two consecutive certificates *c<sub>i</sub>* and *c<sub>i+1</sub>* for *i* in *{1, …, k-1}*:
-If *v<sub>1</sub>*,...,*v<sub>n</sub>* are the validators authenticated by *c<sub>i</sub>*, *w<sub>1</sub>*,...,*w<sub>n</sub>* are the associated BFT weights and *t* is the threshold authenticated by *c<sub>i</sub>*, then the aggregate signature of *c<sub>i+1</sub>* must be valid with respect to the validators *v<sub>1</sub>*,...,*v<sub>n</sub>* with BFT weights *w<sub>1</sub>*,...,*w<sub>n</sub>* and threshold *t*.
+We say that the chain of trust property is satisfied for a sequence of certificates *c<sub>1</sub>*, ..., *c<sub>k</sub>* with *c<sub>1</sub>.height* < *c<sub>2</sub>.height* < ... < *c<sub>k</sub>.height*, if the following holds for any two consecutive certificates *c<sub>i</sub>* and *c<sub>i+1</sub>* for *i* in *{1, …, k-1}*: If *v<sub>1</sub>*,...,*v<sub>n</sub>* are the validators authenticated by *c<sub>i</sub>*, *w<sub>1</sub>*,...,*w<sub>n</sub>* are the associated BFT weights and *t* is the threshold authenticated by *c<sub>i</sub>*, then the aggregate signature of *c<sub>i+1</sub>* must be valid with respect to the validators *v<sub>1</sub>*,...,*v<sub>n</sub>* with BFT weights *w<sub>1</sub>*,...,*w<sub>n</sub>* and threshold *t*.
 
-Let *a<sub>1</sub>*, ..., *a<sub>k</sub>* be the sequence of all aggregate commits included in a blockchain.
-Every aggregate commit *a<sub>i</sub>* uniquely corresponds to one certificate *c<sub>i</sub>*.
-We then call *c<sub>1</sub>*, ..., *c<sub>k</sub>* the certificates generated by the blockchain.
-We further say that the blockchain satisfies the chain of trust property, if the sequence of certificates *c<sub>1</sub>*, ..., *c<sub>k</sub>* satisfies the chain of trust property.
+Let *a<sub>1</sub>*, ..., *a<sub>k</sub>* be the sequence of all aggregate commits included in a blockchain. Every aggregate commit *a<sub>i</sub>* uniquely corresponds to one certificate *c<sub>i</sub>*. We then call *c<sub>1</sub>*, ..., *c<sub>k</sub>* the certificates generated by the blockchain. We further say that the blockchain satisfies the chain of trust property, if the sequence of certificates *c<sub>1</sub>*, ..., *c<sub>k</sub>* satisfies the chain of trust property.
 
-Intuitively, the chain of trust property means that for any validator change a subset of the previous validators with total BFT weights above the given threshold value has to sign a certificate.
-For example, the chain of trust would be broken if all validators could change without signing a certificate authenticating this change, as certificates by the new validators would then not be accepted by other chains as these are not aware of the change.
-An example of a sequence of three certificates satisfying the chain of trust is shown in Figure 1.
-If in that example Certificate 3, which authenticates the transition from the validator set A, B, E, F back to A, B, C, D, is never generated, then the chain of trust property does not hold.
-In particular, if Certificate 2 is submitted to the Lisk Mainchain, then no further certificates could be submitted to the Lisk Mainchain.
+Intuitively, the chain of trust property means that for any validator change a subset of the previous validators with total BFT weights above the given threshold value has to sign a certificate. For example, the chain of trust would be broken if all validators could change without signing a certificate authenticating this change, as certificates by the new validators would then not be accepted by other chains as these are not aware of the change. An example of a sequence of three certificates satisfying the chain of trust is shown in Figure 1. If in that example Certificate 3, which authenticates the transition from the validator set A, B, E, F back to A, B, C, D, is never generated, then the chain of trust property does not hold. In particular, if Certificate 2 is submitted to the Lisk Mainchain, then no further certificates could be submitted to the Lisk Mainchain.
 
 ![Example: Chain of Trust](lip-introduce_certificate_generation_mechanism/example_chain_of_trust.png)
 
 _Figure 1: Example of a sequence of three certificates satisfying the chain of trust._
 
-For maintaining interoperability via certification, it is therefore crucial that the chain of trust is always maintained.
-Every block and also any certificate derived from a block has a `validatorsHash` property.
-This property is computed from the BLS keys of the active validators, their BFT weights and the certificate threshold after the block is applied, see the [BFT module LIP][bft-module-lip] for details.
-As the active validators are the same within one round, only blocks which are the last block of a round may have a different `validatorsHash` property than their parent block.
-This means that the chain of trust property is satisfied if the certificate generation mechanism ensures that a certificate is generated for all blocks for which the `validatorsHash` property is distinct from the `validatorsHash` property of the parent block. This way there is a certificate authenticating any validator transition that happened in the chain.
+For maintaining interoperability via certification, it is therefore crucial that the chain of trust is always maintained. Every block and also any certificate derived from a block has a `validatorsHash` property. This property is computed from the BLS keys of the active validators, their BFT weights and the certificate threshold after the block is applied, see the [BFT module LIP][bft-module-lip] for details. As the active validators are the same within one round, only blocks which are the last block of a round may have a different `validatorsHash` property than their parent block. This means that the chain of trust property is satisfied if the certificate generation mechanism ensures that a certificate is generated for all blocks for which the `validatorsHash` property is distinct from the `validatorsHash` property of the parent block. This way there is a certificate authenticating any validator transition that happened in the chain.
 
-The certificate generation specified in this LIP therefore generates an aggregate commit for any block at height `h` for which  `bftModule.existBFTParameters(h+1)` returns `True`.
-This means that at height `h+1` the [BFT module LIP][bft-module-lip] stores new and possibly different BFT parameters that need to be authenticated by the block at height `h`.
-Note that the [DPoS module][dpos-lip] and [PoA module][poa-lip] only set new BFT parameters for the height of the first block of a round, if the BFT parameters are different from the previous round.
-This implies that for DPoS or PoA an aggregate commit for the last block of a round is only required, if the next round uses different BFT parameters than the current round.
-As already mentioned, from the on-chain data, i.e., the aggregate commit and referenced block header, the corresponding certificates can be computed.
-Hence, the mechanism specified in this LIP guarantees that the generated certificates satisfy the chain of trust property.
+The certificate generation specified in this LIP therefore generates an aggregate commit for any block at height `h` for which  `bftModule.existBFTParameters(h+1)` returns `True`. This means that at height `h+1` the [BFT module LIP][bft-module-lip] stores new and possibly different BFT parameters that need to be authenticated by the block at height `h`. Note that the [DPoS module][dpos-lip] and [PoA module][poa-lip] only set new BFT parameters for the height of the first block of a round, if the BFT parameters are different from the previous round. This implies that for DPoS or PoA an aggregate commit for the last block of a round is only required, if the next round uses different BFT parameters than the current round. As already mentioned, from the on-chain data, i.e., the aggregate commit and referenced block header, the corresponding certificates can be computed. Hence, the mechanism specified in this LIP guarantees that the generated certificates satisfy the chain of trust property.
 
 Note that if possible, also aggregate commits for blocks that are not at the end of the round are created and added to blocks so that a certificate is created as soon as a block is finalized and it is not required to wait for a change of BFT parameters.
 
@@ -184,16 +119,15 @@ In this LIP, we write `bftModule.fct` for a call to the function `fct` defined i
 
 ### Constants
 
-| **Name**               | **Value**              | **Description**                              |
-|------------------------|------------------------|----------------------------------------------|
-| `BLOCK_TIME`           | configurable per chain, <br> default: 10 seconds| Length of a block slot.|
-| `MESSAGE_TAG_CERTIFICATE` | `"LSK_CE_"`| Message tag prepended when signing a certificate object, see [LIP 0037](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0037.md).|
-| `COMMIT_RANGE_STORED`  | 100 | The commit messages at heights `{bftModule.getBFTHeights().maxHeightPrecommitted - COMMIT_RANGE_STORED, ..., bftModule.getBFTHeights().maxHeightPrecommitted}` are always stored. For smaller heights only the single commits for blocks authenticating a change of BFT parameters are stored.|
+| **Name**                   | **Value**              | **Description**                                   |
+|----------------------------|------------------------|---------------------------------------------------|
+| `BLOCK_TIME`               | configurable per chain, <br> default: 10 seconds | Length of a block slot. |
+| `MESSAGE_TAG_CERTIFICATE`  | `"LSK_CE_"`            | Message tag prepended when signing a certificate object, see [LIP 0037](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0037.md). |
+| `COMMIT_RANGE_STORED`      | 100                    | The commit messages at heights `{bftModule.getBFTHeights().maxHeightPrecommitted - COMMIT_RANGE_STORED, ..., bftModule.getBFTHeights().maxHeightPrecommitted}` are always stored. For smaller heights only the single commits for blocks authenticating a change of BFT parameters are stored. |
 
 ### Certificate
 
-Certificates are the key object for transferring information about the state of one chain to another chain.
-Every certificate references a finalized block via the `blockID` property and contains a subset of the properties of that block, namely those properties important for interoperability.
+Certificates are the key object for transferring information about the state of one chain to another chain. Every certificate references a finalized block via the `blockID` property and contains a subset of the properties of that block, namely those properties important for interoperability.
 
 #### Schema
 
@@ -242,26 +176,24 @@ certificateSchema = {
 
 #### Creation
 
-A certificate is always created from a finalized block in the current chain.
-A certificate `c` is computed from a block header `blockHeader` in the following canonical way:
+A certificate is always created from a finalized block in the current chain. A certificate `c` is computed from a block header `blockHeader` in the following canonical way:
 
 ```python
 computeCertificateFromBlockHeader(blockHeader):
-  c = certificate object following certificateSchema
-  c.blockID = block ID of blockHeader
-  c.height = blockHeader.height
-  c.timestamp = blockHeader.timestamp
-  c.stateRoot = blockHeader.stateRoot
-  c.validatorsHash = blockHeader.validatorsHash
-  return c
+    c = certificate object following certificateSchema
+    c.blockID = block ID of blockHeader
+    c.height = blockHeader.height
+    c.timestamp = blockHeader.timestamp
+    c.stateRoot = blockHeader.stateRoot
+    c.validatorsHash = blockHeader.validatorsHash
+    return c
 ```
 
 Note that the two properties `aggregationBits` and `signature` are not required in the schema and are not set in the above function because these properties are removed when signing certificates (see section below).
 
 #### Signature Computation and Validation
 
-In this section we describe how a signature of a certificate is computed and how single and aggregate signatures of certificates are validated.
-The functions `signBLS()`, `verifyBLS()` and `verifyWeightedAggSig()` are as defined in the [LIP 0038](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md).
+In this section we describe how a signature of a certificate is computed and how single and aggregate signatures of certificates are validated. The functions `signBLS()`, `verifyBLS()` and `verifyWeightedAggSig()` are as defined in the [LIP 0038](https://github.com/LiskHQ/lips/blob/master/proposals/lip-0038.md).
 
 ##### signCertificate
 
@@ -318,11 +250,11 @@ The following function verifies the aggregate BLS signature which is provided as
 
 ###### Parameters
 
-*   `keysList` is an array of BLS public keys,
-*   `weights` is an array of weights corresponding to the BLS public keys, i.e., `weights[i]` is the BFT weight of the validator with public key `keysList[i]`,
-*   `threshold` is the required threshold value for the signatures,
-*   `networkIdentifier` is the network identifier of the chain that the certificate corresponds to,
-*   `c` is a certificate object following the schema `certificateSchema` defined above.
+* `keysList` is an array of BLS public keys,
+* `weights` is an array of weights corresponding to the BLS public keys, i.e., `weights[i]` is the BFT weight of the validator with public key `keysList[i]`,
+* `threshold` is the required threshold value for the signatures,
+* `networkIdentifier` is the network identifier of the chain that the certificate corresponds to,
+* `c` is a certificate object following the schema `certificateSchema` defined above.
 
 ###### Returns
 
@@ -342,10 +274,7 @@ verifyAggregateCertificateSignature(keysList, weights, threshold, networkIdentif
 
 ### Single Commits
 
-If for validator `v` a block `b` or a descendant of it obtains precommits of at least the precommit threshold value, then validator `v` creates and gossips a commit message if the validator is active at height `b.header.height`.
-This commit message contains a certificate signature by validator `v` of the certificate computed from the block `b`.
-These commit messages are collected by all nodes, aggregated and then can be added to a block by any block proposer as part of an aggregate commit defined below.
-In this section, we define the schema, creation and validity for single commit messages and the peer-to-peer gossip mechanism.
+If for validator `v` a block `b` or a descendant of it obtains precommits of at least the precommit threshold value, then validator `v` creates and gossips a commit message if the validator is active at height `b.header.height`. This commit message contains a certificate signature by validator `v` of the certificate computed from the block `b`. These commit messages are collected by all nodes, aggregated and then can be added to a block by any block proposer as part of an aggregate commit defined below. In this section, we define the schema, creation and validity for single commit messages and the peer-to-peer gossip mechanism.
 
 #### Schema
 
@@ -408,8 +337,7 @@ createSingleCommit(blockHeader, validatorInfo, networkIdentifier):
 
 #### Single Commit Removal
 
-To reduce the storage requirements, single commits that are no longer needed are removed.
-This section provides a function that computes the height up to which single commits can be removed.
+To reduce the storage requirements, single commits that are no longer needed are removed. This section provides a function that computes the height up to which single commits can be removed.
 
 ##### Returns
 
@@ -425,9 +353,7 @@ getMaxRemovalHeight():
 
 #### Initial Single Commit Creation
 
-If a validator node starts for the first time or loses all previously created single commits due to a restart, the node should automatically re-create all recent single commits, which may be essential for the network to create aggregate commits.
-Let `h1 = getMaxRemovalHeight()` and `h2 = bftModule.getBFTHeights().maxHeightPrecommitted`.
-Then the single commits are created as described in the next section [Creation After Block Processing](#creation-after-block-processing) for these values of `h1` and `h2`.
+If a validator node starts for the first time or loses all previously created single commits due to a restart, the node should automatically re-create all recent single commits, which may be essential for the network to create aggregate commits. Let `h1 = getMaxRemovalHeight()` and `h2 = bftModule.getBFTHeights().maxHeightPrecommitted`. Then the single commits are created as described in the next section [Creation After Block Processing](#creation-after-block-processing) for these values of `h1` and `h2`.
 
 #### Creation After Block Processing
 
@@ -438,17 +364,12 @@ If for a validator `v`, after applying a block the value returned by the functio
 
 #### Single Commit P2P Gossip
 
-Every node needs to store single commit messages for the P2P gossip mechanism and to allow for the creation of aggregate commits from single commits.
-The data structures storing single commits are not part of the blockchain state and can be cleared when restarting the node.
-For the gossip mechanism it is further important to know which commit messages have been gossiped already.
-The specifications below therefore assume that single commits are stored in two separate data structures, but in general a different mechanism for classification such as an additional flag can also be used.
+Every node needs to store single commit messages for the P2P gossip mechanism and to allow for the creation of aggregate commits from single commits. The data structures storing single commits are not part of the blockchain state and can be cleared when restarting the node. For the gossip mechanism it is further important to know which commit messages have been gossiped already. The specifications below therefore assume that single commits are stored in two separate data structures, but in general a different mechanism for classification such as an additional flag can also be used.
 
 We assume that single commits are stored in the following two data structures:
 
-* `nonGossipedCommits:` This data structure stores newly received or newly created single commit messages until they are gossiped.
-  The commit messages are organized by height.
-* `gossipedCommits:` This data structure contains commit messages that have been gossiped already.
-  The commit messages are also organized by height.
+* `nonGossipedCommits:` This data structure stores newly received or newly created single commit messages until they are gossiped. The commit messages are organized by height.
+* `gossipedCommits:` This data structure contains commit messages that have been gossiped already. The commit messages are also organized by height.
 
 Every new incoming single commit message `m` is validated as follows:
 
@@ -463,22 +384,20 @@ Every new incoming single commit message `m` is validated as follows:
 Let `h` be the height of the current tip of the chain. Commit messages in `nonGossipedCommits` are gossiped every `BLOCK_TIME/2` seconds as follows:
 
 1. Cleanup the data structures `nonGossipedCommits` and `gossipedCommits`:
-    1. Remove any single commit message `m` from `nonGossipedCommits` and `gossipedCommits` with `m.height <=  getMaxRemovalHeight()`.
-    2. For every commit message `m` in `nonGossipedCommits` or `gossipedCommits` one of the following two conditions has to hold, otherwise it is discarded.
-        * The value of `m.height` is in `{bftModule.getBFTHeights().maxHeightPrecommitted - COMMIT_RANGE_STORED, …, bftModule.getBFTHeights().maxHeightPrecommitted}`.
-        * The function `bftModule.existBFTParameters(m.height+1)` returns `True`, which means that `m.height` is the height of a block authenticating a change of BFT parameters.
+  1. Remove any single commit message `m` from `nonGossipedCommits` and `gossipedCommits` with `m.height <=  getMaxRemovalHeight()`.
+  2. For every commit message `m` in `nonGossipedCommits` or `gossipedCommits` one of the following two conditions has to hold, otherwise it is discarded.
+    * The value of `m.height` is in `{bftModule.getBFTHeights().maxHeightPrecommitted - COMMIT_RANGE_STORED, …, bftModule.getBFTHeights().maxHeightPrecommitted}`.
+    * The function `bftModule.existBFTParameters(m.height+1)` returns `True`, which means that `m.height` is the height of a block authenticating a change of BFT parameters.
 2. Let `numActiveValidators` be the length of the array returned by `bftModule.getBFTParameters(h).validators`. Choose up to `2*numActiveValidators` commit messages as follows:
-    1. Select any message in `nonGossipedCommits` or `gossipedCommits` with `m.height < bftModule.getBFTHeights().maxHeightPrecommitted - COMMIT_RANGE_STORED` choosing messages with smaller height first.
-    2. Select all newly created commit messages in `nonGossipedCommits` (created by a block generator node itself) choosing the ones with the largest height first.
-    3. Select among the received commit messages in `nonGossipedCommits` (created by other nodes) the ones with the largest height first.
+  1. Select any message in `nonGossipedCommits` or `gossipedCommits` with `m.height < bftModule.getBFTHeights().maxHeightPrecommitted - COMMIT_RANGE_STORED` choosing messages with smaller height first.
+  2. Select all newly created commit messages in `nonGossipedCommits` (created by a block generator node itself) choosing the ones with the largest height first.
+  3. Select among the received commit messages in `nonGossipedCommits` (created by other nodes) the ones with the largest height first.
 3. Gossip an array of up to `2*numActiveValidators` commit messages to 16 randomly chosen connected peers with at least 8 of them being outgoing peers (same parameters as block propagation).
 4. Move any gossiped commit message included in `nonGossipedCommits` to `gossipedCommits`.
 
 ### Aggregate Commits
 
-From multiple single commit messages an aggregate commit message can be computed by aggregating the BLS signatures.
-Subsequently, an aggregate commit can be included in a block header.
-In this section, we describe the schema of an aggregate commit, how it is computed from single commits, how a block generator chooses an aggregate commit to include in a block and how an aggregate commit is processed as part of the block processing.
+From multiple single commit messages an aggregate commit message can be computed by aggregating the BLS signatures. Subsequently, an aggregate commit can be included in a block header. In this section, we describe the schema of an aggregate commit, how it is computed from single commits, how a block generator chooses an aggregate commit to include in a block and how an aggregate commit is processed as part of the block processing.
 
 #### Schema
 
@@ -553,7 +472,7 @@ An object following the schema `aggregateCommitSchema`, which can be added the n
 
 ```python
 selectAggregateCommit():
-    # note that the BFT parameters at height maxHeightCertified+1 are already authenticated by the previous certificate
+    # Note that the BFT parameters at height maxHeightCertified+1 are already authenticated by the previous certificate
     heightNextBFTParameters = bftModule.getNextHeightBFTParameters(bftModule.getBFTHeights().maxHeightCertified + 1)
     if previous function call returns valid height:
         nextHeight = min(heightNextBFTParameters-1, bftModule.getBFTHeights().maxHeightPrecommitted)
@@ -571,7 +490,7 @@ selectAggregateCommit():
             return aggregateSingleCommits(singleCommits)
         else:
             nextHeight -= 1
-    # return default aggregate commit object
+    # Return default aggregate commit object
     aggregateCommit = object following aggregateCommitSchema
     aggregateCommit.height =  bftModule.getBFTHeights().maxHeightCertified
     aggregateCommit.aggregationBits =  empty bytes
@@ -585,17 +504,17 @@ As part of the verification of a block header `blockHeader` as described in [LIP
 
 ```python
 verifyAggregateCommit(aggregateCommit):
-    # check if the aggregate commit object is the default object with empty signature
+    # Check if the aggregate commit object is the default object with empty signature
     if aggregateCommit.aggregationBits == empty bytes
        and aggregateCommit.certificateSignature == empty bytes
        and aggregateCommit.height == bftModule.getBFTHeights().maxHeightCertified:
         return True
     if aggregateCommit.aggregationBits == empty bytes or aggregateCommit.certificateSignature == empty bytes:
         return False
-    # the heights of aggregate commits must be strictly increasing
+    # The heights of aggregate commits must be strictly increasing
     if aggregateCommit.height <= bftModule.getBFTHeights().maxHeightCertified:
         return False
-    # check that the height of the aggregate commit is at most the value of
+    # Check that the height of the aggregate commit is at most the value of
     # maxHeightPrecommitted before processing b
     if aggregateCommit.height > bftModule.getBFTHeights().maxHeightPrecommitted:
         return False
@@ -608,7 +527,7 @@ verifyAggregateCommit(aggregateCommit):
     if previous function call returns valid height and aggregateCommit.height > heightNextBFTParameters-1:
         return False
 
-    # check the aggregate signature with respect to the BFT weights
+    # Check the aggregate signature with respect to the BFT weights
     # and certificate threshold
     blockHeader1 = block header of block at height aggregateCommit.height
     c = computeCertificateFromBlockHeader(blockHeader1)
@@ -642,20 +561,12 @@ TBD
 
 ### Selecting Optimal Certificates for Cross-Chain Certification
 
-For the interoperability solution in Lisk, it is crucial that a node running a blockchain *A* can provide certificates that can be used in cross-chain updates transactions, which are then submitted to another blockchain *B*.
-In particular, given the height `lastCertifiedHeight` of the last certificate submitted to blockchain *B* as input, a node for blockchain *A* should be able to provide a valid certificate of height larger than `lastCertifiedHeight` that will be accepted by blockchain *B* (if such a certificate exists).
-In order to minimize the fees paid for submitting cross-chain updates, the new certificate should have the maximum possible height while still maintaining the chain of trust.
-This means that it should not be necessary to submit intermediate certificates authenticating only minor validator changes, but skip over as many intermediate certificates as possible.
-This is, in particular, important if the previously submitted certificate at height `lastCertifiedHeight` was created days or even weeks ago.
-Note that due to the liveness requirement, there has to be at least one certificate submitted in any 30 day period, see  [LIP 0053][ccu-lip] for details.
+For the interoperability solution in Lisk, it is crucial that a node running a blockchain *A* can provide certificates that can be used in cross-chain updates transactions, which are then submitted to another blockchain *B*. In particular, given the height `lastCertifiedHeight` of the last certificate submitted to blockchain *B* as input, a node for blockchain *A* should be able to provide a valid certificate of height larger than `lastCertifiedHeight` that will be accepted by blockchain *B* (if such a certificate exists). In order to minimize the fees paid for submitting cross-chain updates, the new certificate should have the maximum possible height while still maintaining the chain of trust. This means that it should not be necessary to submit intermediate certificates authenticating only minor validator changes, but skip over as many intermediate certificates as possible. This is, in particular, important if the previously submitted certificate at height `lastCertifiedHeight` was created days or even weeks ago. Note that due to the liveness requirement, there has to be at least one certificate submitted in any 30 day period, see  [LIP 0053][ccu-lip] for details.
 
 In this section, we describe the following two approaches for nodes to provide certificates:
 
-- **Approach 1**: This approach computes a suitable certificate (if it exists) from on-chain data from blockchain *A* , namely the block header data of blockchain *A* (including the aggregate commits) and historic sets of active validators and certificate threshold (inputs of the validators hash computation).
-Any node can store the block header data and the historic active validators and certificate threshold when processing the blocks of blockchain *A* .
-- **Approach 2**: This approach computes a suitable certificates (if it exists) from the on-chain data used in Approach 1 and the single commit messages shared via the P2P network.
-For this approach, the node should have been participating in the P2P network of blockchain *A* from the time of the creation of the last certificate submitted to blockchain *B* onwards and collected all single commits shared via the P2P network.
-Single commits are off-chain data, not required to be stored and cannot be requested from other nodes via the P2P protocol.
+- **Approach 1**: This approach computes a suitable certificate (if it exists) from on-chain data from blockchain *A* , namely the block header data of blockchain *A* (including the aggregate commits) and historic sets of active validators and certificate threshold (inputs of the validators hash computation). Any node can store the block header data and the historic active validators and certificate threshold when processing the blocks of blockchain *A* .
+- **Approach 2**: This approach computes a suitable certificates (if it exists) from the on-chain data used in Approach 1 and the single commit messages shared via the P2P network. For this approach, the node should have been participating in the P2P network of blockchain *A* from the time of the creation of the last certificate submitted to blockchain *B* onwards and collected all single commits shared via the P2P network. Single commits are off-chain data, not required to be stored and cannot be requested from other nodes via the P2P protocol.
 
 #### Auxiliary Functions
 
@@ -684,17 +595,11 @@ getCertificateFromAggregateCommit(aggregateCommit):
 
 #### Approach 1: Certificate computation from aggregate commits
 
-In this section, we describe how to compute the certificate of largest height that can be submitted to a blockchain *B* given the data from a node running blockchain *A*.
-We let `lastCertifiedHeight` be the height of the last certificate from blockchain *A* that has been submitted to blockchain *B*.
-For the computation, we require the following data from blockchain *A*:
+In this section, we describe how to compute the certificate of largest height that can be submitted to a blockchain *B* given the data from a node running blockchain *A*. We let `lastCertifiedHeight` be the height of the last certificate from blockchain *A* that has been submitted to blockchain *B*. For the computation, we require the following data from blockchain *A*:
 
 - All block headers of blockchain *A* with height at least `lastCertifiedHeight`.
-- All aggregate commits included in blockchain *A* with height at least `lastCertifiedHeight`.
-For the specifications here, we assume that there is a key-value map `aggregateCommits` storing the aggregate commits included in blockchain *A*.
-That is `aggregateCommits[h]` for a height `h` is an aggregate commit object with height property equal to `h` that was included in blockchain *A*.
-There is no key-value entry in `aggregateCommits` if no such aggregate commit exists.
-- The validators with BFT weight and BLS key and the certificate thresholds used for the computation of the `validatorsHash` property of the blocks from height `lastCertifiedHeight` onwards.
-For the specifications, we assume that there is a key-value store `validatorsHashPreimage` such that for a validators hash `validatorsHash`, `validatorsHashPreimage[validatorsHash]` is an object following `validatorsHashInputSchema` which yields the value of `validatorsHash` given as input.
+- All aggregate commits included in blockchain *A* with height at least `lastCertifiedHeight`. For the specifications here, we assume that there is a key-value map `aggregateCommits` storing the aggregate commits included in blockchain *A*. That is `aggregateCommits[h]` for a height `h` is an aggregate commit object with height property equal to `h` that was included in blockchain *A*. There is no key-value entry in `aggregateCommits` if no such aggregate commit exists.
+- The validators with BFT weight and BLS key and the certificate thresholds used for the computation of the `validatorsHash` property of the blocks from height `lastCertifiedHeight` onwards. For the specifications, we assume that there is a key-value store `validatorsHashPreimage` such that for a validators hash `validatorsHash`, `validatorsHashPreimage[validatorsHash]` is an object following `validatorsHashInputSchema` which yields the value of `validatorsHash` given as input.
 
 The function `getNextCertificateFromAggregateCommits` which computes the certificate from the data described above is specified in the next section.
 
@@ -727,7 +632,7 @@ getNextCertificateFromAggregateCommits(lastCertifiedHeight):
     h = bftModule.getBFTHeights().maxHeightCertified
     while h > lastCertifiedHeight:
         if h in aggregateCommits:
-            # verify whether the chain of trust is maintained, i.e., the certificate corresponding to
+            # Verify whether the chain of trust is maintained, i.e., the certificate corresponding to
             # aggregateCommits[h] would be accepted by blockchain B
             if checkChainOfTrust(lastValidatorsHash, blsKeyToBFTWeight, lastCertificateThreshold, aggregateCommits[h]):
                 return getCertificateFromAggregateCommit(aggregateCommits[h])
@@ -738,7 +643,7 @@ getNextCertificateFromAggregateCommits(lastCertifiedHeight):
 ```python
 checkChainOfTrust(lastValidatorsHash, blsKeyToBFTWeight, lastCertificateThreshold, aggregateCommit):
     blockHeader = block header at height aggregateCommit.height - 1
-    # certificate signers and certificate threshold for aggregateCommit are those authenticated by the last certificate
+    # Certificate signers and certificate threshold for aggregateCommit are those authenticated by the last certificate
     if lastValidatorsHash == blockHeader.validatorsHash:
         return True
 
@@ -746,7 +651,7 @@ checkChainOfTrust(lastValidatorsHash, blsKeyToBFTWeight, lastCertificateThreshol
     validators = validatorsHashPreimage[blockHeader.validatorsHash].validators
     for i in range(length(validators)):
         if bit i of aggregateCommit.aggregationsBits is 1:
-            # aggregate commit must only be signed by BLS keys known to the other chain
+            # Aggregate commit must only be signed by BLS keys known to the other chain
             if not validators[i].blsKey in blsKeyToBFTWeight:
                 return False
             aggregateBFTWeight += blsKeyToBFTWeight[validators[i].blsKey]
@@ -758,17 +663,11 @@ checkChainOfTrust(lastValidatorsHash, blsKeyToBFTWeight, lastCertificateThreshol
 
 #### Approach 2: Certificate computation from single commits
 
-In this section, we describe how to compute the certificate of largest height that can be submitted to a blockchain *B* given the single commits collected from a node running blockchain *A*.
-We let `lastCertifiedHeight` be the height of the last certificate from blockchain *A* that has been submitted to blockchain *B*.
-For the computation, we require the following data from blockchain *A*:
+In this section, we describe how to compute the certificate of largest height that can be submitted to a blockchain *B* given the single commits collected from a node running blockchain *A*. We let `lastCertifiedHeight` be the height of the last certificate from blockchain *A* that has been submitted to blockchain *B*. For the computation, we require the following data from blockchain *A*:
 
 - All block headers of blockchain *A* with height at least `lastCertifiedHeight`.
-- The single commits collected by the node running blockchain *A* with height at least `lastCertifiedHeight`.
-For the specifications here, we assume that there is a key-value map `singleCommits` storing the single commits shared via the P2P network of blockchain *A* and collected by the node.
-That is `singleCommits[h]` for a height `h` is an array of valid single commit object, i.e., single commit objects that passed the validation steps 1 - 7 described in the section [Single Commit P2P Gossip](#single-commit-p2p-gossip), each with height property equal to `h` and with distinct `validatorAddress` properties.
-There is no key-value entry in `singleCommits` if no single commits for that height were collected.
-- The validators with BFT weight and BLS key and the certificate thresholds used for the computation of the `validatorsHash` property of the blocks from height `lastCertifiedHeight` onwards.
-For the specifications, we assume that there is a key-value store `validatorsHashPreimage` such that for a validators hash `validatorsHash`, `validatorsHashPreimage[validatorsHash]` is an object following `validatorsHashInputSchema` which yields the value of `validatorsHash` given as input.
+- The single commits collected by the node running blockchain *A* with height at least `lastCertifiedHeight`. For the specifications here, we assume that there is a key-value map `singleCommits` storing the single commits shared via the P2P network of blockchain *A* and collected by the node. That is `singleCommits[h]` for a height `h` is an array of valid single commit object, i.e., single commit objects that passed the validation steps 1 - 7 described in the section [Single Commit P2P Gossip](#single-commit-p2p-gossip), each with height property equal to `h` and with distinct `validatorAddress` properties. There is no key-value entry in `singleCommits` if no single commits for that height were collected.
+- The validators with BFT weight and BLS key and the certificate thresholds used for the computation of the `validatorsHash` property of the blocks from height `lastCertifiedHeight` onwards. For the specifications, we assume that there is a key-value store `validatorsHashPreimage` such that for a validators hash `validatorsHash`, `validatorsHashPreimage[validatorsHash]` is an object following `validatorsHashInputSchema` which yields the value of `validatorsHash` given as input.
 - A function to obtain the address of a validator in blockchain *A* from its BLS key. We assume that that this functionality is provided by the function `getAddressFromBLSKey` of the [Validators module][validator-module-lip].
 
 The function `getNextCertificateFromSingleCommits` which computes the certificate from the data described above is specified in the next section.
@@ -819,7 +718,7 @@ computeEligibleSingleCommits(addressToBFTWeight, lastCertificateThreshold, singl
     eligibleSingleCommits = []
     aggregateBFTWeight = 0
     for singleCommit in singleCommitsArray:
-        # certificate must only be signed by BLS keys known to the other chain
+        # Certificate must only be signed by BLS keys known to the other chain
         if singleCommit.validatorAddress in addressToBFTWeight:
             append singleCommit to eligibleSingleCommits
             aggregateBFTWeight += addressToBFTWeight[singleCommit.validatorAddress]
@@ -828,7 +727,6 @@ computeEligibleSingleCommits(addressToBFTWeight, lastCertificateThreshold, singl
     else:
         return []
 ```
-
 
 [ccu-lip]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0053.md
 [bft-module-lip]: https://research.lisk.com/t/introduce-bft-module/321
