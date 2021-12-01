@@ -3,10 +3,11 @@ LIP: <LIP number>
 Title: Introduce certificate generation mechanism
 Author: Jan Hackfeld <jan.hackfeld@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-certificate-generation-mechanism/296
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
-Requires: Introduce BFT module LIP, 0044, 0055
+Created: 2021-05-22
+Updated: 2021-12-01
+Requires: 0044, 0055, 0058
 ```
 
 ## Abstract
