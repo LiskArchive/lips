@@ -102,7 +102,7 @@ Let *a<sub>1</sub>*, ..., *a<sub>k</sub>* be the sequence of all aggregate commi
 
 Intuitively, the chain of trust property means that for any validator change a subset of the previous validators with total BFT weights above the given threshold value has to sign a certificate. For example, the chain of trust would be broken if all validators could change without signing a certificate authenticating this change, as certificates by the new validators would then not be accepted by other chains as these are not aware of the change. An example of a sequence of three certificates satisfying the chain of trust is shown in Figure 1. If in that example Certificate 3, which authenticates the transition from the validator set A, B, E, F back to A, B, C, D, is never generated, then the chain of trust property does not hold. In particular, if Certificate 2 is submitted to the Lisk Mainchain, then no further certificates could be submitted to the Lisk Mainchain.
 
-![Example: Chain of Trust](lip-introduce_certificate_generation_mechanism/example_chain_of_trust.png)
+![Example: Chain of Trust](lip-introduce_certificate_generation_mechanism/chain_of_trust_example.png)
 
 _Figure 1: Example of a sequence of three certificates satisfying the chain of trust._
 
