@@ -33,7 +33,7 @@ In this section, we define the main terms used throughout this LIP.
 * **BFT weight**: The weight with which a validator contributes to finalizing blocks and signing certificates.
 * **single commit**: A message containing a BLS signature of a certificate, which corresponds to a block in the current chain. The single commit message signals that the signing validator considers the corresponding block final.
 * **aggregate commit**: A message containing an aggregate BLS signature of a certificate, which corresponds to a block in the current chain. It attests that all signing validators consider the corresponding block final.
-* **certificate**: Object that authenticates the relevant information for cross-chain communication. It uniquely corresponds to a block header of a chain and contains a subset of properties of that block header. The aggregate BLS signature provided in a certificate attests the finality of the block. Single commits and aggregate commits are messages for communicating certificate signatures.
+* **certificate**: An object that authenticates the relevant information for cross-chain communication. It uniquely corresponds to a block header of a chain and contains a subset of properties of that block header. The aggregate BLS signature provided in a certificate attests the finality of the block. Single commits and aggregate commits are messages for communicating certificate signatures.
 
 ### Certificates
 
@@ -314,9 +314,9 @@ The following function creates a single commit by a validator for a block.
 
 ##### Parameters
 
-* `blockHeader`: a block header object,
-* `validatorInfo`: object containing properties `address`, `blsPublicKey` and `blsSecretKey` of a registered validator,
-* `networkIdentifier`: network identifier of the chain that the block corresponds to.
+* `blockHeader`: is a block header object,
+* `validatorInfo`: is a object containing properties `address`, `blsPublicKey` and `blsSecretKey` of a registered validator,
+* `networkIdentifier`: is the network identifier of the chain that the block corresponds to.
 
 ##### Returns
 
