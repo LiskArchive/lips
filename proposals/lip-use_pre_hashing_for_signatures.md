@@ -21,7 +21,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-Introducing memory efficient signing allows all objects used in the Lisk protocol to be signed on devices with limited memory.  Most of the current transactions have a small size and can be signed on existing devices. However, new transactions implemented in the interoperability module, or transactions implemented in decentralized applications are likely to be too large to be signed directly on such devices. This argument was overlooked in the past which led to the pre-hashing step being removed in [LIP 0008](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0008.md).
+Introducing memory efficient signing allows all objects used in the Lisk protocol to be signed on devices with limited memory.  Most of the current transactions have a small size and can be signed on existing devices. However, new transactions implemented in the interoperability module, or transactions implemented in decentralized applications are likely to be too large to be signed directly on such devices. This argument was overlooked in the past which led to the pre-hashing step being removed in [LIP 0008][lip-0008].
 
 With the current proposal, signatures are computed against the hash of the message to be signed and hence always computed for a byte string of small constant size.
 
@@ -35,7 +35,7 @@ Introduction of another hash function to the Lisk protocol was suggested in [LIP
 
 ### On Removing Pre-hashing in LIP 0008
 
-LIP 0008 removed the pre-hashing step from the Lisk signing protocol. This was mainly done as this step was deemed unnecessary and removing it could improve the theoretical security of the signing process. However this is not reflected by a practical improvement in protocol security as the SHA-256 hash function is considered collision resistant and secure. This hash function is used in several critical parts of many applications, including Lisk, and any future findings that SHA-256 is insecure would require changing the protocol throughout.
+[LIP 0008][lip-0008] removed the pre-hashing step from the Lisk signing protocol. This was mainly done as this step was deemed unnecessary and removing it could improve the theoretical security of the signing process. However this is not reflected by a practical improvement in protocol security as the SHA-256 hash function is considered collision resistant and secure. This hash function is used in several critical parts of many applications, including Lisk, and any future findings that SHA-256 is insecure would require changing the protocol throughout.
 
 ## Specification
 
@@ -74,3 +74,5 @@ TBD
 ## Backwards Compatibility
 
 This LIP results in a hard fork as nodes following the proposed protocol will reject signatures according to the previous protocol, and nodes following the previous protocol will reject signatures according to the proposed protocol.
+
+[lip-0008]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0008.md
