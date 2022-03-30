@@ -5,8 +5,8 @@ Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/use-pre-hashing-for-signatures/329
 Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2022-02-11
+Updated: 2022-03-30
 Requires: 0037
 ```
 
