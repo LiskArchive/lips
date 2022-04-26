@@ -399,7 +399,7 @@ addAuthModuleEntry():
 
 ###### Assets Entry for DPoS Module
 
-Let `genesisDPoSStoreSchema` be as defined in [LIP 0057](https://github.com/LiskHQ/lips/blob/aebeecc40447e4229f14fc641fb11527270dfbb5/proposals/lip-0057.md#genesis-assets-schema). The `assets` entry for the DPoS module is added by the logic defined in the function `addDPoSModuleEntry` in the following pseudo code:
+Let `genesisDPoSStoreSchema` be as defined in [LIP 0057](https://github.com/LiskHQ/lips/blob/aebeecc40447e4229f14fc641fb11527270dfbb5/proposals/lip-0057.md#genesis-assets-schema) and the constant `INVALID_BLS_KEY` as defined in [LIP 0044](https://github.com/LiskHQ/lips-staging/blob/9493d863271131c957c6a1eb152e5f1f94d9e222/proposals/lip-0044.md#notation-and-constants). The `assets` entry for the DPoS module is added by the logic defined in the function `addDPoSModuleEntry` in the following pseudo code:
 
 ```python
 addDPoSModuleEntry():
