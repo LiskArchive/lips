@@ -19,7 +19,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-This LIP is motivated by two points. The first is that the Lisk SDK 6 introduces several new configurable settings. This includes the set of existing modules that can or even must be registered. But also some new constants that must be specified for each chain. Thus, these configurations must be specified for Lisk Core v4 as well which shall be done within this LIP.
+This LIP is motivated by two points. The first is that the Lisk SDK v6 introduces several new configurable settings. This includes the set of existing modules that can or even must be registered. But also some new constants that must be specified for each chain. Thus, these configurations must be specified for Lisk Core v4 as well which shall be done within this LIP.
 
 The second point is the migration from Lisk Core v3 to Lisk Core v4, for which a process must be defined. This shall also be done within this LIP.
 
@@ -253,10 +253,10 @@ When Lisk Core v4 is started for the first time, the following steps are perform
 1. Get the snapshot block (the one for height `HEIGHT_SNAPSHOT+1`):
     1. Check if the snapshot block for height `HEIGHT_SNAPSHOT+1` exists locally. If yes, fetch this block. If not, stop here.
 2. Process the snapshot block as described in [LIP 0060](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0060.md).
-3. Check if a database from Lisk Core v3 containing all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` and`HEIGHT_SNAPSHOT` (inclusive) can be found locally. If yes:
+3. Check if a database from Lisk Core v3 containing all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` and `HEIGHT_SNAPSHOT` (inclusive) can be found locally. If yes:
     1. Fetch these blocks from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
     2. Skip steps 4 and 5.
-4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and`HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
+4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
 5. The snapshot block for the height `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+. When downloaded, it is validated using [minimal validation steps as defined below](#minimal-validation-of-core-3-blocks). If this validation step passes, the block is persisted in the database.
 
 Due to step 1.i, it is a requirement to run Lisk Core v3 and the migrator tool before running Lisk Core v4\. However, nodes starting some time after the migration may fetch the snapshot block and its preceding blocks without running Lisk Core v3 and migrator tool before, as described in the following subsection.
@@ -275,13 +275,13 @@ Note that once the snapshot block for height `HEIGHT_SNAPSHOT+1` is processed, t
 
 ###### Minimal Validation of Core v3 Blocks
 
-A block created by Lisk Core v3, i.e., a block with a height between `HEIGHT_PREVIOUS_SNAPSHOT` and`HEIGHT_SNAPSHOT` (inclusive) is validated as follows:
+A block created by Lisk Core v3, i.e., a block with a height between `HEIGHT_PREVIOUS_SNAPSHOT` and `HEIGHT_SNAPSHOT` (inclusive) is validated as follows:
 
 - Verify that the block follows the [`block schema`](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#deserialization) defined LIP 0029.
 - Compute the block ID as defined in [LIP 0029](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#block-id) and verify that it is equal to the `previousBlockID` property of the child block.
 - Verify that the transactions in the payload yield the [transaction root](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0032.md#specification) provided in the block header.
 
-If any of the steps fails, the block is invalid.
+If any of the steps above fails, the block is invalid.
 
 #### Snapshot Block
 
@@ -312,7 +312,7 @@ In the following, let `accountsState` be the key-value store of the accounts sta
 
 ###### Assets Entry for Legacy Module
 
-The `assets` entry for the legacy module is added by the logic defined in the function `addLegacyModuleEntry` in the following pseudo code:
+Let `genesisLegacyStoreSchema` be as defined in [LIP 0050](https://github.com/LiskHQ/lips/blob/aebeecc40447e4229f14fc641fb11527270dfbb5/proposals/lip-0050.md#genesis-state-initialization). The `assets` entry for the legacy module is added by the logic defined in the function `addLegacyModuleEntry` in the following pseudo code:
 
 ```python
 addLegacyModuleEntry():
@@ -329,7 +329,7 @@ addLegacyModuleEntry():
 
 ###### Assets Entry for Token Module
 
-The `assets` entry for the token module is added by the logic defined in the function `addTokenModuleEntry` in the following pseudo code:
+Let `genesisTokenStoreSchema` be as defined in [LIP 0051](https://github.com/LiskHQ/lips/blob/aebeecc40447e4229f14fc641fb11527270dfbb5/proposals/lip-0051.md#genesis-assets-schema). The `assets` entry for the token module is added by the logic defined in the function `addTokenModuleEntry` in the following pseudo code:
 
 ```python
 addTokenModuleEntry():
@@ -380,7 +380,7 @@ createSupplySubstoreArray():
 
 ###### Assets Entry for Auth Module
 
-The `assets` entry for the auth module is added by the logic defined in the function `addAuthModuleEntry` in the following pseudo code:
+Let `genesisAuthStoreSchema` be as defined in [LIP 0041](https://github.com/LiskHQ/lips/blob/aebeecc40447e4229f14fc641fb11527270dfbb5/proposals/lip-0041.md#genesis-state-initialization). The `assets` entry for the auth module is added by the logic defined in the function `addAuthModuleEntry` in the following pseudo code:
 
 ```python
 addAuthModuleEntry():
@@ -399,7 +399,7 @@ addAuthModuleEntry():
 
 ###### Assets Entry for DPoS Module
 
-The `assets` entry for the DPoS module is added by the logic defined in the function `addDPoSModuleEntry` in the following pseudo code:
+Let `genesisDPoSStoreSchema` be as defined in [LIP 0057](https://github.com/LiskHQ/lips/blob/aebeecc40447e4229f14fc641fb11527270dfbb5/proposals/lip-0057.md#genesis-assets-schema). The `assets` entry for the DPoS module is added by the logic defined in the function `addDPoSModuleEntry` in the following pseudo code:
 
 ```python
 addDPoSModuleEntry():
@@ -511,7 +511,7 @@ The chosen value for the Ed25519 public key for which every signature validation
 
 ### Assigning BLS Key to Validator Accounts
 
-In blockchains created with Lisk SDK 6, one needs to [register](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0044.md#registervalidatorkeys) a [valid BLS key](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0038.md#public-key-registration-and-proof-of-possession) in order to become a validator. This results in an exception for Lisk Core v4 as the existing validators do not have valid BLS key right after the hard fork. Since the DPoS module expects that each validator account has a BLS key and a proof of possession set in the snapshot block (see [here](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#genesis-state-initialization)), this will be done by assigning a fixed public key for which signature validation will always fail along with a dummy value for the proof of possession. This proof of possession will never be evaluated as the DPoS and the validator module handle an exception for this particular case (see [here](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#genesis-state-finalization) and [here](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0044.md#registervalidatorwithoutblskey)). Every validator should then register a valid BLS key via a _[register BLS key](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0050.md#register-bls-key)_ transaction, ideally within the [bootstrap period](#bootstrap-period) described below.
+In blockchains created with Lisk SDK v6, one needs to [register](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0044.md#registervalidatorkeys) a [valid BLS key](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0038.md#public-key-registration-and-proof-of-possession) in order to become a validator. This results in an exception for Lisk Core v4 as the existing validators do not have valid BLS key right after the hard fork. Since the DPoS module expects that each validator account has a BLS key and a proof of possession set in the snapshot block (see [here](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#genesis-state-initialization)), this will be done by assigning a fixed public key for which signature validation will always fail along with a dummy value for the proof of possession. This proof of possession will never be evaluated as the DPoS and the validator module handle an exception for this particular case (see [here](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#genesis-state-finalization) and [here](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0044.md#registervalidatorwithoutblskey)). Every validator should then register a valid BLS key via a _[register BLS key](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0050.md#register-bls-key)_ transaction, ideally within the [bootstrap period](#bootstrap-period) described below.
 
 ### Bootstrap Period
 
