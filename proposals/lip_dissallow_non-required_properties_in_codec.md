@@ -1,0 +1,110 @@
+```
+LIP: <LIP number>
+Title: Disallow Non-required Properties in Lisk Codec
+Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
+? Discussions-To: <Link to discussion in Lisk Research>
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+Replaces: 0027
+Requires: 0055
+```
+
+## Abstract
+
+This proposal defines a stricter version of Lisk codec - the serialization method introduced in[ LIP 0027](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md). It is stricter by requiring that every schema property must be marked as _required_. This simplifies the rules significantly and makes the serialization method much less error-prone without implying any change in the current Lisk SDK implementation.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+The generic serialization method defined in [LIP 0027](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md), also referred to as _Lisk codec_, allows to have properties in a [Lisk JSON schema](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#lisk-json-schemas) that are NOT marked as _required_. The reason was to allow a single schema to be used to serialize an object with and without a signature property. For example, there is only one [block header schema](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#blockheader-schema) in LIP 0029 that is used for serializing unsigned block headers (needed for computing block header signatures) and for serializing signed block headers (needed, for example, for computing block IDs). However, the implementation of the Lisk SDK 5 does not make use of this flexibility. Instead, every time two different serialization methods (with and without signature) are needed, two different schemas are used, where in each schema every property was marked as _required_ (one schema simply does not contain the signature property - see the [block header schemas](https://github.com/LiskHQ/lisk-sdk/blob/v5.2.1/elements/lisk-chain/src/schema.ts#L37-L69))_._ Moreover, this flexibility comes with a couple of downsides:
+
+1. It is error-prone: LIP 0027 encourages [to mark every property in a schema as required](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#uniqueness-of-encoding), as otherwise unexpected things like `encode(decode( binaryMsg )) != binaryMsg` for a binary message `binaryMsg` can happen. But some developers may unintentionally miss this recommendation or may intentionally ignore it without foreseeing all consequences.
+2. Lisk codec is supposed to be compatible with [proto2](https://developers.google.com/protocol-buffers/docs/proto) in the sense that protobuf implementations with the adequate `.proto` file deserialize valid binary messages correctly. However, this could not be achieved to 100% as even the proto2 specification with regard to [decoding missing optional fields](https://developers.google.com/protocol-buffers/docs/proto#optional) (corresponds to non-_required_ properties in Lisk codec) are not fixed. This is because it is not defined what the default value for message fields (corresponds to _objects_ in Lisk codec) is. For proto3, it is mentioned that [this is even language specific](https://developers.google.com/protocol-buffers/docs/proto3#default).
+3. The rules for Lisk codec and the implementation are significantly more complex.
+
+For these reasons, we propose to make the rules for Lisk codec more strict in the way that every property in a Lisk JSON schema must be marked as _required_. This will imply in particular that:
+
+1. `encode(decode( binaryMsg )) == binaryMsg` holds for every valid binary message `binaryMsg.`
+2. Every protobuf implementation will decode a valid binary message correctly.
+3. The rules, especially for decoding, become simpler.
+
+## Specification
+
+The serialization and deserialization method defined in this document works as defined in [LIP 0027](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md) with exceptions and differences specified in the following subsections.
+
+### Lisk JSON Schemas
+
+We make the definition of _Lisk JSON schema_ more strict: A _Lisk JSON schema_ is a JSON schema as defined in the [_Lisk JSON Schemas_ section in LIP 0027](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#lisk-json-schemas) with the additional requirement that
+
+- every schema of type _object_ must use the <code>[required](https://datatracker.ietf.org/doc/html/draft-handrews-json-schema-validation-01#section-6.5.3)</code> keyword, and every property of the object must be contained in its value.
+
+See [below](#invalid-json-schemas) for examples.
+
+### Encoding
+
+The encoding rules are exactly the [same as in LIP 0027](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#encoding).
+
+### Decoding
+
+The decoding rules become simpler compared to [LIP 0027](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#decoding):
+
+Only [valid messages](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#uniqueness-of-binary-messages) can be decoded (note that point 3.iii in the definition of _valid binary message_ becomes obsolete with this proposal). For invalid binary messages, decoding fails. When a valid binary message is parsed, the binary message is decoded according to the[ proto2](https://developers.google.com/protocol-buffers/docs/encoding) specifications. In particular, whenever a binary message does not contain a specific field of type _array_, the corresponding field in the parsed object is set to the empty array. This holds for arrays using [packed encoding](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#arrays-of-varints-or-booleans) as well as for arrays using [non-packed encoding](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#arrays-of-strings-objects-and-bytes).
+
+## Backwards Compatibility
+
+Implementations following this proposal are not totally backwards compatible with the one defined in LIP 0027 and implemented in Lisk SDK 5. That means, Lisk JSON schemas that are [valid in the sense of LIP 0027](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0027.md#uniqueness-of-binary-messages) and that have properties not marked as _required_ cannot be used for encoding and decoding. However, it is backwards compatible with valid Lisk JSON schemas in which every property is marked as _required._
+
+Conversely, every Lisk JSON schema valid in accordance with this proposal is also valid with LIP 0027, and the encoding and decoding rules are the same.
+
+From the Lisk JSON schemas used in the protocol of Lisk SDK 5, only the [block header schema](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#blockheader-schema) is not valid with respect to this proposal. But this one is supposed to be superseded by [LIP 0055](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md) in which two schemas are used. One [with the block header signature](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#block-header-json-schema), the other one [without](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#unsigned-block-header-json-schema).
+
+## Reference Implementation
+
+TBD
+
+## Appendix
+
+### Examples
+
+#### Invalid JSON schemas
+
+The root schema does not use the `required` keyword:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "foo": {
+      "dataType": "uint32",
+      "fieldNumber": 1
+    },
+    "bar": {
+      "dataType": "uint32",
+      "fieldNumber": 2
+    }
+  }
+}
+```
+
+Not all properties of the root schema are listed in the value of `required`:
+
+```json
+{
+  "type": "object",
+  "required": ["foo"]
+  "properties": {
+    "foo": {
+      "dataType": "uint32",
+      "fieldNumber": 1
+    },
+    "bar": {
+      "dataType": "uint32",
+      "fieldNumber": 2
+    }
+  }
+}
+```
