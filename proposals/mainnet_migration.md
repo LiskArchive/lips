@@ -120,17 +120,30 @@ This value will be used for every delegate account in the snapshot block.
    <td>
 
 ```   
-0x7fffffff
+0xffffffff
 ffffffffff
 ffffffffff
 ffffffffff
 ffffffffff
 ffffffffff
-ffffff
+fffffe
 ```
 
    </td>
    <td>An Ed25519 public key for which the signature validation always fails. This value is used for the <code>generatorPublicKey</code> property of validators in the snapshot block for which no public key is contained within the history since the last snapshot block.
+   </td>
+  </tr>
+  <tr>
+   <td><code>INVALID_BLS_KEY</code>
+   </td>
+   <td>bytes
+   </td>
+   <td>
+
+48 bytes all set to 0
+
+   </td>
+   <td>An invalid BLS key, used as a placeholder before a valid BLS key is registered. It is invalid as deserialization fails since the most significant bit of the first byte is zero while the total length is 48 (see second point <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-07#appendix-C.2">here</a>).
    </td>
   </tr>
   <tr>
@@ -150,7 +163,7 @@ ffffff
    </td>
    <td>TBD
    </td>
-   <td>The height of the block from which a state snapshot is taken. This block must be an end of a round block. The snapshot block has then the height <code>HEIGHT_SNAPSHOT +1.</code>
+   <td>The height of the block from which a state snapshot is taken. This block must be an end of a round block. The snapshot block has then the height <code>HEIGHT_SNAPSHOT +1</code>.
    </td>
   </tr>
   <tr>
@@ -241,37 +254,37 @@ The migration from Lisk Core v3 to Lisk Core v4, also depicted in Figure 1, is p
 1. Nodes run Lisk Core v3, where the following steps are done:
     1. After a block at height `HEIGHT_SNAPSHOT` was processed, a snapshot of the state is performed, which we denote by `STATE_SNAPSHOT`. If this block is reverted and a new block for this height is processed, then also `STATE_SNAPSHOT` needs to be computed again.
     2. Nodes continue processing blocks until the block at height `HEIGHT_SNAPSHOT` is final.
-    3. Once the block at height `HEIGHT_SNAPSHOT` is final, nodes can stop forging and processing new blocks. Finalized blocks with a height larger than or equal to `HEIGHT_SNAPSHOT+1` are discarded.
+    3. Once the block at height `HEIGHT_SNAPSHOT` is final, nodes can stop forging and processing new blocks. Finalized blocks with a height larger than or equal to `HEIGHT_SNAPSHOT + 1` are discarded.
 2. Nodes compute a snapshot block as defined [below](#snapshot-block) using a _migrator tool_ and persist this one locally.
 3. Nodes start to use Lisk Core v4, where the steps described in the section [Starting Lisk Core v4](#starting-lisk-core-4) are executed.
-4. Once the timeslot of the snapshot block at height `HEIGHT_SNAPSHOT+1` is passed, the first round following the new protocol starts.
+4. Once the timeslot of the snapshot block at height `HEIGHT_SNAPSHOT + 1` is passed, the first round following the new protocol starts.
 
 ##### Starting Lisk Core v4
 
 When Lisk Core v4 is started for the first time, the following steps are performed:
 
-1. Get the snapshot block (the one for height `HEIGHT_SNAPSHOT+1`):
-    1. Check if the snapshot block for height `HEIGHT_SNAPSHOT+1` exists locally. If yes, fetch this block. If not, stop here.
+1. Get the snapshot block (the one for height `HEIGHT_SNAPSHOT + 1`):
+    1. Check if the snapshot block for height `HEIGHT_SNAPSHOT + 1` exists locally. If yes, fetch this block. If not, stop here.
 2. Process the snapshot block as described in [LIP 0060](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0060.md).
-3. Check if a database from Lisk Core v3 containing all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` and `HEIGHT_SNAPSHOT` (inclusive) can be found locally. If yes:
-    1. Fetch these blocks from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
+3. Check if all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` and `HEIGHT_SNAPSHOT` (inclusive) from Lisk Core v3 can be found locally. If yes:
+    1. Fetch these blocks from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
     2. Skip steps 4 and 5.
-4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
-5. The snapshot block for the height `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+. When downloaded, it is validated using [minimal validation steps as defined below](#minimal-validation-of-core-3-blocks). If this validation step passes, the block is persisted in the database.
+4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
+5. The snapshot block for the height `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+ (see this [discussion on versions of Lisk Core v4](#fetching-snapshot-blocks)). When downloaded, it is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block is persisted in the database.
 
 Due to step 1.i, it is a requirement to run Lisk Core v3 and the migrator tool before running Lisk Core v4\. However, nodes starting some time after the migration may fetch the snapshot block and its preceding blocks without running Lisk Core v3 and migrator tool before, as described in the following subsection.
 
 ###### Fetching Block History and Snapshot Block without Running Lisk Core v3
 
-Once the snapshot block at height `HEIGHT_SNAPSHOT+1` is final, a new version of Lisk Core v4 can be released that has the block ID of this snapshot block hard-coded. In the following, we denote this version by Lisk Core v4+. When a Lisk Core v4+ starts for the first time, the same steps as described above are executed, except that step 1 is replaced by the following:
+Once the snapshot block at height `HEIGHT_SNAPSHOT + 1` is final, a new version of Lisk Core v4 can be released that has the block ID of this snapshot block hard-coded. In the following, we denote this version by Lisk Core v4+. When Lisk Core v4+ starts for the first time, the same steps as described above are executed, except that step 1 is replaced by the following:
 
-1. Get the snapshot block (the one for height `HEIGHT_SNAPSHOT+1`):
-    1. Check if the snapshot block for height `HEIGHT_SNAPSHOT+1` exists locally. If yes:
+1. Get the snapshot block (the one for height `HEIGHT_SNAPSHOT + 1`):
+    1. Check if the snapshot block for height `HEIGHT_SNAPSHOT + 1` exists locally. If yes:
         1. Fetch this block.
         2. Verify that the block ID of this block is matching with the hard-coded block ID of the snapshot block. If yes, skip step b. If not, continue with step ii.
-    2. The snapshot block for height `HEIGHT_SNAPSHOT+1` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+. When downloaded, it must first be verified that the block ID of this block is matching with the hard-coded block ID of the snapshot block. If not, stop here (the process should be repeated, but the node operator should specify a new server to download the snapshot block from).
+    2. The snapshot block for height `HEIGHT_SNAPSHOT + 1` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+. When downloaded, it must first be verified that the block ID of this block is matching with the hard-coded block ID of the snapshot block. If not, stop here (the process should be repeated, but the node operator should specify a new server to download the snapshot block from).
 
-Note that once the snapshot block for height `HEIGHT_SNAPSHOT+1` is processed, the node should start its regular block synchronization, i.e., fetching the blocks with height larger than `HEIGHT_SNAPSHOT+1`. The steps 3 to 5 from above could run in the background with low priority.
+Note that once the snapshot block for height `HEIGHT_SNAPSHOT + 1` is processed, the node should start its regular block synchronization, i.e., fetching the blocks with height larger than `HEIGHT_SNAPSHOT + 1`. The steps 3 to 5 from above could run in the background with low priority.
 
 ###### Minimal Validation of Core v3 Blocks
 
@@ -293,7 +306,7 @@ Let `a` be the block at height `HEIGHT_SNAPSHOT`. Then the following points defi
 
 - `b.header.version = SNAPSHOT_BLOCK_VERSION`
 - `b.header.timestamp = a.header.timestamp + SNAPSHOT_TIME_GAP`
-- `b.header.height = HEIGHT_SNAPSHOT+1`
+- `b.header.height = HEIGHT_SNAPSHOT + 1`
 - `b.header.previousBlockID = blockID(a)`
 - all other block header properties must be as specified in [LIP 0060](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0060.md#validation-2)
 
@@ -339,7 +352,6 @@ addTokenModuleEntry():
     tokenObj.escrowSubstore = []
     tokenObj.availableLocalIDSubstore = {}
     tokenObj.availableLocalIDSubstore.nextAvailableLocalID = LOCAL_ID_LSK + 1
-    tokenObj.terminatedEscrowSubstore = []
     data = serialization of tokenObj using genesisTokenStoreSchema
     append {"moduleID": MODULE_ID_TOKEN, "data": data} to b.assets
 
@@ -370,10 +382,10 @@ getLockedBalances(account):
 createSupplySubstoreArray():
     totalLSKSupply = 0
     for every account in accounts:
-    totalLSKSupply += account.token.balance
-    lockedBalances = getLockedBalances(account)
-    if lockedBalances is not empty:
-        totalLSKSupply += lockedBalances[0].amount
+        totalLSKSupply += account.token.balance
+        lockedBalances = getLockedBalances(account)
+        if lockedBalances is not empty:
+            totalLSKSupply += lockedBalances[0].amount
     LSKSupply = {"localID": LOCAL_ID_LSK, "totalSupply": totalLSKSupply}
     return [LSKSupply]
 ```
@@ -399,7 +411,7 @@ addAuthModuleEntry():
 
 ###### Assets Entry for DPoS Module
 
-Let `genesisDPoSStoreSchema` be as defined in [LIP 0057](https://github.com/LiskHQ/lips/blob/aebeecc40447e4229f14fc641fb11527270dfbb5/proposals/lip-0057.md#genesis-assets-schema) and the constant `INVALID_BLS_KEY` as defined in [LIP 0044](https://github.com/LiskHQ/lips-staging/blob/9493d863271131c957c6a1eb152e5f1f94d9e222/proposals/lip-0044.md#notation-and-constants). The `assets` entry for the DPoS module is added by the logic defined in the function `addDPoSModuleEntry` in the following pseudo code:
+Let `genesisDPoSStoreSchema` be as defined in [LIP 0057](https://github.com/LiskHQ/lips/blob/aebeecc40447e4229f14fc641fb11527270dfbb5/proposals/lip-0057.md#genesis-assets-schema). The `assets` entry for the DPoS module is added by the logic defined in the function `addDPoSModuleEntry` in the following pseudo code:
 
 ```python
 addDPoSModuleEntry():
@@ -463,12 +475,12 @@ createVotersArray():
 createGenesisDataObj():
     genesisDataObj = {}
     genesisDataObj.initRounds = DPOS_INIT_ROUNDS
-    r = round number for the block a
-    Let topDelegates be the set of the top 101 non-banned delegate accounts by delegate weight at the end of round r-2
+    r = ceiling((a.header.height - HEIGHT_PREVIOUS_SNAPSHOT_BLOCK) / ROUND_LENGTH)
+    let topDelegates be the set of the top 101 non-banned delegate accounts by delegate weight at the end of round r-2
     initDelegates = [account.address for account in topDelegates]
     sort initDelegates in lexicographical order
-genesisDataObj.initDelegates = initDelegates
-return genesisDataObj
+    genesisDataObj.initDelegates = initDelegates
+    return genesisDataObj
 ```
 
 ## Rationale
@@ -507,7 +519,7 @@ To avoid the need to send an _updated generator key_ right after the hard fork, 
 
 #### Invalid Ed25519 Public Key
 
-The chosen value for the Ed25519 public key for which every signature validation should fail, `0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff`, is the little endian encoding of 2<sup>255</sup>-1\. As described in the first point of the [decoding section](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.3) of RFC 8032, decoding this value fails. This in turn results in signature verification failure as described in the first point of the [verification section](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.7), regardless of the message and the signature.
+The chosen value for the Ed25519 public key for which every signature validation should fail, `0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe`, is the little endian encoding of 2<sup>255</sup>-1\. As described in the first point of the [decoding section](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.3) of RFC 8032, decoding this value fails because `y`-coordinate value 2<sup>255</sup>-1 is bigger than `p` = 2<sup>255</sup>-19 (see [the notations section](https://datatracker.ietf.org/doc/html/rfc8032#section-2) for more information on little-endian encoding in EdDSA protocol). This in turn results in signature verification failure as described in the first point of the [verification section](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.7), regardless of the message and the signature.
 
 ### Assigning BLS Key to Validator Accounts
 
