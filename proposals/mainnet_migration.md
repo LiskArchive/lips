@@ -126,7 +126,7 @@ ffffffffff
 ffffffffff
 ffffffffff
 ffffffffff
-fffffe
+ffffff
 ```
 
    </td>
@@ -519,7 +519,7 @@ To avoid the need to send an _updated generator key_ right after the hard fork, 
 
 #### Invalid Ed25519 Public Key
 
-The chosen value for the Ed25519 public key for which every signature validation should fail, `0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe`, is the little endian encoding of 2<sup>255</sup>-1\. As described in the first point of the [decoding section](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.3) of RFC 8032, decoding this value fails because `y`-coordinate value 2<sup>255</sup>-1 is bigger than `p` = 2<sup>255</sup>-19 (see [the notations section](https://datatracker.ietf.org/doc/html/rfc8032#section-2) for more information on little-endian encoding in EdDSA protocol). This in turn results in signature verification failure as described in the first point of the [verification section](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.7), regardless of the message and the signature.
+The chosen value for the Ed25519 public key for which every signature validation should fail, `0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff`, is the little endian encoding of 2<sup>256</sup>-1\. As described in the first point of the [decoding section](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.3) of RFC 8032, decoding this value fails because `y`-coordinate value 2<sup>255</sup>-1 is bigger than `p` = 2<sup>255</sup>-19 (see [the notations section](https://datatracker.ietf.org/doc/html/rfc8032#section-2) for more information on little-endian encoding in EdDSA protocol). This in turn results in signature verification failure as described in the first point of the [verification section](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.7), regardless of the message and the signature.
 
 ### Assigning BLS Key to Validator Accounts
 
