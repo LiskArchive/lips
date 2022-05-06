@@ -55,9 +55,9 @@ This value will be used for every delegate account in the snapshot block.
   <tr>
    <td><code><a href="https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#constants-and-notations">TOKEN_ID_LSK_MAINCHAIN</a></code>
    </td>
-   <td>object
+   <td>bytes
    </td>
-   <td><code>{"chainID": 0, "localID": 0}</code>
+   <td><code>0x 00 00 00 00 00 00 00 00</code>
    </td>
    <td>Token ID of the LSK token on mainchain.
    </td>
@@ -65,9 +65,9 @@ This value will be used for every delegate account in the snapshot block.
   <tr>
    <td><code><a href="https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#constants-and-notations">LOCAL_ID_LSK</a></code>
    </td>
-   <td>uint32
+   <td>bytes
    </td>
-   <td>0
+   <td><code>0x 00 00 00 00</code>
    </td>
    <td>The local ID of the LSK token on mainchain.
    </td>
@@ -75,7 +75,7 @@ This value will be used for every delegate account in the snapshot block.
   <tr>
    <td><code>MODULE_ID_DPOS</code>
    </td>
-   <td>uint32
+   <td>bytes
    </td>
    <td>TBD
    </td>
@@ -85,7 +85,7 @@ This value will be used for every delegate account in the snapshot block.
   <tr>
    <td><code>MODULE_ID_AUTH</code>
    </td>
-   <td>uint32
+   <td>bytes
    </td>
    <td>TBD
    </td>
@@ -95,7 +95,7 @@ This value will be used for every delegate account in the snapshot block.
   <tr>
    <td><code>MODULE_ID_TOKEN</code>
    </td>
-   <td>uint32
+   <td>bytes
    </td>
    <td>TBD
    </td>
@@ -105,7 +105,7 @@ This value will be used for every delegate account in the snapshot block.
   <tr>
    <td><code>MODULE_ID_LEGACY</code>
    </td>
-   <td>uint32
+   <td>bytes
    </td>
    <td>TBD
    </td>
@@ -235,11 +235,11 @@ Some new LIPs introduced configurable constants. The values for those constants 
 [DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `MIN_WEIGHT_STANDBY`           | 1000 x (10^8)
 [DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `NUMBER_ACTIVE_DELEGATES`      | 101
 [DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `NUMBER_STANDBY_DELEGATES`     | 2
-[DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `TOKEN_ID_DPOS`                | `TOKEN_ID_LSK = {"chainID": 0, "localID": 0}`
+[DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `TOKEN_ID_DPOS`                | `TOKEN_ID_LSK = 0x 00 00 00 00 00 00 00 00`
 [DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `DELEGATE_REGISTRATION_FEE`    | 10 x (10^8)
 [Random Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0046.md#constants-and-config-parameters) | `MAX_LENGTH_VALIDATOR_REVEALS` | 206
 [Fee Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0048.md#notation-and-constants)             | `MIN_FEE_PER_BYTE`             | 1000
-[Fee Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0048.md#notation-and-constants)             | `TOKEN_ID_FEE`                 | `TOKEN_ID_LSK = { "chainID": 0, "localID": 0}`
+[Fee Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0048.md#notation-and-constants)             | `TOKEN_ID_FEE`                 | `TOKEN_ID_LSK = 0x 00 00 00 00 00 00 00 00`
 
 ### Mainnet Migration
 
@@ -270,7 +270,7 @@ When Lisk Core v4 is started for the first time, the following steps are perform
     1. Fetch these blocks from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
     2. Skip steps 4 and 5.
 4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
-5. The snapshot block for the height `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+ (see this [discussion on versions of Lisk Core v4](#fetching-snapshot-blocks)). When downloaded, it is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block is persisted in the database.
+5. The snapshot block for the height `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` is downloaded from a server. The URL for the source can be configured. When downloaded, it is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block is persisted in the database.
 
 Due to step 1.i, it is a requirement to run Lisk Core v3 and the migrator tool before running Lisk Core v4\. However, nodes starting some time after the migration may fetch the snapshot block and its preceding blocks without running Lisk Core v3 and migrator tool before, as described in the following subsection.
 
@@ -351,7 +351,9 @@ addTokenModuleEntry():
     tokenObj.supplySubstore = createSupplySubstoreArray()
     tokenObj.escrowSubstore = []
     tokenObj.availableLocalIDSubstore = {}
-    tokenObj.availableLocalIDSubstore.nextAvailableLocalID = LOCAL_ID_LSK + 1
+    tokenObj.availableLocalIDSubstore.nextAvailableLocalID = nextLexicographicalOrder(LOCAL_ID_LSK)
+    # where the function nextLexicographicalOrder returns the next byte value, in lexicographical order
+    # this is equivalent to doing localID + 1 if the byte value is viewed as a big endian integer
     data = serialization of tokenObj using genesisTokenStoreSchema
     append {"moduleID": MODULE_ID_TOKEN, "data": data} to b.assets
 
