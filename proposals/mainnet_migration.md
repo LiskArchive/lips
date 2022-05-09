@@ -365,8 +365,6 @@ createUserSubstoreArray():
         userObj.tokenID = TOKEN_ID_LSK_MAINCHAIN
         userObj.availableBalance = account.token.balance
         userObj.lockedBalances = getLockedBalances(account)
-        if (userObj.availableBalance == 0 and userObj.lockedBalances == []):
-            continue
         userSubstore.append(userObj)
     return userSubstore
 
