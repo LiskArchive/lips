@@ -130,7 +130,7 @@ ffffff
 ```
 
    </td>
-   <td>An Ed25519 public key for which the signature validation always fails. This value is used for the <code>generatorPublicKey</code> property of validators in the snapshot block for which no public key is contained within the history since the last snapshot block.
+   <td>An Ed25519 public key for which the signature validation always fails. This value is used for the <code>generatorPublicKey</code> property of validators in the snapshot block for which no public key is present within the history since the last snapshot block.
    </td>
   </tr>
   <tr>
@@ -143,7 +143,7 @@ ffffff
 48 bytes all set to 0
 
    </td>
-   <td>An invalid BLS key, used as a placeholder before a valid BLS key is registered. It is invalid as deserialization fails since the most significant bit of the first byte is zero while the total length is 48 (see second point <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-07#appendix-C.2">here</a>).
+   <td>A BLS key, used as a placeholder before a valid BLS key is registered. It is invalid since the most significant bit of the first byte is zero while the total length is 48 and deserialization fails(see second point <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-07#appendix-C.2">here</a>).
    </td>
   </tr>
   <tr>
@@ -163,7 +163,7 @@ ffffff
    </td>
    <td>TBD
    </td>
-   <td>The height of the block from which a state snapshot is taken. This block must be an end of a round block. The snapshot block has then the height <code>HEIGHT_SNAPSHOT +1</code>.
+   <td>The height of the block from which a state snapshot is taken. This block must be an end of a round block. The snapshot block then has the height <code>HEIGHT_SNAPSHOT +1</code>.
    </td>
   </tr>
   <tr>
@@ -183,7 +183,7 @@ ffffff
    </td>
    <td>TBD
    </td>
-   <td>The number of seconds between the block at height <code>HEIGHT_SNAPSHOT</code> and the snapshot block.
+   <td>The number of seconds elapsed between the block at height <code>HEIGHT_SNAPSHOT</code> and the snapshot block.
    </td>
   </tr>
   <tr>
@@ -216,13 +216,13 @@ Lisk Core v4 will use the following modules:
 
 #### Constants
 
-Some new LIPs introduced configurable constants. The values for those constants are specified in the following table.
+Some new LIPs introduced configurable constants. The values for these constants are specified in the following table:
 
 **Module/LIP**                                                                                                  | **Constant Name**              | **Value**
 --------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------
 [BFT Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0058.md#constants)                          | `LSK_BFT_BATCH_SIZE`           | 103
 [LIP 0055](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#notation-and-constants)               | `MAX_TRANSACTIONS_SIZE_BYTES`  | 15,360
-[LIP 0055](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#notation-and-constants)               | `MAX_ASSET_DATA_SIZE_BYTES`    | 18 (the Reward Module is only module adding an entry to the assets property whereby the size of the data property will not exceed 18 bytes)
+[LIP 0055](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#notation-and-constants)               | `MAX_ASSET_DATA_SIZE_BYTES`    | 18 (The Reward Module is the only module adding an entry to the assets property whereby the size of the data property will not exceed 18 bytes)
 [DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `FACTOR_SELF_VOTES`            | 10
 [DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `MAX_LENGTH_NAME`              | 20
 [DPoS Module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants)            | `MAX_NUMBER_SENT_VOTES`        | 10
@@ -247,16 +247,16 @@ Some new LIPs introduced configurable constants. The values for those constants 
 
 ![Overview of migration process](lip_mainnet_migration/migration_graphic.png)
 
-_Figure 1: Overview of the migration process. Elements in blue are created by Lisk Core v3, including the state snapshot. Elements in yellow - the snapshot block - are created by the migrator tool. Elements in green are created by Lisk Core v4._
+_Figure 1: Overview of the migration process. Elements in blue are created by Lisk Core v3, including the state snapshot. The element in yellow - the snapshot block - is created by the migrator tool. Elements in green are created by Lisk Core v4._
 
-The migration from Lisk Core v3 to Lisk Core v4, also depicted in Figure 1, is performed by the following steps:
+The migration from Lisk Core v3 to Lisk Core v4, also depicted in Figure 1, is performed as follows:
 
 1. Nodes run Lisk Core v3, where the following steps are done:
-    1. After a block at height `HEIGHT_SNAPSHOT` was processed, a snapshot of the state is performed, which we denote by `STATE_SNAPSHOT`. If this block is reverted and a new block for this height is processed, then also `STATE_SNAPSHOT` needs to be computed again.
+    1. Once a block at height `HEIGHT_SNAPSHOT` is processed, a snapshot of the state is derived, which we denote by `STATE_SNAPSHOT`. If this block is reverted and a new block for this height is processed, then `STATE_SNAPSHOT` needs to be computed again.
     2. Nodes continue processing blocks until the block at height `HEIGHT_SNAPSHOT` is final.
-    3. Once the block at height `HEIGHT_SNAPSHOT` is final, nodes can stop forging and processing new blocks. Finalized blocks with a height larger than or equal to `HEIGHT_SNAPSHOT + 1` are discarded.
-2. Nodes compute a snapshot block as defined [below](#snapshot-block) using a _migrator tool_ and persist this one locally.
-3. Nodes start to use Lisk Core v4, where the steps described in the section [Starting Lisk Core v4](#starting-lisk-core-4) are executed.
+    3. Once the block at height `HEIGHT_SNAPSHOT` is final, nodes can stop forging and processing new blocks. All blocks with a height larger than or equal to `HEIGHT_SNAPSHOT + 1` are discarded, even if they are finalized.
+2. Nodes compute a snapshot block as defined [below](#snapshot-block) using a _migrator tool_ and store it locally.
+3. Nodes start to run Lisk Core v4, where the steps described in the section [Starting Lisk Core v4](#starting-lisk-core-4) are executed.
 4. Once the timeslot of the snapshot block at height `HEIGHT_SNAPSHOT + 1` is passed, the first round following the new protocol starts.
 
 ##### Starting Lisk Core v4
@@ -264,33 +264,35 @@ The migration from Lisk Core v3 to Lisk Core v4, also depicted in Figure 1, is p
 When Lisk Core v4 is started for the first time, the following steps are performed:
 
 1. Get the snapshot block (the one for height `HEIGHT_SNAPSHOT + 1`):
-    1. Check if the snapshot block for height `HEIGHT_SNAPSHOT + 1` exists locally. If yes, fetch this block. If not, stop here.
+    1. Check if the snapshot block for height `HEIGHT_SNAPSHOT + 1` exists locally. If yes, fetch this block. If not, stop the initialization here.
 2. Process the snapshot block as described in [LIP 0060](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0060.md).
 3. Check if all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` and `HEIGHT_SNAPSHOT` (inclusive) from Lisk Core v3 can be found locally. If yes:
     1. Fetch these blocks from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
     2. Skip steps 4 and 5.
-4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
+4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer network from highest to lowest height. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation passes, the block along with its transactions is persisted in the database.
 5. The snapshot block for the height `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` is downloaded from a server. The URL for the source can be configured. When downloaded, it is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block is persisted in the database.
 
-Due to step 1.i, it is a requirement to run Lisk Core v3 and the migrator tool before running Lisk Core v4\. However, nodes starting some time after the migration may fetch the snapshot block and its preceding blocks without running Lisk Core v3 and migrator tool before, as described in the following subsection.
+The steps 3 to 5 from above could run in the background with low priority.
+
+Due to step 1.1, it is a requirement to run Lisk Core v3 and the migrator tool before running Lisk Core v4\. However, nodes starting some time after the migration may fetch the snapshot block and its preceding blocks without running Lisk Core v3 and migrator tool, as described in the following subsection.
 
 ###### Fetching Block History and Snapshot Block without Running Lisk Core v3
 
-Once the snapshot block at height `HEIGHT_SNAPSHOT + 1` is final, a new version of Lisk Core v4 can be released that has the block ID of this snapshot block hard-coded. In the following, we denote this version by Lisk Core v4+. When Lisk Core v4+ starts for the first time, the same steps as described above are executed, except that step 1 is replaced by the following:
+Once the snapshot block at height `HEIGHT_SNAPSHOT + 1` is final, a new version of Lisk Core v4 that has the block ID of this snapshot block hard-coded can be released. In the following, we denote this version by Lisk Core v4+. When Lisk Core v4+ starts for the first time, the same steps as described above are executed, except that step 1 is replaced by the following:
 
 1. Get the snapshot block (the one for height `HEIGHT_SNAPSHOT + 1`):
     1. Check if the snapshot block for height `HEIGHT_SNAPSHOT + 1` exists locally. If yes:
         1. Fetch this block.
-        2. Verify that the block ID of this block is matching with the hard-coded block ID of the snapshot block. If yes, skip step b. If not, continue with step ii.
-    2. The snapshot block for height `HEIGHT_SNAPSHOT + 1` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+. When downloaded, it must first be verified that the block ID of this block is matching with the hard-coded block ID of the snapshot block. If not, stop here (the process should be repeated, but the node operator should specify a new server to download the snapshot block from).
+        2. Verify that the block ID of this block is matching with the hard-coded block ID of the snapshot block. If yes, skip step 2. If not, continue with step 2.
+    2. The snapshot block for height `HEIGHT_SNAPSHOT + 1` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+. Once downloaded, it first must be verified that the block ID of this block matches with the hard-coded block ID of the snapshot block. If not, stop the initialization here (the process should be repeated, but the node operator should specify a new server to download the snapshot block from).
 
-Note that once the snapshot block for height `HEIGHT_SNAPSHOT + 1` is processed, the node should start its regular block synchronization, i.e., fetching the blocks with height larger than `HEIGHT_SNAPSHOT + 1`. The steps 3 to 5 from above could run in the background with low priority.
+Note that once the snapshot block for height `HEIGHT_SNAPSHOT + 1` is processed, the node should start its regular block synchronization, i.e., fetching the blocks with height larger than `HEIGHT_SNAPSHOT + 1`. The steps 4 to 5 from above could run in the background with low priority.
 
 ###### Minimal Validation of Core v3 Blocks
 
 A block created by Lisk Core v3, i.e., a block with a height between `HEIGHT_PREVIOUS_SNAPSHOT` and `HEIGHT_SNAPSHOT` (inclusive) is validated as follows:
 
-- Verify that the block follows the [`block schema`](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#deserialization) defined LIP 0029.
+- Verify that the block follows the [`block schema`](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#deserialization) defined in LIP 0029.
 - Compute the block ID as defined in [LIP 0029](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#block-id) and verify that it is equal to the `previousBlockID` property of the child block.
 - Verify that the transactions in the payload yield the [transaction root](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0032.md#specification) provided in the block header.
 
@@ -487,21 +489,21 @@ createGenesisDataObj():
 
 ### Keeping Lisk Core v3 Block History
 
-The decision to discard the block history of Lisk Mainnet at the hard fork from Lisk Core v2 to Lisk Core v3 was considered as rather disadvantageous. One reason is that the transaction history of an account can not be retrieved anymore from a node running Lisk Core v3\. Therefore, the block history of blocks created with Lisk Core v3 shall be kept on Lisk Core v4 nodes.
+The decision to discard the block history of Lisk Mainnet at the hard fork from Lisk Core v2 to Lisk Core v3 was considered as rather disadvantageous. One reason is that the entire transaction history of an account can not be retrieved anymore from a node running Lisk Core v3\. Therefore, the block history of blocks created with Lisk Core v3 shall be kept on Lisk Core v4 nodes.
 
 #### Getting the Lisk Core v3 Block History
 
 In order to keep the implementation of Lisk Core v4 as clean as possible, Lisk Core v4 cannot process Lisk Core v3 blocks, but only ensure their integrity. This is, however, sufficient for maintaining the Lisk Core v3 block history and guaranteeing the immutability of this block history.
 
-Once Lisk Core v4 processed the snapshot block, it can fetch the whole Lisk Core v3 block history, where this is done from the highest to the lowest height. This allows that each block can be validated by simply checking if its block ID matches with the `previousBlockID` property of the child block, and if the payload matches with the `transactionRoot` property. Thus, almost no protocol rules related to Lisk Core v3 must be implemented which keeps the implementation clean. The Lisk Core v3 history can be fetched from a database created by Lisk Core v3 on the same computer or from the peer-to-peer network. Note that the first Lisk Core v3 block - the snapshot block of the previous migration - poses an exception as this one is either [downloaded from a server](#fetching-snapshot-blocks) or fetched from a database created by Lisk Core v3 on the same computer.
+Once Lisk Core v4 processes the snapshot block, it can fetch the whole Lisk Core v3 block history, where this is done from the highest to the lowest height. This allows that each block can be validated by simply checking if its block ID matches with the `previousBlockID` property of the child block, and if the payload matches with the `transactionRoot` property. Thus, almost no protocol rules related to Lisk Core v3 must be implemented which keeps the implementation clean. The Lisk Core v3 history can be fetched from a database created by Lisk Core v3 on the same machine or from the peer-to-peer network. Note that the first Lisk Core v3 block - the snapshot block of the previous migration - poses an exception as this one is either [downloaded from a server](#fetching-snapshot-blocks) or fetched from a database created by Lisk Core v3 on the same machine.
 
 ### Fetching Snapshot Blocks
 
-The snapshot block created for this hard fork as well as for the [one used for the previous hard fork](https://lisk.observer/block/abdea6dfe5941922d958d1f1dc1d2f97249723b8852325334e55b73e92584191) are not shared via peer-to-peer due to their large size. Instead, they are either downloaded from a server or must be found locally.
+The snapshot block created for this hard fork as well as for the [one used for the previous hard fork](https://lisk.observer/block/abdea6dfe5941922d958d1f1dc1d2f97249723b8852325334e55b73e92584191) is not shared via peer-to-peer network due to their large size. Instead, they are either downloaded from a server or must be found locally.
 
 #### Initial Version of Lisk Core v4
 
-The initial version of Lisk Core v4 can not download the snapshot block of this hard fork from a server because it could not validate the block. Instead, it must find the snapshot block locally on the same computer. This requires that the snapshot block must be created using a migrator tool on the same node, which in turn requires that the node runs the latest patched version of Lisk Core v3 until the block at height `HEIGHT_SNAPSHOT` is final.
+The initial version of Lisk Core v4 can not download the snapshot block for this hard fork from a server because it could not validate the block. Instead, it must find the snapshot block locally on the same machine. This requires that the snapshot block must be created using a migrator tool on the same node, which in turn requires that the node runs the latest patched version of Lisk Core v3 until the block at height `HEIGHT_SNAPSHOT` is final.
 
 #### Later Versions of Lisk Core v4
 
@@ -509,7 +511,7 @@ Once the snapshot block is final, a patched version of Lisk Core v4 will be rele
 
 #### Downloading from Server
 
-The URL can be configured. By default, the URL points to a server of the Lisk Foundation. The snapshot block of this hard fork is validated by checking that its block ID matches the hard coded block ID in the patched version of Lisk Core v4\. The snapshot block of the previous migration is validated by checking that its block ID matches with the `previousBlockID` property of its child block (see also [here](#getting-the-lisk-core-3-block-history)). Hence, there are no security concerns by downloading them from a non-trusted server. Users can nevertheless configure their node to download it from a server of their choice. The snapshot blocks could be provided by any users. This may also be helpful for situations where the Lisk Foundation server should be down.
+The URL can be configured. By default, the URL points to a server of the Lisk Foundation. The snapshot block of this hard fork is validated by checking that its block ID matches the hard coded block ID in the patched version of Lisk Core v4\. The snapshot block of the previous migration is validated by checking that its block ID matches with the `previousBlockID` property of its child block (see also [here](#getting-the-lisk-core-3-block-history)). Hence, there are no security concerns by downloading them from even a non-trusted server. Users can nevertheless configure their node to download it from a server of their choice. The snapshot blocks could be provided by any user. This may also be helpful in situations where the Lisk Foundation server is down.
 
 ### Assigning Generator Key to Validator Accounts
 
@@ -527,7 +529,7 @@ In blockchains created with Lisk SDK v6, one needs to [register](https://github.
 
 ### Bootstrap Period
 
-There will be a bootstrap period in which a fixed set of delegates will constitute the set of active delegates. This period will last for one week assuming no missed blocks. This is done by setting the [`initRounds`](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#genesis-assets-schema) property in the snapshot block to the corresponding value, which is given by `DPOS_INIT_ROUNDS`. The reason to have this period is that the DPoS module selects only delegates with a valid BLS key outside of the bootstrap period (there will be an update to [LIP 0057](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md) that adapts the delegate selection in this way). Thus, without bootstrap period, the DPoS module could not select any delegates right after the hard fork which would result in a stop of the chain.
+There will be a bootstrap period in which a fixed set of delegates will constitute the set of active delegates. This period will last for one week assuming no missed blocks. This is done by setting the [`initRounds`](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#genesis-assets-schema) property in the snapshot block to the corresponding value, which is given by `DPOS_INIT_ROUNDS`. The reason to have this period is that the DPoS module selects delegates only with a valid BLS key outside of the bootstrap period (there will be an update to [LIP 0057](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md) that adapts the delegate selection in this way). Thus, without a bootstrap period, the DPoS module could not select any delegates right after the hard fork which would result in a stop of the chain.
 
 The bootstrap period allows each delegate to submit a _[register BLS key](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0050.md#register-bls-key)_ transaction in a sufficiently large time window. The expectation is that most delegates have a valid BLS key after the bootstrap period. In the unexpected case that there are less than 101 non-banned delegates with a BLS key, the DPoS module would simply select a smaller set of delegates that get the block slots of a round assigned round robin.
 
