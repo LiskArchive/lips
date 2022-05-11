@@ -267,7 +267,7 @@ When Lisk Core v4 is started for the first time, the following steps are perform
     1. Check if the snapshot block for height `HEIGHT_SNAPSHOT + 1` exists locally. If yes, fetch this block. If not, stop the initialization here.
 2. Process the snapshot block as described in [LIP 0060](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0060.md).
 3. Check if all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` and `HEIGHT_SNAPSHOT` (inclusive) from Lisk Core v3 can be found locally. If yes:
-    1. Fetch these blocks from highest height to lowest. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
+    1. Fetch these blocks from highest to lowest height. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
     2. Skip steps 4 and 5.
 4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer network from highest to lowest height. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation passes, the block along with its transactions is persisted in the database.
 5. The snapshot block for the height `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` is downloaded from a server. The URL for the source can be configured. When downloaded, it is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block is persisted in the database.
@@ -283,7 +283,7 @@ Once the snapshot block at height `HEIGHT_SNAPSHOT + 1` is final, a new version 
 1. Get the snapshot block (the one for height `HEIGHT_SNAPSHOT + 1`):
     1. Check if the snapshot block for height `HEIGHT_SNAPSHOT + 1` exists locally. If yes:
         1. Fetch this block.
-        2. Verify that the block ID of this block is matching with the hard-coded block ID of the snapshot block. If yes, skip step 2. If not, continue with step 2.
+        2. Verify that the block ID of this block is matching with the hard-coded block ID of the snapshot block. If yes, skip step ii. If not, continue with step ii.
     2. The snapshot block for height `HEIGHT_SNAPSHOT + 1` is downloaded from a server. The URL for the source can be configured in Lisk Core v4+. Once downloaded, it first must be verified that the block ID of this block matches with the hard-coded block ID of the snapshot block. If not, stop the initialization here (the process should be repeated, but the node operator should specify a new server to download the snapshot block from).
 
 Note that once the snapshot block for height `HEIGHT_SNAPSHOT + 1` is processed, the node should start its regular block synchronization, i.e., fetching the blocks with height larger than `HEIGHT_SNAPSHOT + 1`. The steps 4 to 5 from above could run in the background with low priority.
