@@ -2,10 +2,12 @@
 LIP: <LIP number>
 Title: Define Mainnet Configuration and Migration for Lisk Core v4
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
+        Sergey Shemyakov <sergey.shemyakov@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/define-mainnet-configuration-and-migration-for-lisk-core-4/340
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2022-04-06
+Updated: 2022-05-12
 Requires: 0060
 ```
 
