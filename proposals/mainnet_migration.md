@@ -79,7 +79,7 @@ This value will be used for every delegate account in the snapshot block.
    </td>
    <td>TBD
    </td>
-   <td>Module ID of the <a href="https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md">DPoS Module</a>
+   <td>Module ID of the <a href="https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md">DPoS Module</a>.
    </td>
   </tr>
   <tr>
@@ -89,7 +89,7 @@ This value will be used for every delegate account in the snapshot block.
    </td>
    <td>TBD
    </td>
-   <td>Module ID of the <a href="https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md">Auth Module</a>
+   <td>Module ID of the <a href="https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md">Auth Module</a>.
    </td>
   </tr>
   <tr>
@@ -99,7 +99,7 @@ This value will be used for every delegate account in the snapshot block.
    </td>
    <td>TBD
    </td>
-   <td>Module ID of the <a href="https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md">Token Module</a>
+   <td>Module ID of the <a href="https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md">Token Module</a>.
    </td>
   </tr>
   <tr>
@@ -143,7 +143,7 @@ ffffff
 48 bytes all set to 0
 
    </td>
-   <td>A BLS key, used as a placeholder before a valid BLS key is registered. It is invalid since the most significant bit of the first byte is zero while the total length is 48 and deserialization fails(see second point <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-07#appendix-C.2">here</a>).
+   <td>A BLS key, used as a placeholder before a valid BLS key is registered. It is invalid since the most significant bit of the first byte is zero while the total length is 48 and deserialization fails (see second point <a href="https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-07#appendix-C.2">here</a>).
    </td>
   </tr>
   <tr>
@@ -269,7 +269,7 @@ When Lisk Core v4 is started for the first time, the following steps are perform
 3. Check if all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` and `HEIGHT_SNAPSHOT` (inclusive) from Lisk Core v3 can be found locally. If yes:
     1. Fetch these blocks from highest to lowest height. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block and its transactions are persisted in the database.
     2. Skip steps 4 and 5.
-4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK+1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer network from highest to lowest height. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation passes, the block along with its transactions is persisted in the database.
+4. Fetch all blocks between heights `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK + 1` and `HEIGHT_SNAPSHOT` (inclusive) via peer-to-peer network from highest to lowest height. Each block is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation passes, the block along with its transactions is persisted in the database.
 5. The snapshot block for the height `HEIGHT_PREVIOUS_SNAPSHOT_BLOCK` is downloaded from a server. The URL for the source can be configured. When downloaded, it is validated using [minimal validation steps as defined below](#minimal-validation-of-core-v3-blocks). If this validation step passes, the block is persisted in the database.
 
 The steps 3 to 5 from above could run in the background with low priority.
@@ -292,7 +292,7 @@ Note that once the snapshot block for height `HEIGHT_SNAPSHOT + 1` is processed,
 
 A block created by Lisk Core v3, i.e., a block with a height between `HEIGHT_PREVIOUS_SNAPSHOT` and `HEIGHT_SNAPSHOT` (inclusive) is validated as follows:
 
-- Verify that the block follows the [`block schema`](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#deserialization) defined in LIP 0029.
+- Verify that the block follows the [`block schema`](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#deserialization) defined in [LIP 0029](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md).
 - Compute the block ID as defined in [LIP 0029](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0029.md#block-id) and verify that it is equal to the `previousBlockID` property of the child block.
 - Verify that the transactions in the payload yield the [transaction root](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0032.md#specification) provided in the block header.
 
@@ -354,8 +354,8 @@ addTokenModuleEntry():
     tokenObj.escrowSubstore = []
     tokenObj.availableLocalIDSubstore = {}
     tokenObj.availableLocalIDSubstore.nextAvailableLocalID = nextLexicographicalOrder(LOCAL_ID_LSK)
-    # where the function nextLexicographicalOrder returns the next byte value, in lexicographical order
-    # this is equivalent to doing localID + 1 if the byte value is viewed as a big endian integer
+    # Where the function nextLexicographicalOrder returns the next byte value, in lexicographical order
+    # this is equivalent to doing localID + 1 if the byte value is viewed as a big endian integer.
     data = serialization of tokenObj using genesisTokenStoreSchema
     append {"moduleID": MODULE_ID_TOKEN, "data": data} to b.assets
 
