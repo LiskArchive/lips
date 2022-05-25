@@ -72,7 +72,7 @@ The root of the sparse Merkle tree is 32-bytes, therefore resulting in a limited
 
 We specify one standard event which is emitted at the end of the transaction processing. 
 This event is emitted within the application domain and has module ID set to the ID of the module to which the transaction belongs and a constant event type. 
-The event data is a boolean indicating the success of the transaction execution.
+The event data is a Boolean indicating the success of the transaction execution.
 
 ### Error Handling and Events
 
@@ -137,7 +137,7 @@ To summarize, we chose sparse Merkle trees because:
 
 ### Event ID
 
-Events can be globally identified in the blockchain by the height of the block including the event and the index of the event in the block. In particular, we define the event ID as a byte value given by the concatenation of the height of the block (serialized as big endian 4 bytes value) and the event index converted to a binary string of length `EVENT_INDEX_LENGTH_BITS` concatenated `TOPIC_INDEX_LENGTH_BITS` bits set to 0 (for a total of `TOTAL_INDEX_LENGTH_BYTES` bytes). The event ID has length `EVENT_ID_LENGTH_BYTES`.
+Events can be globally identified in the blockchain by the height of the block including the event and the index of the event in the block. In particular, we define the event ID as a byte value given by the concatenation of the height of the block (serialized as big-endian 4 bytes value) and the event index converted to a binary string of length `EVENT_INDEX_LENGTH_BITS` concatenated `TOPIC_INDEX_LENGTH_BITS` bits set to 0 (for a total of `TOTAL_INDEX_LENGTH_BYTES` bytes). The event ID has length `EVENT_ID_LENGTH_BYTES`.
 
 ### Event Data Structure
 
@@ -226,7 +226,7 @@ Each module defines a standard event indicating the result of a transaction proc
 * `moduleID`: The module ID of the transaction.
 * `typeID`: The constant `EVENT_TYPE_ID_STANDARD`.
 * `topics`: An array containing the transaction ID.
-* `data`: A boolean value set to `true` if the transaction was processed successfully, `false` otherwise. The event `data` JSON schema is given below.
+* `data`: A Boolean value set to `true` if the transaction was processed successfully, `false` otherwise. The event `data` JSON schema is given below.
 
 ```java
 standardEventDataSchema = {
