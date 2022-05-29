@@ -26,10 +26,10 @@ Currently in the Lisk protocol, once a transaction has been included in a block,
 However, there are several cases in which this may not be the case anymore:
 
 * The result of advanced transactions might depend on the state at the moment of execution, e.g. the conversion rate at which a swap in a DEX is executed, and cannot be read only from the transaction data. 
-* Some state transitions, like assigning the [block reward][lip-0042] to the block generator, are not induced by transactions but [by the block header itself][lip-0055#separation]. 
 * In the Lisk interoperability solution the effect of a [cross-chain message][lip-0049] that is part of a [cross-chain update][lip-0053] included in a block, does not necessarily depend only on its data: In some cases, the cross-chain message can be returned or its execution can fail.
 * After the implementation of [LIP 0055][lip-0055#failing], transactions can fail, i.e. their execution can trigger an error but the transaction is still included in the block. 
 
+Furthermore, some state transitions, like assigning the [block reward][lip-0042] to the block generator, are not induced by transactions but [by the block header itself][lip-0055#separation]. 
 In all these scenarios, the extra information about the execution of state transitions can be included in _events_, on-chain data emitted during the processing of a block. 
 Front-end products can query the blockchain for the existence of a certain event and use the information contained to enrich the user experience. 
 
