@@ -208,7 +208,7 @@ The leaf value is the serialization of the event properties using the `eventSche
 
 In summary, for each event one key-value pair is added to the events tree for each entry `topic` in the associated `topics` array, where:
 
-* `key = SHA-256(topic)[:TOPIC_HASH_LENGTH_BYTES] || ((event index << TOPIC_INDEX_LENGTH_BITS) + topic index).to_bytes(TOTAL_INDEX_LENGTH_BYTES, byteorder="big")`
+* `key = SHA-256(topic)[:TOPIC_HASH_LENGTH_BYTES] + ((event index << TOPIC_INDEX_LENGTH_BITS) + topic index).to_bytes(TOTAL_INDEX_LENGTH_BYTES, byteorder="big")`
 * `value` = serialization of event according to `eventSchema`.
 
 
