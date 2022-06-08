@@ -245,7 +245,7 @@ standardEventDataSchema = {
 We define the following notation to emit events during the block processing.
 
 - `emitEvent(moduleID: bytes, typeID: bytes, data: bytes, topics: list[bytes])`: emit an event and add it to the events tree as explained [above](#events-tree). The event index and the relevant default topic are added automatically.
-- `emitPersistentEvent(moduleID: bytes, typeID: bytes, data: bytes, topics: list[bytes])`: emit an event and add it to the events tree as explained [above](#events-tree). The event index and the relevant default topic are added automatically. This event can only be emitted during the command execution stage and is not removed from the events tree if the command execution fails.
+- `emitPersistentEvent(moduleID: bytes, typeID: bytes, data: bytes, topics: list[bytes])`: emit an event and add it to the events tree as explained [above](#events-tree). The event index and the relevant default topic are added automatically. If the event is emitted during the command execution stage, it is not removed from the events tree if the command execution fails. Otherwise, it works exactly as `emitEvent`.
 
 
 ## Backwards Compatibility
