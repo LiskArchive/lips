@@ -213,13 +213,14 @@ We define the following notation to emit events during the block processing.
 
 ## Backwards Compatibility
 
-This LIP, and in general the new block header proposed in LIP 0055, results in a hard fork as nodes following the proposed protocol will reject blocks according to the previous protocol, and nodes following the previous protocol will reject blocks according to the proposed protocol.
+This LIP, and in general the new block header proposed in [LIP 0055][lip-0055], results in a hard fork as nodes following the proposed protocol will reject blocks according to the previous protocol, and nodes following the previous protocol will reject blocks according to the proposed protocol.
 
 [lip-0032]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0032.md
 [lip-0039]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0039.md
 [lip-0042]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0042.md
 [lip-0049]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0049.md
 [lip-0053]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0053.md
+[lip-0055]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md
 [lip-0055#block-processing-stages]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#block-processing-stages
 [lip-0055#failing]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#failing-and-invalid-transactions
 [lip-0055#separation]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#separation-between-block-header-and-block-assets
