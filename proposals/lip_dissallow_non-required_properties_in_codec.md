@@ -1,11 +1,12 @@
 ```
 LIP: <LIP number>
-Title: Disallow Non-required Properties in Lisk Codec
+Title: Disallow non-required properties in Lisk codec
 Author: Andreas Kendziorra <andreas.kendziorra@lightcurve.io>
-? Discussions-To: <Link to discussion in Lisk Research>
+Discussions-To: https://research.lisk.com/t/disallow-non-required-properties-in-lisk-codec/341
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2022-04-12
+Updated: 2022-06-17
 Replaces: 0027
 Requires: 0055
 ```
