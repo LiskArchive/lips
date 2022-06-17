@@ -74,3 +74,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0060](proposals/lip-0060.md) | Update genesis block schema and processing                                                     | Iker Alustiza, Rishi Mittal                            | Standards Track | Draft         |
 | [0061](proposals/lip-0061.md) | Introduce certificate generation mechanism                                                     | Jan Hackfeld                                           | Standards Track | Draft         |
 | [0062](proposals/lip-0062.md) | Use pre-hashing for signatures                                                                 | Maxime Gagnebin                                        | Standards Track | Draft         |
+| [0063](proposals/lip-0063.md) | Disallow non-required properties in Lisk codec                                                 | Andreas Kendziorra                                     | Standards Track | Draft         |
