@@ -1,12 +1,13 @@
 ```
 LIP: <LIP number>
 Title: Introduce events and add events root to block headers
-Author:	Mehmet Egemen Albayrak <mehmet.albayrak@lightcurve.io>
-        Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
+Author: Alessandro Ricottone <alessandro.ricottone@lightcurve.io>
+        Mehmet Egemen Albayrak <mehmet.albayrak@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-events-and-add-events-root-to-block-headers/342
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2022-05-03
+Updated: 2022-06-17
 Requires: 0039, 0055
 ```
 
