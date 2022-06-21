@@ -82,10 +82,12 @@ transactionSchema = {
     "properties": {
         "moduleID": {
             "dataType": "bytes",
+            "length": MODULE_ID_LENGTH_BYTES,
             "fieldNumber": 1
         },
         "commandID": {
             "dataType": "bytes",
+            "length": COMMAND_ID_LENGTH_BYTES,
             "fieldNumber": 2
         },
         "nonce": {
@@ -98,6 +100,7 @@ transactionSchema = {
         },
         "senderPublicKey": {
             "dataType": "bytes",
+            "length": PUBLIC_KEY_LENGTH_BYTES,
             "fieldNumber": 5
         },
         "params": {
@@ -108,6 +111,7 @@ transactionSchema = {
             "dataType": "array",
             "items": {
                 "dataType": "bytes",
+                "length": SIGNATURE_LENGTH_BYTES 
             },
             "fieldNumber": 7
         }
@@ -120,10 +124,7 @@ transactionSchema = {
 
 For a transaction `trs` to be valid, it must satisfy the following:
 
-* `trs.moduleID` is of length `MODULE_ID_LENGTH_BYTES`.
-* `trs.commandID` is of length `COMMAND_ID_LENGTH_BYTES`.
-* `trs.senderPublicKey` is of length `PUBLIC_KEY_LENGTH_BYTES`.
-* all elements of `trs.signatures` are of length `SIGNATURE_LENGTH_BYTES`.
+
 * `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE_BYTES` .
 
 
