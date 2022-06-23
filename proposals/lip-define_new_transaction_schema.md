@@ -2,7 +2,7 @@
 LIP: <lip number>
 Title: Define new transaction schema
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
-? Discussions-To: <Link to discussion in Lisk Research>
+? Discussions-To: https://research.lisk.com/t/define-new-transaction-schema/348/15
 Type: Standards Track
 Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
@@ -35,31 +35,31 @@ Defining identifiers as type `bytes` also requires fixing the length of the iden
 
 ### New Property Names
 
-All properties in the proposed transaction schema are equivalent to the ones defined in LIP 0028. The only changes are the renaming of `assetID` to `commandID` and of `asset` to `params`. As was described in LIP "Update Lisk SDK modular blockchain architecture".
+All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the renaming of `assetID` to `commandID` and of `asset` to `params`, as was described in the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture].
 
 
 ## Specification
 
-The transaction schema defined in [LIP 0028](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md) is superseded by the one defined below. 
+The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one defined below. 
 
 The `params` property must follow the schema corresponding to the `moduleID`, `commandID` pair defined in the corresponding module.
 
-All transaction procedures - serialization, deserialization, signature calculation, signature validation and transaction ID - follow the same specifications already defined in [LIP 0028](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md#serialization). The resulting serialization or signatures are however different when the proposed transaction schema is used.
+All transaction procedures - serialization, deserialization, signature calculation, signature validation and transaction ID - follow the same specifications already defined in [LIP 0028][lip-0028]. The resulting serialization or signatures are however different when the proposed transaction schema is used.
 
 
 ### Constants
 
 
-| Global Constants                |         |                                                                                                            |
-|:-------------------------------:|:-------:|------------------------------------------------------------------------------------------------------------|
-| **Name**                        |**Value**|**Description**                                                                                             |
-| `MODULE_ID_LENGTH_BYTES `       | 4       | The length of module IDs.                                                                                  |
-| `COMMAND_ID_LENGTH_BYTES`       | 2       | The length of command IDs.                                                                                 |
-| `PUBLIC_KEY_LENGTH_BYTES `      | 32      | The length of public keys.                                                                                 |
-| `SIGNATURE_LENGTH_BYTES`        | 64      | The length of signatures.                                                                                  |
-| **Configurable Constants**      |         |                                                                                                            |
-| **Name**                        |**Mainchain Value**        |**Description**                                                                           |
-| `MAX_PARAMS_SIZE_BYTES`         | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                             |
+| Global Constants                 |         |                                                                                                            |
+|:--------------------------------:|:-------:|------------------------------------------------------------------------------------------------------------|
+| **Name**                         |**Value**|**Description**                                                                                             |
+| `MODULE_ID_LENGTH `        | 4       | The length of module IDs.                                                                                  |
+| `COMMAND_ID_LENGTH`        | 2       | The length of command IDs.                                                                                 |
+| `ED25519_PUBLIC_KEY_LENGTH`| 32      | The length of public keys.                                                                                 |
+| `ED25519_SIGNATURE_LENGTH` | 64      | The length of signatures.                                                                                  |
+| **Configurable Constants**       |         |                                                                                                            |
+| **Name**                         |**Mainchain Value**        |**Description**                                                                           |
+| `MAX_PARAMS_SIZE`          | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                             |
 
 
 ### JSON Schema
@@ -82,12 +82,12 @@ transactionSchema = {
     "properties": {
         "moduleID": {
             "dataType": "bytes",
-            "length": MODULE_ID_LENGTH_BYTES,
+            "length": MODULE_ID_LENGTH,
             "fieldNumber": 1
         },
         "commandID": {
             "dataType": "bytes",
-            "length": COMMAND_ID_LENGTH_BYTES,
+            "length": COMMAND_ID_LENGTH,
             "fieldNumber": 2
         },
         "nonce": {
@@ -100,7 +100,7 @@ transactionSchema = {
         },
         "senderPublicKey": {
             "dataType": "bytes",
-            "length": PUBLIC_KEY_LENGTH_BYTES,
+            "length": ED25519_PUBLIC_KEY_LENGTH,
             "fieldNumber": 5
         },
         "params": {
@@ -111,7 +111,7 @@ transactionSchema = {
             "dataType": "array",
             "items": {
                 "dataType": "bytes",
-                "length": SIGNATURE_LENGTH_BYTES 
+                "length": ED25519_SIGNATURE_LENGTH 
             },
             "fieldNumber": 7
         }
@@ -125,7 +125,7 @@ transactionSchema = {
 For a transaction `trs` to be valid, it must satisfy the following:
 
 
-* `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE_BYTES` .
+* `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE` .
 
 
 ## Backwards Compatibility
@@ -188,3 +188,7 @@ public key = 6689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55
 private key = 3751d0dee5ee214809118514303fa50a1daaf7151ec8d30c98b12e0caa4bb7de
 public key = aa3f553d66b58d6167d14fe9e91b1bd04d7cf5eef27fed0bec8aaac6c73c90b3
 ```
+
+
+[lip-0028]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md
+[lip-update-lisk-sdk-modular-architecture]: https://research.lisk.com/t/update-lisk-sdk-modular-blockchain-architecture/343
