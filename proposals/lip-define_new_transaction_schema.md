@@ -50,16 +50,17 @@ All transaction procedures - serialization, deserialization, signature calculati
 ### Constants
 
 
-| Global Constants                 |         |                                                                                                            |
-|:--------------------------------:|:-------:|------------------------------------------------------------------------------------------------------------|
-| **Name**                         |**Value**|**Description**                                                                                             |
-| `MODULE_ID_LENGTH `        | 4       | The length of module IDs.                                                                                  |
-| `COMMAND_ID_LENGTH`        | 2       | The length of command IDs.                                                                                 |
-| `ED25519_PUBLIC_KEY_LENGTH`| 32      | The length of public keys.                                                                                 |
-| `ED25519_SIGNATURE_LENGTH` | 64      | The length of signatures.                                                                                  |
-| **Configurable Constants**       |         |                                                                                                            |
-| **Name**                         |**Mainchain Value**        |**Description**                                                                           |
-| `MAX_PARAMS_SIZE`          | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                             |
+| Global Constants                 |         |                              |                                                                             |
+|:--------------------------------:|:-------:|------------------------------|-----------------------------------------------------------------------------|
+|**Name**                    |**Type**   |**Value**                         |**Description**                                                              |
+| `MODULE_ID_LENGTH `        |uint32    | 4                                 | The length of module IDs.                                                   |
+| `COMMAND_ID_LENGTH`        |uint32    | 2                                 | The length of command IDs.                                                  |
+| `ED25519_PUBLIC_KEY_LENGTH`|uint32    | 32                                | The length of public keys.                                                  |
+| `ED25519_SIGNATURE_LENGTH` |uint32    | 64                                | The length of signatures.                                                   |
+| `MESSAGE_TAG_TRANSACTION`  | bytes    | "LSK_TX_" as ASCII-encoded literal| Message tag for transaction signatures (see [LIP 0037](lip-0037)).        |
+| **Configurable Constants** |          |                                   |                                                                             |
+| **Name**                   |**Type**  |**Mainchain Value**                |**Description**                                                             |
+| `MAX_PARAMS_SIZE`          |uint32    | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                         |
 
 
 ### JSON Schema
@@ -120,13 +121,60 @@ transactionSchema = {
 ```
 
 
-### Validation
+#### Validation
 
 For a transaction `trs` to be valid, it must satisfy the following:
 
 
 * `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE` .
 
+### Serialization
+
+`trsData` is an object similar to a transaction with the only difference that the params property is a deserialized version of params.
+
+```python
+def encode(transactionSchema,trsData) -> SignatureEd25519:
+    trs = trsData
+    trs.params = encode(paramsSchema,trs.params)
+    trs = encode(transactionSchema,trs)
+    return trs
+```
+
+
+### Deserialization
+
+Consider a binary message trsMsg to be deserialized. The deserialization procedure is done as follows:
+
+```python
+def decode():
+    deco
+
+
+```
+### Transaction signature calculation
+Consider a data structure `unsignedTrsData` representing a valid transaction object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
+
+```python
+def signTransaction(sk,unsignedTrsData) -> SignatureEd25519:
+    serializedTrs = encode(transactionSchema,unsignedTrsData)
+    return signMessage(sk,MESSAGE_TAG_TRANSACTION,networkIdentifier,serializedTrs)
+
+```
+
+Here `networkIdentifier` is the correct network identifier for the chain and the function `signMessage` is defined in [LIP 0037](lip-0037).
+
+### Transaction signature validation
+
+Consider a binary message `trsMsg` representing a serialized transaction object on a certain chain. The signature of the object is validated as follows:
+
+```python
+def verifySignature(pk,trsMsg):
+    trsData = trsMsg = decode(transactionSchema,trsMsg)
+    trsData.signatures = []
+    trsData = encode(transactionSchema,trsData)
+    return verifyMessageSig(pk,MESSAGE_TAG_TRANSACTION,networkIdentifier,trsData,trsMsg.signatures)
+
+```
 
 ## Backwards Compatibility
 
@@ -191,4 +239,5 @@ public key = aa3f553d66b58d6167d14fe9e91b1bd04d7cf5eef27fed0bec8aaac6c73c90b3
 
 
 [lip-0028]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md
+[lip-0037]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md
 [lip-update-lisk-sdk-modular-architecture]: https://research.lisk.com/t/update-lisk-sdk-modular-blockchain-architecture/343
