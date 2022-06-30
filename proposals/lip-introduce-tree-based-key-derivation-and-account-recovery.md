@@ -41,8 +41,8 @@ We define the following constants:
 
 | Name               | Type    | Validation            | Description                     |
 |--------------------|---------|-----------------------|---------------------------------|
-| `bip39Mnemonic`    | string  | Must follow the mnemonic specifications of [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#Generating_the_mnemonic). | Used as the secret recovery key.   |
-| `extendedKey`      | object  | Object with 2 properties, `key` and `chainCode`. Both associated values must be byte sequences of length 32. | Used as an intermediary object during key derivation.   |
+| `BIP39Mnemonic`    | string  | Must follow the mnemonic specifications of [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#Generating_the_mnemonic). | Used as the secret recovery key.   |
+| `ExtendedKey`      | object  | Object with 2 properties, `key` and `chainCode`. Both associated values must be byte sequences of length 32. | Used as an intermediary object during key derivation.   |
 | `PrivateKeyEd25519`| bytes   | Byte sequences of length `ED25519_PRIVATE_KEY_LENGTH`. | An Ed25519 private key.   |
 | `PrivateKeyBLS`| bytes   | Byte sequences of length `BLS_PRIVATE_KEY_LENGTH`. | An BLS private key.   |
 
@@ -61,10 +61,8 @@ Any of the child keys could be used to create an Ed25519 private key, but in pra
 
 This function derives an Ed25519 private key, as defined in [RFC 8032](https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.5), from an input phrase and a derivation path.
 
-##### Execution
-
 ```python
-def getPrivateKeyFromPhraseAndPath(phrase: bip39Mnemonic, path: list[uint32]) -> PrivateKeyEd25519:
+def getPrivateKeyFromPhraseAndPath(phrase: BIP39Mnemonic, path: list[uint32]) -> PrivateKeyEd25519:
     masterSeed = bip39.toSeed(phrase)
     node = getMasterKeyFromSeed(masterSeed)
 
@@ -89,7 +87,7 @@ This function derives the master node from a given random seed. All further node
 ##### Execution
 
 ```python
-def getMasterKeyFromSeed(seed: bytes) -> extendedKey:
+def getMasterKeyFromSeed(seed: bytes) -> ExtendedKey:
     hmac = PRF-HMAC-SHA-512(
         key=0x656432353531392073656564 #utf8 encoding of 'ed25519 seed'
         data=seed
@@ -107,14 +105,12 @@ Specifications for `PRF-HMAC-SHA-512 `can be found in [RFC4868](https://datatrac
 
 This function derives a child node from a parent node and the given child node index.
 
-##### Execution
-
 ```python
-def childKeyDerivation(node: extendedKey, index: uint32) -> extendedKey:
-    indexBuffer = big-endian encoding of index using 4 bytes 
+def childKeyDerivation(node: ExtendedKey, index: uint32) -> ExtendedKey:
+    indexBuffer = index.to_bytes(4, byteorder='big')
     hmac = PRF-HMAC-SHA-512(
         key=node.chainCode,
-        data = 0x00 || node.key || indexBuffer
+        data = 0x00 + node.key + indexBuffer
     )
     return {
         key: hmac[:32],
@@ -138,15 +134,8 @@ We follow the BLS key derivation described in [EIP 2333](https://eips.ethereum.o
 
 This function derives a BLS private key, as defined in [draft-irtf-cfrg-bls-signature-04](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bls-signature-04), from an input phrase and a derivation path.
 
-
-##### Returns
-
-A BLS secret key.
-
-##### Execution
-
 ```python
-def getBLSPrivateKeyFromPhraseAndPath(phrase: bip39Mnemonic, path: list[uint32]) -> PrivateKeyBLS:
+def getBLSPrivateKeyFromPhraseAndPath(phrase: BIP39Mnemonic, path: list[uint32]) -> PrivateKeyBLS:
     masterSeed = bip39.toSeed(phrase)
     key = derive_master_SK(masterSeed)
 
@@ -180,7 +169,7 @@ When inputting a secret recovery phrase into the Lisk wallet, the wallet will tr
 Given a secret recovery phrase `phrase`, the potential keys previously used by users are discovered by the following method, setting `GAP_LIMIT = 20`, as in [BIP 44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#address-gap-limit).
 
 ```python
-def getKeysFromPhrase(phrase: bip39Mnemonic) -> list[str]:
+def getKeysFromPhrase(phrase: BIP39Mnemonic) -> list[str]:
     usedDerivationPath = []
     privateEd25519Key = sha256(phrase)
     if Address corresponding to privateEd25519Key has at least 1 incoming transaction:
