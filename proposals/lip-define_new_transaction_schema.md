@@ -130,27 +130,27 @@ For a transaction `trs` to be valid, it must satisfy the following:
 
 ### Serialization
 
-`trsData` is an object similar to a transaction with the only difference that the params property is a deserialized version of params.
+Consider a data structure `trsData` which is an object similar to a transaction with the only difference that the params property is not serialized and contains the values of parameters of paramsSchema. The serialization of such an object is described in the following pseudocode.
 
 ```python
 def encode(transactionSchema,trsData) -> SignatureEd25519:
     trs = trsData
     trs.params = encode(paramsSchema,trs.params)
-    trs = encode(transactionSchema,trs)
-    return trs
+    return encode(transactionSchema,trs)
 ```
 
 
 ### Deserialization
 
-Consider a binary message trsMsg to be deserialized. The deserialization procedure is done as follows:
+Consider a binary message `trsMsg` to be deserialized. The deserialization procedure is done as follows:
 
 ```python
-def decode():
-    deco
-
-
+def decode(transactionSchema,trsMsg):
+    trsData = decode(transactionSchema,trsMsg)
+    trsData.params = decode(paramsSchema,trsData.params)
+    return trsData
 ```
+
 ### Transaction signature calculation
 Consider a data structure `unsignedTrsData` representing a valid transaction object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
 
@@ -161,7 +161,7 @@ def signTransaction(sk,unsignedTrsData) -> SignatureEd25519:
 
 ```
 
-Here `networkIdentifier` is the correct network identifier for the chain and the function `signMessage` is defined in [LIP 0037](lip-0037).
+Here `networkIdentifier` is the correct network identifier for the chain and the function `signMessage` is defined in [LIP 0037][lip-0037].
 
 ### Transaction signature validation
 
