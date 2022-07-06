@@ -40,11 +40,15 @@ All properties in the proposed transaction schema are equivalent to the ones def
 
 ## Specification
 
-The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one defined below. 
+The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one defined [below](#json-schema). 
 
-The `params` property must follow the schema corresponding to the `moduleID`, `commandID` pair defined in the corresponding module.
+The `params` property must follow the schema corresponding to the `moduleID`, `commandID` pair defined in the corresponding module; we call this schema `paramsSchema`.
 
-All transaction procedures - serialization, deserialization, signature calculation, signature validation and transaction ID - follow the same specifications already defined in [LIP 0028][lip-0028]. The resulting serialization or signatures are however different when the proposed transaction schema is used.
+As for the other transaction procedures:
+
+- Serialization and deserialization follow the same specifications already defined in [LIP 0028][lip-0028]; for completeness we include the pseudocode [below](#serialization). The resulting serialization is however different when the proposed transaction schema is used, due to the change of types for `moduleID` and `commandID`. Moreover, the transaction ID is calculated in the same way as described in [LIP 0028][lip-0028].
+- Signature calculation follows the same specifications as in [LIP 0028][lip-0028], updated to incorporate message tags introduced in [LIP 0037][lip-0037]. For completeness we provide the pseudocode [below](#transaction-signature-calculation).
+- Signature validation is done using the `verifySignatures` function defined in [LIP 0041](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md#transaction-verification). 
 
 
 ### Constants
@@ -56,12 +60,21 @@ All transaction procedures - serialization, deserialization, signature calculati
 | `MODULE_ID_LENGTH `        |uint32    | 4                                 | The length of module IDs.                                                   |
 | `COMMAND_ID_LENGTH`        |uint32    | 2                                 | The length of command IDs.                                                  |
 | `ED25519_PUBLIC_KEY_LENGTH`|uint32    | 32                                | The length of public keys.                                                  |
+| `ED25519_PRIVATE_KEY_LENGTH`|uint32   | 32                                | The length of private keys.                                                 |
 | `ED25519_SIGNATURE_LENGTH` |uint32    | 64                                | The length of signatures.                                                   |
 | `MESSAGE_TAG_TRANSACTION`  | bytes    | "LSK_TX_" as ASCII-encoded literal| Message tag for transaction signatures (see [LIP 0037](lip-0037)).        |
 | **Configurable Constants** |          |                                   |                                                                             |
 | **Name**                   |**Type**  |**Mainchain Value**                |**Description**                                                             |
 | `MAX_PARAMS_SIZE`          |uint32    | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                         |
 
+
+### Type Definition
+
+| Name                | Type   | Validation                                       | Description                                                          |
+|---------------------|--------|--------------------------------------------------|----------------------------------------------------------------------|
+| `SignatureEd25519` | bytes   | Must be of length `ED25519_SIGNATURE_LENGTH`.  | Used for Ed25519 signatures.  |
+| `PrivateKeyEd25519` | bytes   | Must be of length `ED25519_PRIVATE_KEY_LENGTH`. | Used for Ed25519 private keys. |
+| `Transaction` | object | Must follow the `transactionSchema` schema with the only difference that `params` property is not serialized and contains the values of parameters of `paramsSchema` for the corresponding transaction. | An object representing a non-serialized transaction.                                        |
 
 ### JSON Schema
 
@@ -130,51 +143,36 @@ For a transaction `trs` to be valid, it must satisfy the following:
 
 ### Serialization
 
-Consider a data structure `trsData` which is an object similar to a transaction with the only difference that the params property is not serialized and contains the values of parameters of paramsSchema. The serialization of such an object is described in the following pseudocode.
+The serialization of an object of type `Transaction` is described in the following pseudocode.
 
 ```python
-def encode(transactionSchema,trsData) -> SignatureEd25519:
-    trs = trsData
+def encode(transactionSchema: LiskJSONSchema, trs: Transaction) -> bytes:
     trs.params = encode(paramsSchema,trs.params)
     return encode(transactionSchema,trs)
 ```
 
-
 ### Deserialization
 
-Consider a binary message `trsMsg` to be deserialized. The deserialization procedure is done as follows:
+Consider a binary message `trsMsg`, corresponding to a serialized transaction. The deserialization procedure is as follows:
 
 ```python
-def decode(transactionSchema,trsMsg):
+def decode(transactionSchema: LiskJSONSchema, trsMsg: bytes) -> Transaction: 
     trsData = decode(transactionSchema,trsMsg)
     trsData.params = decode(paramsSchema,trsData.params)
     return trsData
 ```
 
 ### Transaction signature calculation
-Consider a data structure `unsignedTrsData` representing a valid transaction object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
+Consider a data structure `unsignedTrsData` representing a valid `Transaction` object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
 
 ```python
-def signTransaction(sk,unsignedTrsData) -> SignatureEd25519:
-    serializedTrs = encode(transactionSchema,unsignedTrsData)
-    return signMessage(sk,MESSAGE_TAG_TRANSACTION,networkIdentifier,serializedTrs)
-
+def signTransaction(sk: PrivateKeyEd25519, unsignedTrsData: Transaction) -> SignatureEd25519:
+    serializedTrs = encode(transactionSchema, unsignedTrsData)
+    return signMessage(sk, MESSAGE_TAG_TRANSACTION, networkIdentifier, serializedTrs)
 ```
 
-Here `networkIdentifier` is the correct network identifier for the chain and the function `signMessage` is defined in [LIP 0037][lip-0037].
+Here `networkIdentifier` is the correct [network identifier](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#network-identifiers) for the chain and the function `signMessage` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
 
-### Transaction signature validation
-
-Consider a binary message `trsMsg` representing a serialized transaction object on a certain chain. The signature of the object is validated as follows:
-
-```python
-def verifySignature(pk,trsMsg):
-    trsData = trsMsg = decode(transactionSchema,trsMsg)
-    trsData.signatures = []
-    trsData = encode(transactionSchema,trsData)
-    return verifyMessageSig(pk,MESSAGE_TAG_TRANSACTION,networkIdentifier,trsData,trsMsg.signatures)
-
-```
 
 ## Backwards Compatibility
 
