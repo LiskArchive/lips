@@ -1,0 +1,276 @@
+```
+LIP: <LIP number>
+Title: Introduce a generic keystore
+Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-a-generic-keystore/360
+Type: Informational
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+```
+
+
+## Abstract
+
+We describe a format for encrypted information to be used in the Lisk ecosystem. This could be used in the wallet to encrypt a user's private keys or by the block generator module to store the generator keys.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+A common encryption standard allows different wallets and third party tools to be compatible with each other.
+
+## Rationale
+
+The Lisk protocol uses different types of signature schemes for different use cases. For example, transactions must be signed by the account sending it using an Ed25519 signature and commits must be signed using a BLS signature. The proposed keystore is agnostic to the private key type and could allow user facing products to abstract away the signature type from the user. The way private keys are generated from secret recovery phrases is specified in LIP ["Introduce tree based key derivation and account recovery"][lip-tree-derivation].
+
+### Encrypting Secret Recovery Phrases
+
+The secret recovery phrase is a sequence of 12 (or 24) words that follow the [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) standards and that is used to derive all private keys a user might need. Naturally, it is the first thing to be generated and shared with the user to be stored safely. However, it is possible that users lose their phrase and need to back it up once more. For this reason, the keystore proposed below can easily be used to encrypt secret recovery phrases.
+
+In the same encrypted file, we can store metadata indicating how the secret recovery phrase was used and which private keys were already generated with it. This allows users to not only recover all their accounts when importing the encrypted file in a new device, but also to make sure that newly generated private keys are using a new derivation path.
+
+### Encrypting Private Keys
+
+The keystore presented below is also designed to encrypt private keys. The reason to encrypt and store private keys directly is two fold. First it improves the efficiency of the signing process. Indeed, if we decrypt the private key directly, there is no need to derive the key again from the secret recovery phrase. Secondly, in the case the device of the user was corrupted, decrypting just one private key would compromise the account linked to this private key, but not the others generated with the same secret recovery phrase.
+
+
+## Specification
+
+The specifications below are inspired from [Web3 Secret Storage](https://github.com/ethereum/wiki/wiki/Web3-Secret-Storage-Definition) with the addition of a `metadata` property which allows to store all needed information regarding the encrypted material.
+
+### Encryption File Format
+
+We store secret recovery phrases and private keys in a JSON file following the format below.
+
+```java
+keystoreSchema = {
+  "type": "object",
+  "required": ["encryptedPassphrase", "metadata", "id"],
+  "properties": {
+    "encryptedPassphrase": {
+      "type": "object",
+      "properties": {
+        "version": {"type": "string"},
+        "ciphertext": {"type": "string"},
+        "mac": {"type": "string"},
+        "kdf": {"type": "string"},
+        "kdfparams": {"type": "object"},
+        "cipher": {"type": "string"},
+        "cipherparams": {"type": "object"}
+      }
+    },
+    "metadata": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "pubkey": {"type": "string"},
+        "address": {"type": "string"},
+        "path": {"type": "string"},
+        "derivedFromID": {"type": "string"},
+        "creationTime": {"type": "string"},
+        "pathsUsed": {"type": "array"},
+        "tags": {"type": "array"}
+    },
+    "id": {
+        "type": "string",
+        "format": "uuid"
+    }
+  }
+}
+```
+
+In the following sections, we describe the uses of the properties of `keystoreSchema`.
+
+#### encryptedPassphrase
+
+##### version
+
+The `version` is set to `"1"`.
+
+##### ciphertext
+
+The encrypted message in hexadecimal format.
+
+##### mac
+
+Computed as `SHA256(last 16 bytes of derivation key || ciphertext)`. It can be used to check the verification key before starting the decryption process.
+
+##### kdf and kdfparams
+
+The encryption/decryption key is an intermediate key derived from the user password. It is used to generate the secret key for decryption, and verify if the given password is correct. The function, and the params used to derive this key from the password are specified in `kdf`. The following values of `kdf` and `kdfparams` are allowed, depending on the key derivation function:
+
+| `kdf` | function | `kdfparams` | Definition |
+|-------|----------|-------------|------------|
+| "PBKDF2-SHA-256" | `pbkdf2`    | `{iterations: uint32, salt: string}` | [RFC 2898](https://www.ietf.org/rfc/rfc2898.txt)|
+| "argon2id"       | `argon2id`  | `{parallelism: uint32, iterations: uint32, memory: uint32, salt: string}` | [RFC 9106](https://datatracker.ietf.org/doc/html/rfc9106)|
+
+##### cipher and cipherparams
+
+The specified function encrypts the secret using the decryption key; to decrypt it, the decryption key along with `cipher` and `cipherparams` must be used. If the decryption key is longer than the key size required by the encoding function, it is truncated to the correct number of bits. The following option is supported:
+
+| `cipher` | function | `cipherparams` | Definition |
+|--------|----------|--------------|------------|
+| "AES-256-GCM" | `aes-256-gcm`    | `{iv: string, tag: string}` | [RFC 5116](https://datatracker.ietf.org/doc/html/rfc5116#section-5.2)
+
+Note that when using AES-256-GCM, the tag is an output of the encryption and is needed for decryption, this is why it is stored in the `cipherparams` property.
+
+#### metadata
+
+All information that is useful when using the file. None of the properties are required and they can be left empty depending on the usage of the encrypted file. Other properties could also be included in the metadata property, but they might not be supported by other implementations of this proposal.
+
+##### name
+
+A name given by the user to allow easier identification of the file.
+
+##### description
+
+The description field indicates the nature of the encrypted material. We specify the following description for commonly encrypted messages in Lisk:
+
+| Description value        | Uses |
+|--------------------------|------------------------------------------------------------------------------------------|
+| "Secret recovery phrase" | The description for secret recovery phrases.                                             |
+| "Ed25519 private key"    | The description for derived ed25519 private key, encoded as a hex string for encryption. |
+| "BLS private key"        | The description for derived BLS private key, encoded as a hex string for encryption.    |
+
+Other descriptions could also be possible, but do not need to be supported by products implementing this proposal.
+
+##### pubkey
+
+The public key of the key pair. This property is only used if the encoded data is an Ed25519 private key or a BLS private key. 
+
+##### address
+
+The address corresponding to the key pair. This property is only used if the encoded data is an Ed25519 private key.
+
+##### path
+
+The path used to derive the key pair from the secret recovery phrase.  This property is only used if the encoded data is an Ed25519 private key or a BLS private key. 
+
+##### derivedFromID
+
+This property contains the UUID of the file encrypting the corresponding secret recovery phrase.This property is only used if the encoded data is an Ed25519 private key or a BLS private key. 
+
+##### creationTime
+
+Time when the file was created. 
+
+##### pathsUsed
+
+List of paths used with the store recovery phrate to derive key pairs. This property should be used only if the encoded data is a secret recovery phrase. This information is useful to recover all accounts that were generated with this recovery phrase. It is also useful when creating a new account and selecting the next unused path.
+
+##### tags
+
+List of tags associated with the file.
+
+#### id
+
+The `id` property stores a provided uuid (version 4 UUID as specified in [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)), this is a randomly generated ID. It is used if the keystore needs to be referred to. Implementation help: the generation of the id is supported by node.js with the [`uuid`](https://github.com/uuidjs/uuid#uuidv4options-buffer-offset) package for example.
+
+### Recommended Parameters
+
+#### Argon2id
+
+We recommend using argon2id (instead of PBKDF2) to derive the encryption key, as it is recognised as a more secure key derivation method (see for example [OWASP recommendations](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)). We recommend to follow [RFC 9106](https://www.rfc-editor.org/rfc/rfc9106.html#name-parameter-choice) for basic parameter choices. Their first recommend options are:
+
+* iterations=1, 
+* parallelism=4 lanes, 
+* memory=2048 (2 GiB of RAM), 
+* 16 bytes salt, 
+* 32 bytes output. 
+
+### Password Strength General Recommendations
+
+The password submitted by the user should be validated to be long enough and use a variety of numbers and lower and upper case letters (see for example [https://www.securden.com/blog/top-10-password-policies.html](https://www.securden.com/blog/top-10-password-policies.html)). Further password requirements can be found in [EIP 2335](https://eips.ethereum.org/EIPS/eip-2335#password-requirements).
+
+#### PBKDF2
+
+Using PBKDF2 as a KDF is currently implemented in Lisk Elements with 10^6 iterations. PBKDF2 is considered secure, but slightly less future proof than argon2id.
+
+## Backwards Compatibility
+
+There are no incompatibilities since the protocol is not changed.
+
+## Reference Implementation
+
+TBD
+
+## Appendix
+
+### Help for Implementation
+
+This audit can help to create a better implementation [https://github.com/trailofbits/publications/blob/master/reviews/ETH2DepositCLI.pdf](https://github.com/trailofbits/publications/blob/master/reviews/ETH2DepositCLI.pdf) 
+
+### Examples
+
+#### Secret Recovery Phrase
+
+Password: `testpassword`.
+Secret recovery phrase:  `target cancel solution recipe vague faint bomb convince pink vendor fresh patrol`.
+
+```json
+{
+  "encryptedPassphrase": {
+    "version": "1",
+    "ciphertext": "866c6f1cab3ef67514bdc54cf0143b8b824ebe7c045efb97707c158c81d313cd1a6399b7aa3002248984d39ea2604b0263fe7bdbd8cb04286a9cbd2d353fc79908daab9af04b2528bf4f06a82d79483c",
+    "mac": "a476979ca68fe90f3c96f8a5f3f0a9fe33aef8b091d1169861e44a11a680aae9",
+    "cipher": "aes-256-gcm",
+    "cipherparams": {
+      "iv": "da7a74acbf34d20ffd3658f9",
+      "tag": "f4282899ed6cb0193e2981dca0d2ae8e"
+    },
+    "kdf": "argon2id",
+    "kdfparams": {
+      "parallelism": 4,
+      "iterations": 1,
+      "memory": 2024,
+      "salt": "2d4d7f0b7c68ccd977eae30ee10726f3"
+    }
+  },
+  "metadata": {
+    "name": "Maxime",
+    "description": "secret recovery phrase",
+    "pathsUsed": "m/44'/134'/0'",
+  },
+  "uuid": "fa3e4ceb-10dc-41ad-810e-17bf51ed93aa"
+}
+```
+
+#### Ed25519 Key Pair
+
+Password: `testpassword`.
+Key pair derived from the secret recovery phrase above, and the path `m/44'/134'/0'`.
+
+```json
+{
+  "encryptedPassphrase": {
+    "version": "1",
+    "ciphertext": "086a59889e0e311422eeb15bb6c753aeead210c4494eb37cf7b8f01b0ed372d64e6a08cc77e0bc8170f79f199e2ce7b4c47fe5353e97e67d53c846c029c6cd08",
+    "mac": "9497dd4a84f05c941b22df1cce0cb7558fb3bdd66481c462d63e003dab837c7c",
+    "cipher": "aes-256-gcm",
+    "cipherparams": { 
+      "iv": "aa97507e9f8574b2e7c7ba8b",
+      "tag": "4b3362626c82b0ba1b2de62fb84a1e73" 
+    },
+    "kdf": "argon2id",
+    "kdfparams": {
+      "parallelism": 4,
+      "iterations": 1,
+      "memory": 2024,
+      "salt": "12209d2c085ccbe40c09bb5a3ec7cefb"
+    }
+  },
+  "metadata": {
+    "name": "my lisk account",
+    "description": "ed25519 key pair",
+    "pubkey": "c6bae83af23540096ac58d5121b00f33be6f02f05df785766725acdd5d48be9d",
+    "address": "ed629c34f72e276ba38be61b6f289f84627f2b81",
+    "path": "m/44'/134'/0'",
+    "derivedFromUUID": "fa3e4ceb-10dc-41ad-810e-17bf51ed93aa",
+  },
+  "uuid": "ef52c117-d7cc-4246-bc9d-4dd506bef82f"
+}
+```
+
+
+[lip-tree-derivation]: https://research.lisk.com/t/introduce-tree-based-key-derivation-and-account-recovery/349/3
