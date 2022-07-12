@@ -47,7 +47,7 @@ We store secret recovery phrases and private keys in a JSON file following the f
 ```java
 keystoreSchema = {
   "type": "object",
-  "required": ["encryptedPassphrase", "metadata", "id"],
+  "required": ["encryptedPassphrase", "metadata", "ID"],
   "properties": {
     "encryptedPassphrase": {
       "type": "object",
@@ -72,7 +72,7 @@ keystoreSchema = {
         "pathsUsed": {"type": "array"},
         "tags": {"type": "array"}
     },
-    "id": {
+    "ID": {
         "type": "string",
         "format": "uuid"
     }
@@ -94,11 +94,11 @@ The encrypted message in hexadecimal format.
 
 ##### mac
 
-Computed as `SHA256(last 16 bytes of derivation key || ciphertext)`. It can be used to check the verification key before starting the decryption process.
+Computed as `SHA256(encryptionKey[-16:] + cipherText)`, where `encryptionKey` is the key derived from the user password using the key-derivation function. It can be used to verify the encryption key before starting the decryption process.
 
 ##### kdf and kdfparams
 
-The encryption/decryption key is an intermediate key derived from the user password. It is used to generate the secret key for decryption, and verify if the given password is correct. The function, and the params used to derive this key from the password are specified in `kdf`. The following values of `kdf` and `kdfparams` are allowed, depending on the key derivation function:
+The encryption/decryption key is an intermediate key derived from the user password. It is used to generate the secret key for decryption, and verify if the given password is correct. The function, and the params used to derive this key from the password are specified in `kdf`. The following values of `kdf` and `kdfparams` are allowed, depending on the key-derivation function:
 
 | `kdf` | function | `kdfparams` | Definition |
 |-------|----------|-------------|------------|
@@ -163,15 +163,15 @@ List of paths used with the store recovery phrate to derive key pairs. This prop
 
 List of tags associated with the file.
 
-#### id
+#### ID
 
-The `id` property stores a provided uuid (version 4 UUID as specified in [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)), this is a randomly generated ID. It is used if the keystore needs to be referred to. Implementation help: the generation of the id is supported by node.js with the [`uuid`](https://github.com/uuidjs/uuid#uuidv4options-buffer-offset) package for example.
+The `ID` property stores a provided uuid (version 4 UUID as specified in [RFC 4122](https://datatracker.ietf.org/doc/html/rfc4122)), this is a randomly generated ID. It is used if the keystore needs to be referred to. Implementation help: ID generation is supported by nodejs with the [`uuid`](https://github.com/uuidjs/uuid#uuidv4options-buffer-offset) package, for example.
 
 ### Recommended Parameters
 
 #### Argon2id
 
-We recommend using argon2id (instead of PBKDF2) to derive the encryption key, as it is recognised as a more secure key derivation method (see for example [OWASP recommendations](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)). We recommend to follow [RFC 9106](https://www.rfc-editor.org/rfc/rfc9106.html#name-parameter-choice) for basic parameter choices. Their first recommend options are:
+We recommend using argon2id (instead of PBKDF2) to derive the encryption key, as it is recognised as a more secure key-derivation function (see for example [OWASP recommendations](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)). We recommend to follow [RFC 9106](https://www.rfc-editor.org/rfc/rfc9106.html#name-parameter-choice) for basic parameter choices. Their first recommend options are:
 
 * iterations=1, 
 * parallelism=4 lanes, 
