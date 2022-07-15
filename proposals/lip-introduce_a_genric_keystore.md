@@ -27,13 +27,20 @@ The Lisk protocol uses different types of signature schemes for different use ca
 
 ### Encrypting Secret Recovery Phrases
 
-The secret recovery phrase is a sequence of 12 (or 24) words that follow the [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) standards and that is used to derive all private keys a user might need. Naturally, it is the first thing to be generated and shared with the user to be stored safely. However, it is possible that users lose their phrase and need to back it up once more. For this reason, the keystore proposed below can easily be used to encrypt secret recovery phrases.
+The secret recovery phrase is a sequence of 12 (or 24) words that follow the [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) standards and that is used to derive all private keys a user might need.
+Naturally, it is the first thing to be generated and shared with the user to be stored safely. However, it is possible that users lose their phrase and need to back it up once more. 
+For this reason, the keystore proposed below can easily be used to encrypt and store secret recovery phrases in a file. 
+Each file has an associated password which is used to derive the encryption key using a key-derivation function. 
 
 In the same encrypted file, we can store metadata indicating how the secret recovery phrase was used and which private keys were already generated with it. This allows users to not only recover all their accounts when importing the encrypted file in a new device, but also to make sure that newly generated private keys are using a new derivation path.
 
 ### Encrypting Private Keys
 
 The keystore presented below is also designed to encrypt private keys. The reason to encrypt and store private keys directly is two fold. First it improves the efficiency of the signing process. Indeed, if we decrypt the private key directly, there is no need to derive the key again from the secret recovery phrase. Secondly, in the case the device of the user was corrupted, decrypting just one private key would compromise the account linked to this private key, but not the others generated with the same secret recovery phrase.
+
+### User Password
+
+
 
 
 ## Specification
@@ -94,11 +101,11 @@ The encrypted message in hexadecimal format.
 
 ##### mac
 
-Computed as `SHA256(encryptionKey[-16:] + cipherText)`, where `encryptionKey` is the key derived from the user password using the key-derivation function. It can be used to verify the encryption key before starting the decryption process.
+Computed as `SHA256(encryptionKey[-16:] + cipherText)`, where `encryptionKey` is the key derived from the user password using the key-derivation function. The `mac` can be used to verify the encryption key before starting the decryption process.
 
 ##### kdf and kdfparams
 
-The encryption/decryption key is an intermediate key derived from the user password. It is used to generate the secret key for decryption, and verify if the given password is correct. The function, and the params used to derive this key from the password are specified in `kdf`. The following values of `kdf` and `kdfparams` are allowed, depending on the key-derivation function:
+The encryption key is an intermediate key derived from the user password. It is used to generate the secret key for decryption, and verify if the given password is correct. The function, and the params used to derive this key from the password are specified in `kdf`. The following values of `kdf` and `kdfparams` are allowed, depending on the key-derivation function:
 
 | `kdf` | function | `kdfparams` | Definition |
 |-------|----------|-------------|------------|
@@ -107,7 +114,7 @@ The encryption/decryption key is an intermediate key derived from the user passw
 
 ##### cipher and cipherparams
 
-The specified function encrypts the secret using the decryption key; to decrypt it, the decryption key along with `cipher` and `cipherparams` must be used. If the decryption key is longer than the key size required by the encoding function, it is truncated to the correct number of bits. The following option is supported:
+The specified function encrypts the secret using the encryption key; to decrypt it, the encryption key along with `cipher` and `cipherparams` must be used. If the encryption key is longer than the key size required by the encoding function, it is truncated to the correct number of bits. The following option is supported:
 
 | `cipher` | function | `cipherparams` | Definition |
 |--------|----------|--------------|------------|
