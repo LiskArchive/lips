@@ -8,7 +8,6 @@ Created: <YYYY-MM-DD>
 Updated: <YYYY-MM-DD>
 ```
 
-
 ## Abstract
 
 We describe a format for encrypted information to be used in the Lisk ecosystem. This could be used in the wallet to encrypt a user's private keys or by the block generator module to store the generator keys.
@@ -27,10 +26,7 @@ The Lisk protocol uses different types of signature schemes for different use ca
 
 ### Encrypting Secret Recovery Phrases
 
-The secret recovery phrase is a sequence of 12 (or 24) words that follow the [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) standards and that is used to derive all private keys a user might need.
-Naturally, it is the first thing to be generated and shared with the user to be stored safely. However, it is possible that users lose their phrase and need to back it up once more. 
-For this reason, the keystore proposed below can easily be used to encrypt and store secret recovery phrases in a file. 
-Each file has an associated password which is used to derive the encryption key using a key-derivation function. 
+The secret recovery phrase is a sequence of 12 (or 24) words that follow the [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) standards and that is used to derive all private keys a user might need. Naturally, it is the first thing to be generated and shared with the user to be stored safely. However, it is possible that users lose their phrase and need to back it up once more. For this reason, the keystore proposed below can easily be used to encrypt and store secret recovery phrases in a file. Each file has an associated password which is used to derive the encryption key using a key-derivation function.
 
 In the same encrypted file, we can store metadata indicating how the secret recovery phrase was used and which private keys were already generated with it. This allows users to not only recover all their accounts when importing the encrypted file in a new device, but also to make sure that newly generated private keys are using a new derivation path.
 
@@ -39,9 +35,6 @@ In the same encrypted file, we can store metadata indicating how the secret reco
 The keystore presented below is also designed to encrypt private keys. The reason to encrypt and store private keys directly is two fold. First it improves the efficiency of the signing process. Indeed, if we decrypt the private key directly, there is no need to derive the key again from the secret recovery phrase. Secondly, in the case the device of the user was corrupted, decrypting just one private key would compromise the account linked to this private key, but not the others generated with the same secret recovery phrase.
 
 ### User Password
-
-
-
 
 ## Specification
 
@@ -107,18 +100,18 @@ Computed as `SHA256(encryptionKey[-16:] + cipherText)`, where `encryptionKey` is
 
 The encryption key is an intermediate key derived from the user password. It is used to generate the secret key for decryption, and verify if the given password is correct. The function, and the params used to derive this key from the password are specified in `kdf`. The following values of `kdf` and `kdfparams` are allowed, depending on the key-derivation function:
 
-| `kdf` | function | `kdfparams` | Definition |
-|-------|----------|-------------|------------|
-| "PBKDF2-SHA-256" | `pbkdf2`    | `{iterations: uint32, salt: string}` | [RFC 2898](https://www.ietf.org/rfc/rfc2898.txt)|
-| "argon2id"       | `argon2id`  | `{parallelism: uint32, iterations: uint32, memory: uint32, salt: string}` | [RFC 9106](https://datatracker.ietf.org/doc/html/rfc9106)|
+| `kdf`            | function   | `kdfparams` | Definition |
+|------------------|------------|-------------|------------|
+| "PBKDF2-SHA-256" | `pbkdf2`   | `{iterations: uint32, salt: string}` | [RFC 2898](https://www.ietf.org/rfc/rfc2898.txt) |
+| "argon2id"       | `argon2id` | `{parallelism: uint32, iterations: uint32, memory: uint32, salt: string}` | [RFC 9106](https://datatracker.ietf.org/doc/html/rfc9106) |
 
 ##### cipher and cipherparams
 
 The specified function encrypts the secret using the encryption key; to decrypt it, the encryption key along with `cipher` and `cipherparams` must be used. If the encryption key is longer than the key size required by the encoding function, it is truncated to the correct number of bits. The following option is supported:
 
-| `cipher` | function | `cipherparams` | Definition |
-|--------|----------|--------------|------------|
-| "AES-256-GCM" | `aes-256-gcm`    | `{iv: string, tag: string}` | [RFC 5116](https://datatracker.ietf.org/doc/html/rfc5116#section-5.2)
+| `cipher`      | function      | `cipherparams` | Definition |
+|---------------|---------------|----------------|------------|
+| "AES-256-GCM" | `aes-256-gcm` | `{iv: string, tag: string}` | [RFC 5116](https://datatracker.ietf.org/doc/html/rfc5116#section-5.2) |
 
 Note that when using AES-256-GCM, the tag is an output of the encryption and is needed for decryption, this is why it is stored in the `cipherparams` property.
 
@@ -135,16 +128,16 @@ A name given by the user to allow easier identification of the file.
 The description field indicates the nature of the encrypted material. We specify the following description for commonly encrypted messages in Lisk:
 
 | Description value        | Uses |
-|--------------------------|------------------------------------------------------------------------------------------|
-| "Secret recovery phrase" | The description for secret recovery phrases.                                             |
+|--------------------------|------|
+| "Secret recovery phrase" | The description for secret recovery phrases. |
 | "Ed25519 private key"    | The description for derived ed25519 private key, encoded as a hex string for encryption. |
-| "BLS private key"        | The description for derived BLS private key, encoded as a hex string for encryption.    |
+| "BLS private key"        | The description for derived BLS private key, encoded as a hex string for encryption. |
 
 Other descriptions could also be possible, but do not need to be supported by products implementing this proposal.
 
 ##### pubkey
 
-The public key of the key pair. This property is only used if the encoded data is an Ed25519 private key or a BLS private key. 
+The public key of the key pair. This property is only used if the encoded data is an Ed25519 private key or a BLS private key.
 
 ##### address
 
@@ -152,15 +145,15 @@ The address corresponding to the key pair. This property is only used if the enc
 
 ##### path
 
-The path used to derive the key pair from the secret recovery phrase.  This property is only used if the encoded data is an Ed25519 private key or a BLS private key. 
+The path used to derive the key pair from the secret recovery phrase.  This property is only used if the encoded data is an Ed25519 private key or a BLS private key.
 
 ##### derivedFromID
 
-This property contains the UUID of the file encrypting the corresponding secret recovery phrase.This property is only used if the encoded data is an Ed25519 private key or a BLS private key. 
+This property contains the UUID of the file encrypting the corresponding secret recovery phrase.This property is only used if the encoded data is an Ed25519 private key or a BLS private key.
 
 ##### creationTime
 
-Time when the file was created. 
+Time when the file was created.
 
 ##### pathsUsed
 
@@ -180,11 +173,11 @@ The `ID` property stores a provided uuid (version 4 UUID as specified in [RFC 41
 
 We recommend using argon2id (instead of PBKDF2) to derive the encryption key, as it is recognised as a more secure key-derivation function (see for example [OWASP recommendations](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)). We recommend to follow [RFC 9106](https://www.rfc-editor.org/rfc/rfc9106.html#name-parameter-choice) for basic parameter choices. Their first recommend options are:
 
-* iterations=1, 
-* parallelism=4 lanes, 
-* memory=2048 (2 GiB of RAM), 
-* 16 bytes salt, 
-* 32 bytes output. 
+* iterations=1,
+* parallelism=4 lanes,
+* memory=2048 (2 GiB of RAM),
+* 16 bytes salt,
+* 32 bytes output.
 
 ### Password Strength General Recommendations
 
@@ -206,14 +199,14 @@ TBD
 
 ### Help for Implementation
 
-This audit can help to create a better implementation [https://github.com/trailofbits/publications/blob/master/reviews/ETH2DepositCLI.pdf](https://github.com/trailofbits/publications/blob/master/reviews/ETH2DepositCLI.pdf) 
+This audit can help to create a better implementation [https://github.com/trailofbits/publications/blob/master/reviews/ETH2DepositCLI.pdf](https://github.com/trailofbits/publications/blob/master/reviews/ETH2DepositCLI.pdf)
 
 ### Examples
 
 #### Secret Recovery Phrase
 
 Password: `testpassword`.
-Secret recovery phrase:  `target cancel solution recipe vague faint bomb convince pink vendor fresh patrol`.
+Secret recovery phrase: `target cancel solution recipe vague faint bomb convince pink vendor fresh patrol`.
 
 ```json
 {
@@ -255,9 +248,9 @@ Key pair derived from the secret recovery phrase above, and the path `m/44'/134'
     "ciphertext": "086a59889e0e311422eeb15bb6c753aeead210c4494eb37cf7b8f01b0ed372d64e6a08cc77e0bc8170f79f199e2ce7b4c47fe5353e97e67d53c846c029c6cd08",
     "mac": "9497dd4a84f05c941b22df1cce0cb7558fb3bdd66481c462d63e003dab837c7c",
     "cipher": "aes-256-gcm",
-    "cipherparams": { 
+    "cipherparams": {
       "iv": "aa97507e9f8574b2e7c7ba8b",
-      "tag": "4b3362626c82b0ba1b2de62fb84a1e73" 
+      "tag": "4b3362626c82b0ba1b2de62fb84a1e73"
     },
     "kdf": "argon2id",
     "kdfparams": {
@@ -278,6 +271,5 @@ Key pair derived from the secret recovery phrase above, and the path `m/44'/134'
   "uuid": "ef52c117-d7cc-4246-bc9d-4dd506bef82f"
 }
 ```
-
 
 [lip-tree-derivation]: https://research.lisk.com/t/introduce-tree-based-key-derivation-and-account-recovery/349/3
