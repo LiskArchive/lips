@@ -14,11 +14,9 @@ This LIP proposes methods for deriving private keys from a single source of entr
 
 We also describe a procedure to discover accounts from a given secret recovery phrase.
 
-
 ## Copyright
 
 This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
-
 
 ## Motivation
 
@@ -26,25 +24,25 @@ The current key-derivation method extracts an Ed25519 private key from a secret 
 
 BLS keys will be used by validators to sign, among other things, commits in Lisk chains. It is therefore also desirable to introduce a key-derivation method that allows validators to generate multiple BLS key pairs from the same secret recovery phrase. Following a common standard will ease the adoption of Lisk and its integration into third-party products. The most commonly used protocol for deriving a tree-hierarchy of BLS keys is [EIP 2333](https://eips.ethereum.org/EIPS/eip-2333), which we propose to follow in this LIP.
 
-
 ## Specification
 
 ### Constants
+
 We define the following constants:
 
-| Name               | Type    | Value       | Description                             |
-| ------------------ |---------| ------------| ----------------------------------------|
-| `ED25519_PRIVATE_KEY_LENGTH`     | uint32  | 32      | Length in bytes of type `PrivateKeyEd25519`. |
-| `BLS_PRIVATE_KEY_LENGTH`     | uint32  | 32      | Length in bytes of type `PrivateKeyBLS`. |
+| Name                         | Type   | Value | Description                                  |
+|------------------------------|--------|-------| ---------------------------------------------|
+| `ED25519_PRIVATE_KEY_LENGTH` | uint32 | 32    | Length in bytes of type `PrivateKeyEd25519`. |
+| `BLS_PRIVATE_KEY_LENGTH`     | uint32 | 32    | Length in bytes of type `PrivateKeyBLS`.     |
 
 ### Type Definition
 
-| Name               | Type    | Validation            | Description                     |
-|--------------------|---------|-----------------------|---------------------------------|
-| `BIP39Mnemonic`    | string  | Must follow the mnemonic specifications of [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#Generating_the_mnemonic). | Used as the secret recovery key.   |
-| `ExtendedKey`      | object  | Object with 2 properties, `key` and `chainCode`. Both associated values must be byte sequences of length 32. | Used as an intermediary object during key derivation.   |
-| `PrivateKeyEd25519`| bytes   | Byte sequences of length `ED25519_PRIVATE_KEY_LENGTH`. | An Ed25519 private key.   |
-| `PrivateKeyBLS`| bytes   | Byte sequences of length `BLS_PRIVATE_KEY_LENGTH`. | An BLS private key.   |
+| Name                | Type   | Validation | Description |
+|---------------------|--------|------------|-------------|
+| `BIP39Mnemonic`     | string | Must follow the mnemonic specifications of [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#Generating_the_mnemonic). | Used as the secret recovery key. |
+| `ExtendedKey`       | object | Object with 2 properties, `key` and `chainCode`. Both associated values must be byte sequences of length 32. | Used as an intermediary object during key derivation. |
+| `PrivateKeyEd25519` | bytes  | Byte sequences of length `ED25519_PRIVATE_KEY_LENGTH`. | An Ed25519 private key. |
+| `PrivateKeyBLS`     | bytes  | Byte sequences of length `BLS_PRIVATE_KEY_LENGTH`. | An BLS private key. |
 
 ### Ed25519 Key Derivation
 
@@ -55,7 +53,6 @@ In the proposed key-derivation, a private key is generated from a BIP 39 mnemoni
 <img src="lip-introduce-tree-based-key-derivation-and-account-recovery/key_derivation.png" alt="drawing" width="730"/>
 
 Any of the child keys could be used to create an Ed25519 private key, but in practice, only the child key at the end of the path is used to create the Ed25519 private key.
-
 
 #### getPrivateKeyFromPhraseAndPath
 
@@ -100,7 +97,6 @@ def getMasterKeyFromSeed(seed: bytes) -> ExtendedKey:
 
 Specifications for `PRF-HMAC-SHA-512 `can be found in [RFC4868](https://datatracker.ietf.org/doc/html/rfc4868).
 
-
 #### childKeyDerivation
 
 This function derives a child node from a parent node and the given child node index.
@@ -124,11 +120,9 @@ The path for deriving the n-th private key from that phrase is `m/44'/134'/n'`. 
 
 The path for deriving the private key of the n-th [generator key](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0044.md#generator-key) pair, for the chain with [ID](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0043.md#chain-id) `chainID `is `m/25519'/134'/chainID'/n'.` If `chainID` is not known, use the path `m/25519'/134'/0'/n'` for the n-th generator key derived for chains without known chain ID.
 
-
 ### BLS Key Derivation
 
 We follow the BLS key derivation described in [EIP 2333](https://eips.ethereum.org/EIPS/eip-2333). Additional test cases can be found in the appendix. Deriving the private key is done similarly as in the Ed25519 case with a function following the logic:
-
 
 #### getBLSPrivateKeyFromPhraseAndPath
 
@@ -154,13 +148,11 @@ If `chainID` is not known, use the path `m/12381/134/0/n` for the n-th generator
 
 In particular, the path used to derive the BLS private key for the Lisk mainchain is `m/12381/134/1/0`.
 
-
 ### Secret Recovery Phrase
 
 The basic entropy required to generate the various keys used in the Lisk ecosystem is stored in a 12 or 24 word phrase, as described by [BIP 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki).
 
 For users wanting to run a generator node, we recommend using a 24 word secret recovery phrase. This would be closer to specifications from [draft-irtf-cfrg-bls-signature-04](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bls-signature-04#section-2.3), even though the BLS key derivation specified here is different from the one specified in the IETF draft.
-
 
 ### Account Recovery
 
@@ -191,45 +183,35 @@ def getKeysFromPhrase(phrase: BIP39Mnemonic) -> list[str]:
 
 Additionally, UI products should allow users to input a custom derivation path that might have been used to derive the user's key.
 
-
 ## Rationale
-
 
 ### Ed25519 Key Derivation
 
 Using a tree-hierarchical key derivation allows to derive multiple key pairs from the same secret recovery phrase. This is especially useful when using the same secret recovery phrase for multiple ecosystems or multiple tokens. The proposed method repeatedly applies an [HMAC](https://en.wikipedia.org/wiki/HMAC) function to the randomness derived from the secret recovery phrase. This method is based on  BIP 32 and is already in use in several hardware wallets. Using an industry-adopted key derivation method offers several benefits. Firstly, it gives us strong confidence that this method is secure and has been thoroughly analyzed and tested. Secondly, it makes the integration of Lisk into other products much easier.
 
-
 ### Ed25519 Derivation Path
 
 The derivation path for account keys is chosen to follow the [BIP 44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) standard. This is now a widely used industry standard and is currently the path used by hardware wallets to derive Lisk accounts.
-
 
 ### BLS Key derivation
 
 The use of BLS keys for the Lisk ecosystem was introduced in [LIP 0038](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0038.md) and one of the deciding factors to assess its security was the adoption of BLS keys by the Ethereum consensus layer. Ethereum is the main project using BLS keys and as such already has several clients implementing BLS key generation and signatures. Most of those clients follow the key-derivation method described in [EIP 2333](https://eips.ethereum.org/EIPS/eip-2333). This key derivation follows industry standards in terms of security and deviating from it would only limit the adoption of Lisk by potential third parties.
 
-
 ### BLS Derivation Path
 
 Similarly to the key derivation for BLS, the Ethereum community is following [EIP 2334](https://eips.ethereum.org/EIPS/eip-2334) to choose its BLS key derivation path. The path proposed in this LIP follows the base pattern described in EIP 2334. This is done in order to facilitate potential future integration of Lisk into third party tools.
-
 
 ## Backwards Compatibility
 
 This proposal is backwards compatible since the protocol is not changed.
 
-
 ## Reference Implementation
 
 TBD
 
-
 ## Appendix
 
-
 ### Test cases for Ed25519 key derivation
-
 
 #### Test case 1
 
@@ -241,7 +223,6 @@ Ed25519 private key: `c465dfb15018d3aef0d94d411df048e240e87a3ec9cd6d422cea903bfc
 
 Ed25519 public key: `c6bae83af23540096ac58d5121b00f33be6f02f05df785766725acdd5d48be9d`
 
-
 #### Test case 2
 
 secret recovery phrase: `abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art`
@@ -251,7 +232,6 @@ path: `m/44'/134'/0'`
 Ed25519 private key: `111b6146ec9fbfd7631c75bf42de7c020837d905323a1c161352efed680e86a9`
 
 Ed25519 public key: `4815aaeb2da9e7485bfd4f43a5a57431d78fd9e2a3545f9aa6f131ff35ee57b0`
-
 
 #### Test case 3
 
@@ -263,9 +243,7 @@ Ed25519 private key: `544a796e02833f9b6fe90512a8fe48360924a9a5462a5e263a3a40092d
 
 Ed25519 public key: `0ad5733ff582886700791aed326ff226e1c04ab5b683facb082b36594b7eddb1`
 
-
 ### Test cases for BLS key derivation
-
 
 #### Test case 1
 
