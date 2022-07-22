@@ -78,3 +78,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0064](proposals/lip-0064.md) | Disallow non-required properties in Lisk codec                                                 | Andreas Kendziorra                                     | Standards Track | Draft         |
 | [0065](proposals/lip-0065.md) | Introduce events and add events root to block headers                                          | Alessandro Ricottone, Mehmet Egemen Albayrak           | Standards Track | Draft         |
 | [0066](proposals/lip-0066.md) | Introduce tree based key derivation and account recovery                                       | Maxime Gagnebin                                        | Informational   | Draft         |
+| [0067](proposals/lip-0067.md) | Introduce a generic keystore                                                                   | Maxime Gagnebin                                        | Informational   | Draft         |
