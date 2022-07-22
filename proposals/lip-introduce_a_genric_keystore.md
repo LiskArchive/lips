@@ -22,7 +22,7 @@ A common encryption standard allows different wallets and third party tools to b
 
 ## Rationale
 
-The Lisk protocol uses different types of signature schemes for different use cases. For example, transactions must be signed by the account sending it using an Ed25519 signature and commits must be signed using a BLS signature. The proposed keystore is agnostic to the private key type and could allow user facing products to abstract away the signature type from the user. The way private keys are generated from secret recovery phrases is specified in LIP ["Introduce tree based key derivation and account recovery"][lip-tree-derivation].
+The Lisk protocol uses different types of signature schemes for different use cases. For example, transactions must be signed by the account sending it using an Ed25519 signature and commits must be signed using a BLS signature. The proposed keystore is agnostic to the private key type and could allow user facing products to abstract away the signature type from the user. The way private keys are generated from secret recovery phrases is specified in LIP ["Introduce tree based key derivation and account recovery"][lip-0066].
 
 ### Encrypting Secret Recovery Phrases
 
@@ -272,4 +272,4 @@ Key pair derived from the secret recovery phrase above, and the path `m/44'/134'
 }
 ```
 
-[lip-tree-derivation]: https://research.lisk.com/t/introduce-tree-based-key-derivation-and-account-recovery/349/3
+[lip-0066]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0066.md
