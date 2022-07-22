@@ -3,9 +3,10 @@ LIP: <LIP number>
 Title: Introduce tree based key derivation and account recovery
 Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/introduce-tree-based-key-derivation-and-account-recovery/349
+Status: Draft
 Type: Informational
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2022-06-02
+Updated: 2022-07-22
 ```
 
 ## Abstract
