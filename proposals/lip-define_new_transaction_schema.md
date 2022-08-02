@@ -10,7 +10,7 @@ Updated: <YYYY-MM-DD>
 
 ## Abstract
 
-This LIP defines a new schema to be used to serialize transactions. The main change is to make module and command identifiers to be of type bytes. This LIP also updates the terminology used for transaction and transaction properties. 
+This LIP defines a new schema to be used to serialize transactions. The main change is to replace module and command identifiers by the corresponding names, which are of type string. This LIP also updates the terminology used for transaction and transaction properties. 
 
 
 ## Copyright
@@ -20,7 +20,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The Lisk protocol handles identifiers for transactions, modules, commands, and many more. The type of those identifiers is however not fully consistent, as some are of type `uint32` (like module ID and chain ID) and others of type `bytes` (like transaction ID and block ID). Moreover, all identifiers used in the new state model to compute the store keys must be first converted to type `bytes`. Unifying all identifier types to be of type `bytes` simplifies their handling and avoids unnecessary type conversion.
+The Lisk protocol handles identifiers for transactions, modules, commands, and many more. In many of those cases such as modules and commands there is also a name property, which is of type string and is set to some intuitive value (e.g., "token" module, "token transfer" command). In the current protocol,  such objects are referenced using their identifiers and their names have an auxiliary role. This is not so convenient for users and developers, since they have to memorize the (non-intuitive) identifier values. Merging those two properties and identifying modules and commands using their name provides a much better user/developer experience. 
 
 
 ## Rationale
@@ -35,18 +35,19 @@ Defining identifiers as type `bytes` also requires fixing the length of the iden
 
 ### New Property Names
 
-All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the renaming of `assetID` to `commandID` and of `asset` to `params`, as was described in the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture].
+
+All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replace of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture]. In particular, `moduleID` is replaced by `moduleName`, `assetID` is replaced by `commandName` and `asset` is renamed to `params`.
 
 
 ## Specification
 
 The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one defined [below](#json-schema). 
 
-The `params` property must follow the schema corresponding to the `moduleID`, `commandID` pair defined in the corresponding module; we call this schema `paramsSchema`.
+The `params` property must follow the schema corresponding to the `moduleName`, `commandName` pair defined in the corresponding module; we call this schema `paramsSchema`.
 
 As for the other transaction procedures:
 
-- Serialization and deserialization follow the same specifications already defined in [LIP 0028][lip-0028]; for completeness we include the pseudocode [below](#serialization). The resulting serialization is however different when the proposed transaction schema is used, due to the change of types for `moduleID` and `commandID`. Moreover, the transaction ID is calculated in the same way as described in [LIP 0028][lip-0028].
+- Serialization and deserialization follow the same specifications already defined in [LIP 0028][lip-0028]; for completeness we include the pseudocode [below](#serialization). The resulting serialization is however different when the proposed transaction schema is used, due to the change of types for identifiers for module and command. Moreover, the transaction ID is calculated in the same way as described in [LIP 0028][lip-0028] (the SHA-256 hash of the serialized transaction object).
 - Signature calculation follows the same specifications as in [LIP 0028][lip-0028], updated to incorporate message tags introduced in [LIP 0037][lip-0037]. For completeness we provide the pseudocode [below](#transaction-signature-calculation).
 - Signature validation is done using the `verifySignatures` function defined in [LIP 0041](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md#transaction-verification). 
 
@@ -54,17 +55,14 @@ As for the other transaction procedures:
 ### Constants
 
 
-| Global Constants                 |         |                              |                                                                             |
-|:--------------------------------:|:-------:|------------------------------|-----------------------------------------------------------------------------|
-|**Name**                    |**Type**   |**Value**                         |**Description**                                                              |
-| `MODULE_ID_LENGTH `        |uint32    | 4                                 | The length of module IDs.                                                   |
-| `COMMAND_ID_LENGTH`        |uint32    | 2                                 | The length of command IDs.                                                  |
+|Name                        |Type      |Value                              |Description                                                                  |
+|----------------------------|----------|-----------------------------------|-----------------------------------------------------------------------------|
+|**Global Constants**        |          |                                   |                                                                             |
 | `ED25519_PUBLIC_KEY_LENGTH`|uint32    | 32                                | The length of public keys.                                                  |
 | `ED25519_PRIVATE_KEY_LENGTH`|uint32   | 32                                | The length of private keys.                                                 |
 | `ED25519_SIGNATURE_LENGTH` |uint32    | 64                                | The length of signatures.                                                   |
-| `MESSAGE_TAG_TRANSACTION`  | bytes    | "LSK_TX_" as ASCII-encoded literal| Message tag for transaction signatures (see [LIP 0037](lip-0037)).        |
-| **Configurable Constants** |          |                                   |                                                                             |
-| **Name**                   |**Type**  |**Mainchain Value**                |**Description**                                                             |
+| `MESSAGE_TAG_TRANSACTION`  | bytes    | "LSK_TX_" as ASCII-encoded literal| Message tag for transaction signatures (see [LIP 0037](lip-0037)).          |
+| **Configurable Constants** |          |**Mainchain Value**                |                                                                             |
 | `MAX_PARAMS_SIZE`          |uint32    | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                         |
 
 
@@ -85,8 +83,8 @@ Transactions are serialized using `transactionSchema` given below.
 transactionSchema = {
     "type": "object",
     "required": [
-        "moduleID",
-        "commandID",
+        "moduleName",
+        "commandName",
         "nonce",
         "fee",
         "senderPublicKey",
@@ -94,14 +92,12 @@ transactionSchema = {
         "signatures"
     ],
     "properties": {
-        "moduleID": {
-            "dataType": "bytes",
-            "length": MODULE_ID_LENGTH,
+        "moduleName": {
+            "dataType": "string",
             "fieldNumber": 1
         },
-        "commandID": {
-            "dataType": "bytes",
-            "length": COMMAND_ID_LENGTH,
+        "commandName": {
+            "dataType": "string",
             "fieldNumber": 2
         },
         "nonce": {
