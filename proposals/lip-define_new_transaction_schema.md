@@ -26,24 +26,24 @@ The Lisk protocol handles identifiers for transactions, modules, commands, and m
 ## Rationale
 
 
-### Unifying Identifier Type
+### Simplifying identification
 
-The type identifiers in the Lisk protocol are not fully consistent, as some are of type `uint32` and others of type `bytes`. This means that special care is required to use the proper type whenever the identifier is used. Further, identifiers are often used to compute the store keys in the state tree and for this purpose must always be of type bytes. Hence, identifiers of `uint32` type need to be converted to fulfill this purpose. This implies that the implementation very often converts those identifiers from their integer form (as schema entries) to the corresponding bytes (as store key). The new transaction schema introduced in this LIP sets the module ID and command ID to type bytes. 
+The type identifiers in the Lisk protocol are of type `uint32` or of type `bytes`. In both cases, they are set to a non-intuitive value which has to be memorized by users and developers. As the ecosystem grows and more functionalities are added, especially with the intoduction of interoperability, the number of values that have to be memorized gets quite large, making the identification system quite impractical (and potentially error-prone). On the other hand, for each component (modules, commands, events, etc.) there is a much more intuitive parameter: its name. Switching identifiers to those names (and removing the old identifiers) makes the whole user and developer experience easier and less error-prone. 
 
-Defining identifiers as type `bytes` also requires fixing the length of the identifier. This was not possible when using identifiers of type `uint32`, as the full 4 bytes of the maximal range always had to be assumed when using the identifier in the state tree.  
+Therefore, for the cases where removing the old identifiers does not introduce any significant challenge in the ecosystem, it is plausible to proceed to this switch and use names as identifiers. This is the case for modules, commands and events.  
 
 
 ### New Property Names
 
 
-All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replace of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture]. In particular, `moduleID` is replaced by `moduleName`, `assetID` is replaced by `commandName` and `asset` is renamed to `params`.
+All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replace of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture] (renaming a module asset to a command and a transaction `asset` property to `params`). Overall, `moduleID` is replaced by `module`, `assetID` is replaced by `command` and `asset` is renamed to `params`.
 
 
 ## Specification
 
 The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one defined [below](#json-schema). 
 
-The `params` property must follow the schema corresponding to the `moduleName`, `commandName` pair defined in the corresponding module; we call this schema `paramsSchema`.
+The `params` property must follow the schema corresponding to the (`module`, `command`) pair defined in the corresponding module; we call this schema `paramsSchema`.
 
 As for the other transaction procedures:
 
@@ -83,8 +83,8 @@ Transactions are serialized using `transactionSchema` given below.
 transactionSchema = {
     "type": "object",
     "required": [
-        "moduleName",
-        "commandName",
+        "module",
+        "command",
         "nonce",
         "fee",
         "senderPublicKey",
@@ -92,11 +92,11 @@ transactionSchema = {
         "signatures"
     ],
     "properties": {
-        "moduleName": {
+        "module": {
             "dataType": "string",
             "fieldNumber": 1
         },
-        "commandName": {
+        "command": {
             "dataType": "string",
             "fieldNumber": 2
         },
@@ -134,8 +134,11 @@ transactionSchema = {
 
 For a transaction `trs` to be valid, it must satisfy the following:
 
-
+* `trs` must follow the `transactionSchema`. 
 * `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE` .
+
+The validity of each transaction is verified in the [static validation stage][lip-0055#block-processing] of the block processing. 
+
 
 ### Serialization
 
@@ -234,4 +237,5 @@ public key = aa3f553d66b58d6167d14fe9e91b1bd04d7cf5eef27fed0bec8aaac6c73c90b3
 
 [lip-0028]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md
 [lip-0037]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md
+[lip-0055#block-processing]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#block-processing-stages
 [lip-update-lisk-sdk-modular-architecture]: https://research.lisk.com/t/update-lisk-sdk-modular-blockchain-architecture/343
