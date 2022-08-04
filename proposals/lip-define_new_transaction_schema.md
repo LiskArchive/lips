@@ -26,7 +26,7 @@ The Lisk protocol handles identifiers for transactions, modules, commands, and m
 ## Rationale
 
 
-### Simplifying identification
+### Simplifying Identification
 
 The type identifiers in the Lisk protocol are of type `uint32` or of type `bytes`. In both cases, they are set to a non-intuitive value which has to be memorized by users and developers. As the ecosystem grows and more functionalities are added, especially with the intoduction of interoperability, the number of values that have to be memorized gets quite large, making the identification system quite impractical (and potentially error-prone). On the other hand, for each component (modules, commands, events, etc.) there is a much more intuitive parameter: its name. Switching identifiers to those names (and removing the old identifiers) makes the whole user and developer experience easier and less error-prone. 
 
@@ -169,7 +169,7 @@ def decode(paramsSchema: LiskJSONSchema, trsMsg: bytes) -> Transaction:
     return trsData
 ```
 
-### Transaction signature calculation
+### Transaction Signature Calculation
 Consider a data structure `unsignedTrsData` representing a valid `Transaction` object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
 
 ```python
