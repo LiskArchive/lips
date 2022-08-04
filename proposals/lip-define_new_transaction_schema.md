@@ -153,7 +153,7 @@ The validity of each transaction is verified in the [static validation stage][li
 The serialization of an object of type `Transaction` is described in the following pseudocode.
 
 ```python
-def encode(transactionSchema: LiskJSONSchema, trs: Transaction) -> bytes:
+def encode(paramsSchema: LiskJSONSchema, trs: Transaction) -> bytes:
     trs.params = encode(paramsSchema,trs.params)
     return encode(transactionSchema,trs)
 ```
@@ -163,7 +163,7 @@ def encode(transactionSchema: LiskJSONSchema, trs: Transaction) -> bytes:
 Consider a binary message `trsMsg`, corresponding to a serialized transaction. The deserialization procedure is as follows:
 
 ```python
-def decode(transactionSchema: LiskJSONSchema, trsMsg: bytes) -> Transaction: 
+def decode(paramsSchema: LiskJSONSchema, trsMsg: bytes) -> Transaction: 
     trsData = decode(transactionSchema,trsMsg)
     trsData.params = decode(paramsSchema,trsData.params)
     return trsData
@@ -173,12 +173,13 @@ def decode(transactionSchema: LiskJSONSchema, trsMsg: bytes) -> Transaction:
 Consider a data structure `unsignedTrsData` representing a valid `Transaction` object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
 
 ```python
-def signTransaction(sk: PrivateKeyEd25519, unsignedTrsData: Transaction) -> SignatureEd25519:
-    serializedTrs = encode(transactionSchema, unsignedTrsData)
+def computeTransactionSignature(sk: PrivateKeyEd25519, unsignedTrsData: Transaction, networkIdentifier: bytes) -> SignatureEd25519:
+    paramsSchema =  JSON schema corresponding to (module, command) pair.
+    serializedTrs = encode(paramsSchema, unsignedTrsData)
     return signMessage(sk, MESSAGE_TAG_TRANSACTION, networkIdentifier, serializedTrs)
 ```
 
-Here `networkIdentifier` is the correct [network identifier](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#network-identifiers) for the chain and the function `signMessage` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
+Here `networkIdentifier` is the [network identifier](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#network-identifiers) for the chain and the function `signMessage` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
 
 
 ## Backwards Compatibility
