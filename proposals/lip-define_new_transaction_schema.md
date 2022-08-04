@@ -62,6 +62,10 @@ As for the other transaction procedures:
 | `ED25519_PRIVATE_KEY_LENGTH`|uint32   | 32                                | The length of private keys.                                                 |
 | `ED25519_SIGNATURE_LENGTH` |uint32    | 64                                | The length of signatures.                                                   |
 | `MESSAGE_TAG_TRANSACTION`  | bytes    | "LSK_TX_" as ASCII-encoded literal| Message tag for transaction signatures (see [LIP 0037](lip-0037)).          |
+| `MIN_MODULE_NAME_LENGTH`   |uint32    | 1                                 | The minimum length of a string specifying the name of a module.             |
+| `MAX_MODULE_NAME_LENGTH`   |uint32    | 32                                | The maximum length of a string specifying the name of a module              |
+| `MIN_COMMAND_NAME_LENGTH`  |uint32    | 1                                 | The minimum length of a string specifying the name of a command.            |
+| `MAX_COMMAND_NAME_LENGTH`  |uint32    | 32                                | The maximum length of a string specifying the name of a command.            | 
 | **Configurable Constants** |          |**Mainchain Value**                |                                                                             |
 | `MAX_PARAMS_SIZE`          |uint32    | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                         |
 
@@ -94,10 +98,14 @@ transactionSchema = {
     "properties": {
         "module": {
             "dataType": "string",
+            "minLength": MIN_MODULE_NAME_LENGTH, 
+            "maxLength": MAX_MODULE_NAME_LENGTH,
             "fieldNumber": 1
         },
         "command": {
             "dataType": "string",
+            "minLength": MIN_COMMAND_NAME_LENGTH, 
+            "maxLength": MAX_COMMAND_NAME_LENGTH,
             "fieldNumber": 2
         },
         "nonce": {
