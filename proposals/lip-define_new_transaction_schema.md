@@ -33,10 +33,16 @@ The type identifiers in the Lisk protocol are of type `uint32` or of type `bytes
 Therefore, for the cases where removing the old identifiers does not introduce any significant challenge in the ecosystem, it is plausible to proceed to this switch and use names as identifiers. This is the case for modules, commands and events.  
 
 
-### New Property Names
+### Changes Compared to LIP 0028
 
+The previous transaction schema was defined in [LIP 0028][lip-0028]. Here we define the following changes:
 
-All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replacement of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture] (renaming a module asset to a command and a transaction `asset` property to `params`). Overall, `moduleID` is replaced by `module`, `assetID` is replaced by `command` and `asset` is renamed to `params`.
+**New property names:** All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replacement of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture] (renaming a module asset to a command and a transaction `asset` property to `params`). Overall, `moduleID` is replaced by `module`, `assetID` is replaced by `command` and `asset` is renamed to `params`.
+
+**Serialization/Deserialization:** Serialization and deserialization follow the same specifications already defined in [LIP 0028][lip-0028]; the resulting serialization is however different when the proposed transaction schema is used, due to the change of types for identifiers for module and command. For completeness we include the pseudocode [below](#serialization). The transaction ID is calculated in the same way as described in [LIP 0028][lip-0028] (the SHA-256 hash of the serialized transaction object).
+
+**Signature Calculation:** The signature calculation function defined in [LIP 0028][lip-0028#signature-calculation] is updated to incorporate message tags introduced in [LIP 0037][lip-0037]. 
+
 
 
 ## Specification
@@ -45,11 +51,6 @@ The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one 
 
 The `params` property must follow the schema corresponding to the (`module`, `command`) pair defined in the corresponding module; we call this schema `paramsSchema`.
 
-As for the other transaction procedures:
-
-- Serialization and deserialization follow the same specifications already defined in [LIP 0028][lip-0028]; for completeness we include the pseudocode [below](#serialization). The resulting serialization is however different when the proposed transaction schema is used, due to the change of types for identifiers for module and command. Moreover, the transaction ID is calculated in the same way as described in [LIP 0028][lip-0028] (the SHA-256 hash of the serialized transaction object).
-- Signature calculation follows the same specifications as in [LIP 0028][lip-0028], updated to incorporate message tags introduced in [LIP 0037][lip-0037]. For completeness we provide the pseudocode [below](#transaction-signature-calculation).
-- Signature validation is done using the `verifySignatures` function defined in [LIP 0041](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md#transaction-verification). 
 
 
 ### Constants
@@ -170,6 +171,7 @@ def decode(paramsSchema: LiskJSONSchema, trsMsg: bytes) -> Transaction:
 ```
 
 ### Transaction Signature Calculation
+
 Consider a data structure `unsignedTrsData` representing a valid `Transaction` object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
 
 ```python
@@ -180,6 +182,11 @@ def computeTransactionSignature(sk: PrivateKeyEd25519, unsignedTrsData: Transact
 ```
 
 Here `networkIdentifier` is the [network identifier](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#network-identifiers) for the chain and the function `signMessage` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
+
+### Transaction Signature Validation
+
+Signature validation is done using the `verifySignatures` function defined in [LIP 0041](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md#transaction-verification). 
+
 
 
 ## Backwards Compatibility
@@ -245,6 +252,7 @@ public key = aa3f553d66b58d6167d14fe9e91b1bd04d7cf5eef27fed0bec8aaac6c73c90b3
 
 
 [lip-0028]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md
+[lip-0028#signature-calculation]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md#transaction-signature-calculation
 [lip-0037]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md
 [lip-0055#block-processing]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#block-processing-stages
 [lip-update-lisk-sdk-modular-architecture]: https://research.lisk.com/t/update-lisk-sdk-modular-blockchain-architecture/343
