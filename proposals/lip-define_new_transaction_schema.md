@@ -36,7 +36,7 @@ Therefore, for the cases where removing the old identifiers does not introduce a
 ### New Property Names
 
 
-All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replace of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture] (renaming a module asset to a command and a transaction `asset` property to `params`). Overall, `moduleID` is replaced by `module`, `assetID` is replaced by `command` and `asset` is renamed to `params`.
+All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replacement of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture] (renaming a module asset to a command and a transaction `asset` property to `params`). Overall, `moduleID` is replaced by `module`, `assetID` is replaced by `command` and `asset` is renamed to `params`.
 
 
 ## Specification
