@@ -1,7 +1,9 @@
 ```
 LIP: <lip number>
 Title: Define new transaction schema
-Author: Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
+Author: Grigorios Koumoutsos <grigorios.koumoutsos@lightcurve.io>
+        Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
+        
 ? Discussions-To: https://research.lisk.com/t/define-new-transaction-schema/348/15
 Type: Standards Track
 Created: <YYYY-MM-DD>
@@ -20,7 +22,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The Lisk protocol handles identifiers for transactions, modules, commands, and many more. In many of those cases such as modules and commands there is also a name property, which is of type string and is set to some intuitive value (e.g., "token" module, "token transfer" command). In the current protocol,  such objects are referenced using their identifiers and their names have an auxiliary role. This is not so convenient for users and developers, since they have to memorize the (non-intuitive) identifier values. Merging those two properties and identifying modules and commands using their name provides a much better user/developer experience. 
+The Lisk protocol handles identifiers for transactions, modules, commands, and many more. In many of those cases such as modules and commands there is also a name property, which is of type string and is set to some intuitive value (e.g., "token" module, "token transfer" command). In the current protocol, such objects are referenced using their identifiers and their names have an auxiliary role. This is not so convenient for users and developers, since they have to memorize the (non-intuitive) identifier values. Merging those two properties and identifying modules and commands using their name provides a much better user/developer experience. 
 
 
 ## Rationale
@@ -146,7 +148,7 @@ For a transaction `trs` to be valid, it must satisfy the following:
 * `trs` must follow the `transactionSchema`. 
 * `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE` .
 
-The validity of each transaction is verified in the [static validation stage][lip-0055#block-processing] of the block processing. 
+These checks are performed in the [static validation stage][lip-0055#block-processing] of the block processing. 
 
 
 ### Serialization
@@ -175,7 +177,7 @@ def decode(paramsSchema: LiskJSONSchema, trsMsg: bytes) -> Transaction:
 Consider a data structure `unsignedTrsData` representing a valid `Transaction` object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
 
 ```python
-def computeTransactionSignature(sk: PrivateKeyEd25519, unsignedTrsData: Transaction, networkIdentifier: bytes) -> SignatureEd25519:
+def computeTransactionSignature(sk: PrivateKeyEd25519, unsignedTrs: Transaction, networkIdentifier: bytes) -> SignatureEd25519:
     paramsSchema =  JSON schema corresponding to (module, command) pair.
     serializedTrs = encode(paramsSchema, unsignedTrsData)
     return signMessage(sk, MESSAGE_TAG_TRANSACTION, networkIdentifier, serializedTrs)
