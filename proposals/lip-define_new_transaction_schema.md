@@ -103,12 +103,14 @@ transactionSchema = {
             "dataType": "string",
             "minLength": MIN_MODULE_NAME_LENGTH, 
             "maxLength": MAX_MODULE_NAME_LENGTH,
+            "pattern": "^[a-z0-9!\@\&\_\,\.]*$",
             "fieldNumber": 1
         },
         "command": {
             "dataType": "string",
             "minLength": MIN_COMMAND_NAME_LENGTH, 
             "maxLength": MAX_COMMAND_NAME_LENGTH,
+            "pattern": "^[a-z0-9!\@\&\_\,\.]*$",
             "fieldNumber": 2
         },
         "nonce": {
