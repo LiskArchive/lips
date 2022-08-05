@@ -156,7 +156,8 @@ These checks are performed in the [static validation stage][lip-0055#block-proce
 The serialization of an object of type `Transaction` is described in the following pseudocode.
 
 ```python
-def encode(paramsSchema: LiskJSONSchema, trs: Transaction) -> bytes:
+def encodeTransaction(trs: Transaction) -> bytes:
+    paramsSchema = JSON schema corresponding to (trs.module, trs.command) pair
     trs.params = encode(paramsSchema,trs.params)
     return encode(transactionSchema,trs)
 ```
@@ -166,20 +167,20 @@ def encode(paramsSchema: LiskJSONSchema, trs: Transaction) -> bytes:
 Consider a binary message `trsMsg`, corresponding to a serialized transaction. The deserialization procedure is as follows:
 
 ```python
-def decode(paramsSchema: LiskJSONSchema, trsMsg: bytes) -> Transaction: 
+def decodeTransaction(trsMsg: bytes) -> Transaction: 
     trsData = decode(transactionSchema,trsMsg)
+    paramsSchema = JSON schema corresponding to (trsData.module, trsData.command) pair
     trsData.params = decode(paramsSchema,trsData.params)
     return trsData
 ```
 
 ### Transaction Signature Calculation
 
-Consider a data structure `unsignedTrsData` representing a valid `Transaction` object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
+Consider a data structure `unsignedTrs` representing a valid `Transaction` object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
 
 ```python
 def computeTransactionSignature(sk: PrivateKeyEd25519, unsignedTrs: Transaction, networkIdentifier: bytes) -> SignatureEd25519:
-    paramsSchema =  JSON schema corresponding to (module, command) pair.
-    serializedTrs = encode(paramsSchema, unsignedTrsData)
+    serializedTrs = encodeTransaction(unsignedTrs)
     return signMessage(sk, MESSAGE_TAG_TRANSACTION, networkIdentifier, serializedTrs)
 ```
 
