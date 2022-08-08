@@ -103,14 +103,12 @@ transactionSchema = {
             "dataType": "string",
             "minLength": MIN_MODULE_NAME_LENGTH,
             "maxLength": MAX_MODULE_NAME_LENGTH,
-            "pattern": "^[a-z0-9!@&_,.]*$",
             "fieldNumber": 1
         },
         "command": {
             "dataType": "string",
             "minLength": MIN_COMMAND_NAME_LENGTH,
             "maxLength": MAX_COMMAND_NAME_LENGTH,
-            "pattern": "^[a-z0-9!@&_,.]*$",
             "fieldNumber": 2
         },
         "nonce": {
@@ -148,10 +146,11 @@ transactionSchema = {
 For a transaction `trs` to be valid, it must satisfy the following:
 
 * `trs` must follow the `transactionSchema`.
-* `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE` .
+* `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE`.
+* `trs.module` is an alphanumeric string, i.e., matches the regular expression `"^[a-zA-Z0-9]*$"`.
+* `trs.command` is an alphanumeric string, i.e., matches the regular expression `"^[a-zA-Z0-9]*$"`.
 
 These checks are performed in the [static validation stage][lip-0055#block-processing] of the block processing.
-
 
 ### Serialization
 
@@ -192,8 +191,6 @@ By convention, the `signatures` property of the transaction object that is signe
 ### Transaction Signature Validation
 
 Signature validation is done using the `verifySignatures` function defined in [LIP 0041](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md#transaction-verification) with the input parameter `tag` equal to `MESSAGE_TAG_TRANSACTION`.
-
-
 
 ## Backwards Compatibility
 
