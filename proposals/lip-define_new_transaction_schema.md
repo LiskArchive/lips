@@ -3,7 +3,7 @@ LIP: <lip number>
 Title: Define new transaction schema
 Author: Grigorios Koumoutsos <grigorios.koumoutsos@lightcurve.io>
         Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
-        
+
 ? Discussions-To: https://research.lisk.com/t/define-new-transaction-schema/348/15
 Type: Standards Track
 Created: <YYYY-MM-DD>
@@ -12,7 +12,7 @@ Updated: <YYYY-MM-DD>
 
 ## Abstract
 
-This LIP defines a new schema to be used to serialize transactions. The main change is to replace module and command identifiers by the corresponding names, which are of type string. This LIP also updates the terminology used for transaction and transaction properties. 
+This LIP defines a new schema to be used to serialize transactions. The main change is to replace module and command identifiers by the corresponding names, which are of type string. This LIP also updates the terminology used for transaction and transaction properties.
 
 
 ## Copyright
@@ -22,7 +22,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The Lisk protocol handles identifiers for transactions, modules, commands, and many more. In many of those cases such as modules and commands there is also a name property, which is of type string and is set to some intuitive value (e.g., "token" module, "token transfer" command). In the current protocol, such objects are referenced using their identifiers and their names have an auxiliary role. This is not so convenient for users and developers, since they have to memorize the (non-intuitive) identifier values. Merging those two properties and identifying modules and commands using their name provides a much better user/developer experience. 
+The Lisk protocol handles identifiers for transactions, modules, commands, and many more. In many of those cases such as modules and commands there is also a name property, which is of type string and is set to some intuitive value (e.g., "token" module, "token transfer" command). In the current protocol, such objects are referenced using their identifiers and their names have an auxiliary role. This is not so convenient for users and developers, since they have to memorize the (non-intuitive) identifier values. Merging those two properties and identifying modules and commands using their name provides a much better user/developer experience.
 
 
 ## Rationale
@@ -30,7 +30,7 @@ The Lisk protocol handles identifiers for transactions, modules, commands, and m
 
 ### Simplifying Identification
 
-The type identifiers in the Lisk protocol are of type `uint32` or of type `bytes`. In both cases, they are set to a non-intuitive value which has to be memorized by users and developers. As the ecosystem grows and more functionalities are added, especially with the intoduction of interoperability, the number of values that have to be memorized gets quite large, making the identification system quite impractical (and potentially error-prone). On the other hand, for each component (modules, commands, events, etc.) there is a much more intuitive parameter: its name. Switching identifiers to those names (and removing the old identifiers) makes the whole user and developer experience easier and less error-prone. 
+The type identifiers in the Lisk protocol are of type `uint32` or of type `bytes`. In both cases, they are set to a non-intuitive value which has to be memorized by users and developers. As the ecosystem grows and more functionalities are added, especially with the intoduction of interoperability, the number of values that have to be memorized gets quite large, making the identification system quite impractical (and potentially error-prone). On the other hand, for each component (modules, commands, events, etc.) there is a much more intuitive parameter: its name. Switching identifiers to those names (and removing the old identifiers) makes the whole user and developer experience easier and less error-prone.
 
 Therefore, for the cases where removing the old identifiers does not introduce any significant challenge in the ecosystem, it is plausible to proceed to this switch and use names as identifiers. This is the case for modules, commands and events.  
 
@@ -43,13 +43,13 @@ The previous transaction schema was defined in [LIP 0028][lip-0028]. Here we def
 
 **Serialization/Deserialization:** Serialization and deserialization follow the same specifications already defined in [LIP 0028][lip-0028]; the resulting serialization is however different when the proposed transaction schema is used, due to the change of types for identifiers for module and command. For completeness we include the pseudocode [below](#serialization). The transaction ID is calculated in the same way as described in [LIP 0028][lip-0028] (the SHA-256 hash of the serialized transaction object).
 
-**Signature Calculation:** The signature calculation function defined in [LIP 0028][lip-0028#signature-calculation] is updated to incorporate message tags introduced in [LIP 0037][lip-0037]. 
+**Signature Calculation:** The signature calculation function defined in [LIP 0028][lip-0028#signature-calculation] is updated to incorporate message tags introduced in [LIP 0037][lip-0037].
 
 
 
 ## Specification
 
-The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one defined [below](#json-schema). 
+The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one defined [below](#json-schema).
 
 The `params` property must follow the schema corresponding to the (`module`, `command`) pair defined in the corresponding module; we call this schema `paramsSchema`.
 
@@ -68,7 +68,7 @@ The `params` property must follow the schema corresponding to the (`module`, `co
 | `MIN_MODULE_NAME_LENGTH`   |uint32    | 1                                 | The minimum length of a string specifying the name of a module.             |
 | `MAX_MODULE_NAME_LENGTH`   |uint32    | 32                                | The maximum length of a string specifying the name of a module              |
 | `MIN_COMMAND_NAME_LENGTH`  |uint32    | 1                                 | The minimum length of a string specifying the name of a command.            |
-| `MAX_COMMAND_NAME_LENGTH`  |uint32    | 32                                | The maximum length of a string specifying the name of a command.            | 
+| `MAX_COMMAND_NAME_LENGTH`  |uint32    | 32                                | The maximum length of a string specifying the name of a command.            |
 | **Configurable Constants** |          |**Mainchain Value**                |                                                                             |
 | `MAX_PARAMS_SIZE`          |uint32    | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                         |
 
@@ -101,14 +101,14 @@ transactionSchema = {
     "properties": {
         "module": {
             "dataType": "string",
-            "minLength": MIN_MODULE_NAME_LENGTH, 
+            "minLength": MIN_MODULE_NAME_LENGTH,
             "maxLength": MAX_MODULE_NAME_LENGTH,
             "pattern": "^[a-z0-9!@&_,.]*$",
             "fieldNumber": 1
         },
         "command": {
             "dataType": "string",
-            "minLength": MIN_COMMAND_NAME_LENGTH, 
+            "minLength": MIN_COMMAND_NAME_LENGTH,
             "maxLength": MAX_COMMAND_NAME_LENGTH,
             "pattern": "^[a-z0-9!@&_,.]*$",
             "fieldNumber": 2
@@ -134,7 +134,7 @@ transactionSchema = {
             "dataType": "array",
             "items": {
                 "dataType": "bytes",
-                "length": ED25519_SIGNATURE_LENGTH 
+                "length": ED25519_SIGNATURE_LENGTH
             },
             "fieldNumber": 7
         }
@@ -147,10 +147,10 @@ transactionSchema = {
 
 For a transaction `trs` to be valid, it must satisfy the following:
 
-* `trs` must follow the `transactionSchema`. 
+* `trs` must follow the `transactionSchema`.
 * `trs.params` is of length less than or equal to `MAX_PARAMS_SIZE` .
 
-These checks are performed in the [static validation stage][lip-0055#block-processing] of the block processing. 
+These checks are performed in the [static validation stage][lip-0055#block-processing] of the block processing.
 
 
 ### Serialization
@@ -169,7 +169,7 @@ def encodeTransaction(trs: Transaction) -> bytes:
 Consider a binary message `trsMsg`, corresponding to a serialized transaction. The deserialization procedure is as follows:
 
 ```python
-def decodeTransaction(trsMsg: bytes) -> Transaction: 
+def decodeTransaction(trsMsg: bytes) -> Transaction:
     trsData = decode(transactionSchema,trsMsg)
     paramsSchema = JSON schema corresponding to (trsData.module, trsData.command) pair
     trsData.params = decode(paramsSchema,trsData.params)
@@ -178,19 +178,20 @@ def decodeTransaction(trsMsg: bytes) -> Transaction:
 
 ### Transaction Signature Calculation
 
-Consider a data structure `unsignedTrs` representing a valid `Transaction` object in which the signatures array is initialized to the default value (an empty array). The following function calculates a signature of the object on a certain chain with secret key `sk`. 
+The following function calculates the signature with secret key `sk` of a transaction `trs` for a chain identified by the given [network identifier](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#network-identifiers).
 
 ```python
-def computeTransactionSignature(sk: PrivateKeyEd25519, unsignedTrs: Transaction, networkIdentifier: bytes) -> SignatureEd25519:
-    serializedTrs = encodeTransaction(unsignedTrs)
+def computeTransactionSignature(sk: PrivateKeyEd25519, trs: Transaction, networkIdentifier: bytes) -> SignatureEd25519:
+    trs.signatures = []
+    serializedTrs = encodeTransaction(trs)
     return signMessage(sk, MESSAGE_TAG_TRANSACTION, networkIdentifier, serializedTrs)
 ```
 
-Here `networkIdentifier` is the [network identifier](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#network-identifiers) for the chain and the function `signMessage` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
+By convention, the `signatures` property of the transaction object that is signed is required to be the empty array and therefore this property is set accordingly. Further note that the function `signMessage` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
 
 ### Transaction Signature Validation
 
-Signature validation is done using the `verifySignatures` function defined in [LIP 0041](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md#transaction-verification). 
+Signature validation is done using the `verifySignatures` function defined in [LIP 0041](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0041.md#transaction-verification) with the input parameter `tag` equal to `MESSAGE_TAG_TRANSACTION`.
 
 
 
@@ -205,6 +206,9 @@ TBD
 
 
 ## Appendix
+
+<!---
+The example in the appendix requires to be updated.
 
 In this section, we present a serialization example for a transfer transaction. To calculate the signature, we use the network identifier: `networkID = 9ee11e9df416b18bf69dbd1a920442e08c6ca319e69926bc843a561782ca17ee` and the tag: `tag = "LSK_TX_".encode()`.
 
@@ -254,7 +258,7 @@ public key = 6689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55
 private key = 3751d0dee5ee214809118514303fa50a1daaf7151ec8d30c98b12e0caa4bb7de
 public key = aa3f553d66b58d6167d14fe9e91b1bd04d7cf5eef27fed0bec8aaac6c73c90b3
 ```
-
+-->
 
 [lip-0028]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md
 [lip-0028#signature-calculation]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md#transaction-signature-calculation
