@@ -204,44 +204,39 @@ TBD
 
 ## Appendix
 
-TBD
-
-<!---
-The example in the appendix requires to be updated.
-
 In this section, we present a serialization example for a transfer transaction. To calculate the signature, we use the network identifier: `networkID = 9ee11e9df416b18bf69dbd1a920442e08c6ca319e69926bc843a561782ca17ee` and the tag: `tag = "LSK_TX_".encode()`.
 
 #### **Transaction object to serialize:**
 
 ```java
 myTrs = {
-  "moduleID": '00000002',
-  "commandID": '0000',
-  "nonce": 5n,
-  "fee": 1216299416n,
+  "module": 'token',
+  "command": 'transfer',
+  "nonce": 5,
+  "fee": 1216299416,
   "senderPublicKey": '6689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55',
   "params": {
-    "amount": 123986407700n,
+    "amount": 123986407700,
     "recipientID": '2ca4b4e9924547c48c04300b320be84e8cd81e4a',
     "data": 'Odi et amo. Quare id faciam, fortasse requiris.'
   },
   "signatures": [
-    '9953f164f9664e05526c1e3a10c4631715cdcb9fd4f376bf7db5334ded3bbc8470bce023d67c7aca16cf3389ea01f3e3c011820c317f1f5a63f98bb6d6b34b07',
-    'a95fc611f7207ddaaaf7929f8f19b7c1cb2473ead20e9be99b8c0abc148b4ea35713ed296acbd6612f124698e96d57e6fde0eddbb998b86203d04ff3c3976700'
+    'c557395ccc1b74603b0a20d4b3333aa9b38a97fef74e0fffbeff5401ddb2e1abb9d9e70aeed9e67ae4ff0cfc705c16d6a9ec8fe9b2da8d01b690ae38d743ca0f',
+    '14d07967a8c30847deb6b611efe8ec58dd0da6e5a5faf5d876d768f128fe8e0d6482e95a66ce63a2244ac0eef2da6121cd3a1d93265ec1eef462b72d3697aa00'
   ]
 }
 ```
 
-#### **Binary message without signatures (132 bytes):**
+#### **Binary message without signatures (139 bytes):**
 
 ```
-0a0400000002120200001805209883fdc3042a206689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55324e0894e2a9f1cd0312142ca4b4e9924547c48c04300b320be84e8cd81e4a1a2f4f646920657420616d6f2e2051756172652069642066616369616d2c20666f7274617373652072657175697269732e
+0a05746f6b656e12087472616e736665721805209883fdc3042a206689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55324e0894e2a9f1cd0312142ca4b4e9924547c48c04300b320be84e8cd81e4a1a2f4f646920657420616d6f2e2051756172652069642066616369616d2c20666f7274617373652072657175697269732e
 ```
 
 #### **Transaction ID:**
 
 ```
-48d354de94872d87556d6be51d2b6418dcadcec9
+45e786fd88996fea75d8f033a18cb8cd211ccad38e796d1acd36f0ab53c135c5
 ```
 
 #### **First key pair:**
@@ -257,7 +252,7 @@ public key = 6689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55
 private key = 3751d0dee5ee214809118514303fa50a1daaf7151ec8d30c98b12e0caa4bb7de
 public key = aa3f553d66b58d6167d14fe9e91b1bd04d7cf5eef27fed0bec8aaac6c73c90b3
 ```
--->
+
 
 [lip-0028]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md
 [lip-0028#signature-calculation]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md#transaction-signature-calculation
