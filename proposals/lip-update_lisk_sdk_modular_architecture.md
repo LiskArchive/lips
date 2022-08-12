@@ -217,8 +217,4 @@ For example, the `seedReveal` property is added to the block asset in this hook 
 This LIP is informational. It does not introduce any protocol change.
 
 
-## Reference Implementation
-
-TBD
-
 [lip-event-log]:  https://research.lisk.com/
