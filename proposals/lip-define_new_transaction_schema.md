@@ -204,39 +204,41 @@ TBD
 
 ## Appendix
 
-In this section, we present a serialization example for a transfer transaction. To calculate the signature, we use the network identifier: `networkID = 9ee11e9df416b18bf69dbd1a920442e08c6ca319e69926bc843a561782ca17ee` and the tag: `tag = "LSK_TX_".encode()`.
+In this section, we present a serialization example for a transfer transaction. To calculate the signature, we use the chain identifier: `chainID = 0x00000000` and the tag: `tag = "LSK_TX_".encode()`.
 
 #### **Transaction object to serialize:**
 
 ```java
 myTrs = {
-  "module": 'token',
-  "command": 'transfer',
-  "nonce": 5,
-  "fee": 1216299416,
-  "senderPublicKey": '6689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55',
-  "params": {
-    "amount": 123986407700,
-    "recipientID": '2ca4b4e9924547c48c04300b320be84e8cd81e4a',
-    "data": 'Odi et amo. Quare id faciam, fortasse requiris.'
-  },
-  "signatures": [
-    'c557395ccc1b74603b0a20d4b3333aa9b38a97fef74e0fffbeff5401ddb2e1abb9d9e70aeed9e67ae4ff0cfc705c16d6a9ec8fe9b2da8d01b690ae38d743ca0f',
-    '14d07967a8c30847deb6b611efe8ec58dd0da6e5a5faf5d876d768f128fe8e0d6482e95a66ce63a2244ac0eef2da6121cd3a1d93265ec1eef462b72d3697aa00'
-  ]
+"module": "token", 
+"command": "transfer", 
+"nonce": "5", 
+"fee": "1216299416", 
+"senderPublicKey": "6689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55", 
+"params": {
+  "tokenID": "0000000000000000", 
+  "amount": "123986407700", 
+  "recipientAddress": "2ca4b4e9924547c48c04300b320be84e8cd81e4a", 
+  "data": "Odi et amo. Quare id faciam, fortasse requiris.", 
+  "accountInitializationFee": "0"
+}, 
+"signatures": [
+   '7d99f9c16dfb65f68380c20920ebe61f78d34d36d4aa9f329579b52cd15adef37cc82eddd6ae64c68b0ca856eaba66086435225879c3babb55dcd98da8f68a01',
+   '2fd50abd1eb0543f20386e522282288fd7c30e435804f9ac35e25fc203b319fbb90ac90c7265197a8fec4b6b67b930d036e89caa1e96a01680c014cbbfd5e009'
+   ]
 }
 ```
 
-#### **Binary message without signatures (139 bytes):**
+#### **Binary message without signatures (151 bytes):**
 
 ```
-0a05746f6b656e12087472616e736665721805209883fdc3042a206689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55324e0894e2a9f1cd0312142ca4b4e9924547c48c04300b320be84e8cd81e4a1a2f4f646920657420616d6f2e2051756172652069642066616369616d2c20666f7274617373652072657175697269732e
+0a05746f6b656e12087472616e736665721805209883fdc3042a206689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55325a0a0800000000000000001094e2a9f1cd031a142ca4b4e9924547c48c04300b320be84e8cd81e4a222f4f646920657420616d6f2e2051756172652069642066616369616d2c20666f7274617373652072657175697269732e2800
 ```
 
 #### **Transaction ID:**
 
 ```
-45e786fd88996fea75d8f033a18cb8cd211ccad38e796d1acd36f0ab53c135c5
+96f439242b9514ab8b8aa6c422283976ce811457429f4b13ac1a5380ef3c88b5
 ```
 
 #### **First key pair:**
