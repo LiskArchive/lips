@@ -177,7 +177,7 @@ def decodeTransaction(trsMsg: bytes) -> Transaction:
 
 ### Transaction Signature Calculation
 
-The following function calculates the signature with secret key `sk` of a transaction `trs` for a chain identified by the given [chainID](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md).
+The following function calculates the signature with secret key `sk` of a transaction `trs` for a chain identified by the given [chainID](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#chain-identifiers).
 
 ```python
 def computeTransactionSignature(sk: PrivateKeyEd25519, trs: Transaction, chainID: bytes) -> SignatureEd25519:
