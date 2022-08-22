@@ -32,7 +32,7 @@ The Lisk protocol handles identifiers for transactions, modules, commands, and m
 
 The type identifiers in the Lisk protocol are of type `uint32` or of type `bytes`. In both cases, they are set to a non-intuitive value which has to be memorized by users and developers. As the ecosystem grows and more functionalities are added, especially with the intoduction of interoperability, the number of values that have to be memorized gets quite large, making the identification system quite impractical (and potentially error-prone). On the other hand, for each component (modules, commands, events, etc.) there is a much more intuitive parameter: its name. Switching identifiers to those names (and removing the old identifiers) makes the whole user and developer experience easier and less error-prone.
 
-Therefore, for the cases where removing the old identifiers does not introduce any significant challenge in the ecosystem, it is plausible to proceed to this switch and use names as identifiers. This is the case for modules, commands and events.  
+Therefore, for the cases where removing the old identifiers does not introduce any significant challenge in the ecosystem, it is plausible to proceed to this switch and use names as identifiers. This is the case for modules, commands and events. 
 
 
 ### Changes Compared to LIP 0028
@@ -177,13 +177,13 @@ def decodeTransaction(trsMsg: bytes) -> Transaction:
 
 ### Transaction Signature Calculation
 
-The following function calculates the signature with secret key `sk` of a transaction `trs` for a chain identified by the given [network identifier](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#network-identifiers).
+The following function calculates the signature with secret key `sk` of a transaction `trs` for a chain identified by the given [chainID](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md).
 
 ```python
-def computeTransactionSignature(sk: PrivateKeyEd25519, trs: Transaction, networkIdentifier: bytes) -> SignatureEd25519:
+def computeTransactionSignature(sk: PrivateKeyEd25519, trs: Transaction, chainID: bytes) -> SignatureEd25519:
     trs.signatures = []
     serializedTrs = encodeTransaction(trs)
-    return signMessage(sk, MESSAGE_TAG_TRANSACTION, networkIdentifier, serializedTrs)
+    return signMessage(sk, MESSAGE_TAG_TRANSACTION, chainID, serializedTrs)
 ```
 
 By convention, the `signatures` property of the transaction object that is signed is required to be the empty array and therefore this property is set accordingly. Further note that the function `signMessage` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
