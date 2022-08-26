@@ -183,10 +183,10 @@ The following function calculates the signature with secret key `sk` of a transa
 def computeTransactionSignature(sk: PrivateKeyEd25519, trs: Transaction, chainID: bytes) -> SignatureEd25519:
     trs.signatures = []
     serializedTrs = encodeTransaction(trs)
-    return signEdd25519(sk, MESSAGE_TAG_TRANSACTION, chainID, serializedTrs)
+    return signEd25519(sk, MESSAGE_TAG_TRANSACTION, chainID, serializedTrs)
 ```
 
-By convention, the `signatures` property of the transaction object that is signed is required to be the empty array and therefore this property is set accordingly. Further note that the function `signEdd25519` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
+By convention, the `signatures` property of the transaction object that is signed is required to be the empty array and therefore this property is set accordingly. Further note that the function `signEd25519` is defined in [LIP 0037](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md#signing-and-verifying-with-ed25519).
 
 ### Transaction Signature Validation
 
