@@ -22,7 +22,7 @@ This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://cre
 
 ## Motivation
 
-The Lisk protocol handles identifiers for transactions, modules, commands, and many more. In many of those cases such as modules and commands there is also a name property, which is of type string and is set to some intuitive value (e.g., "token" module, "tokenTransfer" command). In the current protocol, such objects are referenced using their identifiers and their names have an auxiliary role. This is not so convenient for users and developers, since they have to memorize the (non-intuitive) identifier values. Merging those two properties and identifying modules and commands using their name provides a much better user/developer experience.
+The Lisk protocol handles identifiers for transactions, modules, commands, and many more. In many of those cases such as modules and commands there is also a name property, which is of type string and is set to some intuitive value (e.g., "token" module, "transfer" command). In the current protocol, such objects are referenced using their identifiers and their names have an auxiliary role. This is not so convenient for users and developers, since they have to memorize the (non-intuitive) identifier values. Merging those two properties and identifying modules and commands using their name provides a much better user/developer experience.
 
 
 ## Rationale
