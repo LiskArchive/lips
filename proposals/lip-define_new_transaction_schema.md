@@ -14,38 +14,31 @@ Updated: <YYYY-MM-DD>
 
 This LIP defines a new schema to be used to serialize transactions. The main change is to replace module and command identifiers by the corresponding names, which are of type string. This LIP also updates the terminology used for transaction and transaction properties.
 
-
 ## Copyright
 
 This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
-
 
 ## Motivation
 
 The Lisk protocol handles identifiers for transactions, modules, commands, and many more. In many of those cases such as modules and commands there is also a name property, which is of type string and is set to some intuitive value (e.g., "token" module, "transfer" command). In the current protocol, such objects are referenced using their identifiers and their names have an auxiliary role. This is not so convenient for users and developers, since they have to memorize the (non-intuitive) identifier values. Merging those two properties and identifying modules and commands using their name provides a much better user/developer experience.
 
-
 ## Rationale
-
 
 ### Simplifying Identification
 
 The type identifiers in the Lisk protocol are of type `uint32` or of type `bytes`. In both cases, they are set to a non-intuitive value which has to be memorized by users and developers. As the ecosystem grows and more functionalities are added, especially with the intoduction of interoperability, the number of values that have to be memorized gets quite large, making the identification system quite impractical (and potentially error-prone). On the other hand, for each component (modules, commands, events, etc.) there is a much more intuitive parameter: its name. Switching identifiers to those names (and removing the old identifiers) makes the whole user and developer experience easier and less error-prone.
 
-Therefore, for the cases where removing the old identifiers does not introduce any significant challenge in the ecosystem, it is plausible to proceed to this switch and use names as identifiers. This is the case for modules, commands and events. 
-
+Therefore, for the cases where removing the old identifiers does not introduce any significant challenge in the ecosystem, it is plausible to proceed to this switch and use names as identifiers. This is the case for modules, commands and events.
 
 ### Changes Compared to LIP 0028
 
 The previous transaction schema was defined in [LIP 0028][lip-0028]. Here we define the following changes:
 
-**New property names:** All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replacement of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][lip-update-lisk-sdk-modular-architecture] (renaming a module asset to a command and a transaction `asset` property to `params`). Overall, `moduleID` is replaced by `module`, `assetID` is replaced by `command` and `asset` is renamed to `params`.
+**New property names:** All properties in the proposed transaction schema are equivalent to the ones defined in [LIP 0028][lip-0028]. The only changes are the replacement of identifiers by the corresponding names and the update of terminology according to the [LIP "Update Lisk SDK modular blockchain architecture"][research:update-lisk-sdk-modular-architecture] (renaming a module asset to a command and a transaction `asset` property to `params`). Overall, `moduleID` is replaced by `module`, `assetID` is replaced by `command` and `asset` is renamed to `params`.
 
 **Serialization/Deserialization:** Serialization and deserialization follow the same specifications already defined in [LIP 0028][lip-0028]; the resulting serialization is however different when the proposed transaction schema is used, due to the change of types for identifiers for module and command. For completeness we include the pseudocode [below](#serialization). The transaction ID is calculated in the same way as described in [LIP 0028][lip-0028] (the SHA-256 hash of the serialized transaction object).
 
 **Signature Calculation:** The signature calculation function defined in [LIP 0028][lip-0028#signature-calculation] is updated to incorporate message tags introduced in [LIP 0037][lip-0037].
-
-
 
 ## Specification
 
@@ -53,38 +46,33 @@ The transaction schema defined in [LIP 0028][lip-0028] is superseded by the one 
 
 The `params` property must follow the schema corresponding to the (`module`, `command`) pair defined in the corresponding module; we call this schema `paramsSchema`.
 
-
-
 ### Constants
 
-
-|Name                        |Type      |Value                              |Description                                                                  |
-|----------------------------|----------|-----------------------------------|-----------------------------------------------------------------------------|
-|**Global Constants**        |          |                                   |                                                                             |
-| `ED25519_PUBLIC_KEY_LENGTH`|uint32    | 32                                | The length of public keys.                                                  |
-| `ED25519_PRIVATE_KEY_LENGTH`|uint32   | 32                                | The length of private keys.                                                 |
-| `ED25519_SIGNATURE_LENGTH` |uint32    | 64                                | The length of signatures.                                                   |
-| `MESSAGE_TAG_TRANSACTION`  | bytes    | "LSK_TX_" as ASCII-encoded literal| Message tag for transaction signatures (see [LIP 0037](lip-0037)).          |
-| `MIN_MODULE_NAME_LENGTH`   |uint32    | 1                                 | The minimum length of a string specifying the name of a module.             |
-| `MAX_MODULE_NAME_LENGTH`   |uint32    | 32                                | The maximum length of a string specifying the name of a module              |
-| `MIN_COMMAND_NAME_LENGTH`  |uint32    | 1                                 | The minimum length of a string specifying the name of a command.            |
-| `MAX_COMMAND_NAME_LENGTH`  |uint32    | 32                                | The maximum length of a string specifying the name of a command.            |
-| **Configurable Constants** |          |**Mainchain Value**                |                                                                             |
-| `MAX_PARAMS_SIZE`          |uint32    | 14 KiB (14*1024 bytes)    |   The maximum allowed length of the transaction parameters.                         |
-
+| Name                         | Type   | Value                              | Description                                                        |
+|------------------------------|--------|------------------------------------|--------------------------------------------------------------------|
+| **Global Constants**         |        |                                    |                                                                    |
+| `ED25519_PUBLIC_KEY_LENGTH`  | uint32 | 32                                 | The length of public keys.                                         |
+| `ED25519_PRIVATE_KEY_LENGTH` | uint32 | 32                                 | The length of private keys.                                        |
+| `ED25519_SIGNATURE_LENGTH`   | uint32 | 64                                 | The length of signatures.                                          |
+| `MESSAGE_TAG_TRANSACTION`    | bytes  | "LSK_TX_" as ASCII-encoded literal | Message tag for transaction signatures (see [LIP 0037](lip-0037)). |
+| `MIN_MODULE_NAME_LENGTH`     | uint32 | 1                                  | The minimum length of a string specifying the name of a module.    |
+| `MAX_MODULE_NAME_LENGTH`     | uint32 | 32                                 | The maximum length of a string specifying the name of a module     |
+| `MIN_COMMAND_NAME_LENGTH`    | uint32 | 1                                  | The minimum length of a string specifying the name of a command.   |
+| `MAX_COMMAND_NAME_LENGTH`    | uint32 | 32                                 | The maximum length of a string specifying the name of a command.   |
+| **Configurable Constants**   |        | **Mainchain Value**                |                                                                    |
+| `MAX_PARAMS_SIZE`            | uint32 | 14 KiB (14*1024 bytes)             | The maximum allowed length of the transaction parameters.          |
 
 ### Type Definition
 
-| Name                | Type   | Validation                                       | Description                                                          |
-|---------------------|--------|--------------------------------------------------|----------------------------------------------------------------------|
-| `SignatureEd25519` | bytes   | Must be of length `ED25519_SIGNATURE_LENGTH`.  | Used for Ed25519 signatures.  |
-| `PrivateKeyEd25519` | bytes   | Must be of length `ED25519_PRIVATE_KEY_LENGTH`. | Used for Ed25519 private keys. |
-| `Transaction` | object | Must follow the `transactionSchema` schema with the only difference that `params` property is not serialized and contains the values of parameters of `paramsSchema` for the corresponding transaction. | An object representing a non-serialized transaction.                                        |
+| Name                | Type   | Validation                                      | Description                    |
+|---------------------|--------|-------------------------------------------------|--------------------------------|
+| `SignatureEd25519`  | bytes  | Must be of length `ED25519_SIGNATURE_LENGTH`.   | Used for Ed25519 signatures.   |
+| `PrivateKeyEd25519` | bytes  | Must be of length `ED25519_PRIVATE_KEY_LENGTH`. | Used for Ed25519 private keys. |
+| `Transaction`       | object | Must follow the `transactionSchema` schema with the only difference that `params` property is not serialized and contains the values of parameters of `paramsSchema` for the corresponding transaction. | An object representing a non-serialized transaction. |
 
 ### JSON Schema
 
 Transactions are serialized using `transactionSchema` given below.
-
 
 ```java
 transactionSchema = {
@@ -139,7 +127,6 @@ transactionSchema = {
     }
 }
 ```
-
 
 #### Validation
 
@@ -196,11 +183,9 @@ Signature validation is done using the `verifySignatures` function defined in [L
 
 This LIP results in a hard fork as nodes following the proposed protocol will reject transactions following the previous schema, and nodes following the previous protocol will reject transactions following the proposed schema.
 
-
 ## Reference Implementation
 
 TBD
-
 
 ## Appendix
 
@@ -210,18 +195,18 @@ In this section, we present a serialization example for a transfer transaction. 
 
 ```java
 myTrs = {
-"module": "token", 
-"command": "transfer", 
-"nonce": "5", 
-"fee": "1216299416", 
-"senderPublicKey": "6689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55", 
+"module": "token",
+"command": "transfer",
+"nonce": "5",
+"fee": "1216299416",
+"senderPublicKey": "6689d38d0d89e072b5339d24b4bff1bd6ef99eb26d8e02697819aecc8851fd55",
 "params": {
-  "tokenID": "0000000000000000", 
-  "amount": "123986407700", 
-  "recipientAddress": "2ca4b4e9924547c48c04300b320be84e8cd81e4a", 
-  "data": "Odi et amo. Quare id faciam, fortasse requiris.", 
+  "tokenID": "0000000000000000",
+  "amount": "123986407700",
+  "recipientAddress": "2ca4b4e9924547c48c04300b320be84e8cd81e4a",
+  "data": "Odi et amo. Quare id faciam, fortasse requiris.",
   "accountInitializationFee": "0"
-}, 
+},
 "signatures": [
    '7d99f9c16dfb65f68380c20920ebe61f78d34d36d4aa9f329579b52cd15adef37cc82eddd6ae64c68b0ca856eaba66086435225879c3babb55dcd98da8f68a01',
    '2fd50abd1eb0543f20386e522282288fd7c30e435804f9ac35e25fc203b319fbb90ac90c7265197a8fec4b6b67b930d036e89caa1e96a01680c014cbbfd5e009'
@@ -255,9 +240,8 @@ private key = 3751d0dee5ee214809118514303fa50a1daaf7151ec8d30c98b12e0caa4bb7de
 public key = aa3f553d66b58d6167d14fe9e91b1bd04d7cf5eef27fed0bec8aaac6c73c90b3
 ```
 
-
 [lip-0028]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md
 [lip-0028#signature-calculation]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0028.md#transaction-signature-calculation
 [lip-0037]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0037.md
 [lip-0055#block-processing]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md#block-processing-stages
-[lip-update-lisk-sdk-modular-architecture]: https://research.lisk.com/t/update-lisk-sdk-modular-blockchain-architecture/343
+[research:update-lisk-sdk-modular-architecture]: https://research.lisk.com/t/update-lisk-sdk-modular-blockchain-architecture/343
