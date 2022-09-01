@@ -3,11 +3,11 @@ LIP: <lip number>
 Title: Define new transaction schema
 Author: Grigorios Koumoutsos <grigorios.koumoutsos@lightcurve.io>
         Maxime Gagnebin <maxime.gagnebin@lightcurve.io>
-
-? Discussions-To: https://research.lisk.com/t/define-new-transaction-schema/348/15
+Discussions-To: https://research.lisk.com/t/define-new-transaction-schema/348/15
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2022-05-31
+Updated: 2022-09-01
 ```
 
 ## Abstract
