@@ -71,7 +71,7 @@ The terms _apply_, _process_, _execute_ were used interchangeably to describe th
 
 #### Events
 
-_Events_ are on-chain data emitted during the processing of a block which add extra information about the execution of state transitions. The protocol for events is defined in [LIP 00XX][lip-event-log].
+_Events_ are on-chain data emitted during the processing of a block which add extra information about the execution of state transitions. The protocol for events is defined in [LIP 0065][lip-0065].
 
 ## Specifications
 
@@ -171,4 +171,4 @@ For example, the `seedReveal` property is added to the block asset in this hook 
 
 This LIP is informational. It does not introduce any protocol change.
 
-[lip-event-log]: https://research.lisk.com/
+[lip-0065]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0065.md
