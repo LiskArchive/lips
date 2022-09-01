@@ -77,3 +77,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0063](proposals/lip-0063.md) | Define mainnet configuration and migration for Lisk Core v4                                    | Andreas Kendziorra, Sergey Shemyakov                   | Standards Track | Draft         |
 | [0064](proposals/lip-0064.md) | Disallow non-required properties in Lisk codec                                                 | Andreas Kendziorra                                     | Standards Track | Draft         |
 | [0065](proposals/lip-0065.md) | Introduce events and add events root to block headers                                          | Alessandro Ricottone, Mehmet Egemen Albayrak           | Standards Track | Draft         |
+| [0066](proposals/lip-0066.md) | Define new transaction schema                                                                  | Grigorios Koumoutsos, Maxime Gagnebin                  | Standards Track | Draft         |
