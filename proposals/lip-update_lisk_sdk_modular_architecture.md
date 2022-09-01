@@ -3,9 +3,10 @@ LIP: <LIP number>
 Title: Update Lisk SDK modular blockchain architecture
 Author: Shusetsu Toda <shusetsu@lightcurve.io>
 Discussions-To: https://research.lisk.com/t/update-lisk-sdk-modular-blockchain-architecture/343
+Status: Draft
 Type: Informational
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2022-05-09
+Updated: 2022-09-01
 ```
 ## Abstract
 
