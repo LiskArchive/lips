@@ -80,3 +80,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0066](proposals/lip-0066.md) | Introduce tree based key derivation and account recovery                                       | Maxime Gagnebin                                        | Informational   | Draft         |
 | [0067](proposals/lip-0067.md) | Introduce a generic keystore                                                                   | Maxime Gagnebin                                        | Informational   | Draft         |
 | [0068](proposals/lip-0068.md) | Define new transaction schema                                                                  | Grigorios Koumoutsos, Maxime Gagnebin                  | Standards Track | Draft         |
+| [0069](proposals/lip-0069.md) | Update Lisk SDK modular blockchain architecture                                                | Shusetsu Toda                                          | Informational   | Draft         |
