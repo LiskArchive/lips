@@ -13,7 +13,7 @@ Describe in brief what this proposal achieves and how.
 
 ## Copyright
 
-This LIP is licensed under the [GNU General Public License, version 3](http://www.gnu.org/licenses/gpl-3.0.html).
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
 
 ## Motivation
 
@@ -34,3 +34,4 @@ Describe any incompatibilities with the existing protocol, including their sever
 ## Reference Implementation
 
 TBD
+
