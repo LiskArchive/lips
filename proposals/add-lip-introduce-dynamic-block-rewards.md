@@ -1,0 +1,362 @@
+```
+LIP: <LIP number>
+Title: Introduce dynamic block rewards module
+Author: Vikas Jaiman <vikas.jaiman@lightcurve.io>
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+Required: LIP 0044, LIP 0051, LIP 0057, LIP 0058
+```
+
+
+
+## Abstract
+
+This LIP introduces the Dynamic Block Rewards module that is responsible for providing the base reward system for the Lisk blockchain according to the delegate weight. In this LIP, we specify the properties of the Dynamic Block Rewards module, along with their default values. Furthermore, we specify the protocol logic injected during the block lifecycle, and the functions that can be called from other modules or off-chain services. This module is mainly used for Delegate Proof-of-Stake (DPoS) in the Lisk ecosystem.
+
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+
+## Motivation
+
+In the current [Lisk protocol][lip-0042], the rewards are the same for all active and standby delegates (selected according to the selection mechanism described in [LIP 0022][lip-0022] and [LIP 0023][lip-0023]) who forge a block in a round, irrespective of their delegate weight. In the current scenario, the rewards for generating a block are fixed and therefore a delegate with a large delegate weight does not have incentives to lock further tokens via self-votes unless they run multiple delegates, which is not desirable for them due to operational costs and maintenance efforts. Thus, the LIP aims to simplify DPoS participation for delegates to lock the large number of tokens. By more participation, we expect to increase the Total Value Locked (TVL) and therefore, the security of the Lisk Mainchain. To achieve this, we assign block rewards to also depend on the weight of the delegate generating the block. 
+
+
+## Rationale
+
+​​The main purpose of Dynamic Block Rewards module is to compute the block rewards according to the delegate weight for active delegates and induces specific logic after the application of a block:
+
+### Minimum Reward for Active Delegates
+
+* This module assigns a minimum reward i.e. `minimumRewardActiveDelegates` per round to all active delegates to cover the minimal operational cost to run a delegate. For the Lisk mainchain, the minimum reward is 10<sup>7</sup> beddows or `0.1 LSK`.             
+
+ ### Rewards Proportional to the Delegates Weight 
+
+* This module distributes the remaining stake rewards i.e. `stakeRewardActiveDelegates` proportional to the delegates weight. It is given to the active delegates (per round) after giving the minimum reward. For the Lisk mainchain, as calculated in the [`table`](#reward-computation), the rewards are `90.9*10^8` beddows or `90.9 LSK`. This way, the module achieves fairness (higher weight implies higher rewards) while ensuring that rewards of low-weight delegates do not go below the threshold of profitability. 
+* In principle, if percentage of rewards shared equally among active delegates is set to `0%` i.e.`FACTOR_MINIMUM_REWARD_ACTIVE_DELEGATES == 0` (as described in [table](#specification)), then it will be a proof-of-stake system where rewards are proportional to the delegate weight. On the other hand, if the percentage of rewards shared equally among active delegates is set to `100%` i.e. `FACTOR_MINIMUM_REWARD_ACTIVE_DELEGATES == 10000`, it will be the current delegate proof-of-stake (DPoS) system where each delegate receives the same reward for forging a block irrespective of their weights. Therefore, this reward system can be seen as a generalization of the previous one and allows flexibility to developers to use the variant of Proof-of-Stake they find more appropriate for their use case.
+  
+ ### Default Reward for StandBy Delegates  
+
+* This module assigns the default reward `defaultRewardStandByDelegates` to all stand-by delegates i.e. there is a fixed reward irrespective of the delegate weight. For the Lisk mainchain, the default reward for standby delegate is 10<sup>8</sup> beddows or `1 LSK` at current block height. This will help stand-by delegates to cover the costs of running a node even though the probability of the selection is low in a round. 
+
+
+### Reward for Missed blocks
+
+* Currently, in the Lisk protocol if a delegate misses a block, some other delegates forge the block and the delegate gets a default reward at current block height (`1 LSK` for mainchain). The reason is, the total rewards shouldn't exceed in a round it if a delegate misses a block. Now, in the dynamic block rewards, delegates get rewards proportional to the delegate weight. If a delegate misses a block then a delegate forging the block second time will get the reward proportional to their weight. This results in imbalancing the total reward in a round. In terms of inflation, currently in the Lisk mainchain, there is a maximum minting of `6*60*24*365 = 3153600` LSK per year. Every time a delegate misses their block, 1 LSK less is minted per year. So the important aspect that we want to guarantee here is that in the dynamic block rewards also never more than `3153600` LSK are minted per year so that there is a reliable upper bound on the inflation. In terms of incentives, it is also important that it should never be profitable for a delegate if someone misses a block. Therefore, for missed blocks, delegates forging blocks for the second time in the round, gets `minimumRewardActiveDelegates`. For the Lisk mainchain, the reward for missed blocks is 10<sup>7</sup> beddows or `0.1 LSK` at current block height. Since delegates are already running full nodes and there is no additional effort for them to forge a missed block. There is a possibility that the minting of the tokens will be less if there are missed blocks. 
+
+### Minting of the Rewards
+
+* After applying the block, a certain quantity of the native token of the blockchain is minted. The exact amount assigned to the block generator, i.e. the reward is calculated depending on the rules of the [Random module][lip-0046] and the [Lisk-BFT][lip-0058] protocol. Specifically, the reward is reduced for not participating in BFT block finalization or failure to properly reveal the random seed. This reduction happens exactly as before mentioned in the previous [Reward module][lip-0042]. After minting the block rewards, `updateSharedRewards `function is called from the [reward sharing mechanism][lip-rewardsharing] of the DPoS module which locks the amount of the rewards which will be shared with the voters.
+
+
+## Specification
+
+In this section, we specify the protocol logic in the lifecycle of a block injected by the Dynamic Block Rewards module as well as the functions that can be called from off-chain services. It depends on the [Token][lip-0051], [Random module][lip-0046], and [Lisk-BFT][lip-0058] protocol. (see the [table below](#heading=h.arcsjo6wpya2)).
+
+
+### Notation and Constants
+
+We define the following constants:
+
+
+| **Name**                                | **Type** | **Value**                                 | **Description**                                                                                                                                                                  |
+|-----------------------------------------|----------|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `MODULE_NAME_DYNAMIC_BLOCK_REWARDS`       | string   | "dynamicBlockRewards"                     | The module name of the Dynamic Block Rewards module.                                                                                                                             |
+| `EVENT_NAME_REWARD_MINTED`                | string   | "rewardMinted"                            | Name of the event during minting of the rewards.                                                                                                                                 |
+| `REWARD_NO_REDUCTION`                     | uint32   | 0                                         | Return code for no block reward reduction.                                                                                                                                       |
+| `REWARD_REDUCTION_SEED_REVEAL`            | uint32   | 1                                         | Return code for block reward reduction because of the failed seed reveal.                                                                                                        |
+| `REWARD_REDUCTION_MAX_PREVOTES`           | uint32   | 2                                         | Return code for block reward reduction because the block header does not imply the maximal number of prevotes.                                                                   |
+| `REWARD_REDUCTION_FACTOR_BFT`             | uint32   | 4                                         | The reduction factor for validator block reward in case when the block header does not imply the maximal number of prevotes.                                                     |
+| `SUBSTORE_PREFIX_END_OF_ROUND_TIMESTAMP` | bytes    | 0xe000                                    | The substore prefix of the End-Of-Round timestamp substore. |  
+| **Configurable Constants**               |         | **Mainchain Value**                         |                                                                                                                                                                                                 |
+| `FACTOR_MINIMUM_REWARD_ACTIVE_DELEGATES` | uint32  | `1000`                                      | It determines the percentage of rewards assigned equally to all active delegates. The percentage can be obtained by dividing the value by `100`, i.e., a value of `1000` corresponds to `10%` .|
+| `TOKEN_ID_DYNAMIC_BLOCK_REWARD`          | bytes   | `TOKEN_ID_LSK = 0x 00 00 00 00 00 00 00 00` | The [token ID][lip-0051#token-id-and-native-tokens] of the token used for the reward system of the Blockchain.                                                                                  |
+| `NUMBER_ACTIVE_DELEGATES`                | uint32  | `101`                                       | The number of active delegates (as defined in [DPoS module][lip-0057]).                                                                                                                         |
+| `ROUND_LENGTH`                           | uint32  | `103`                                       | The round length (as defined in [DPoS module][lip-0057]).                                                                                                                                       |   
+
+Furthermore, for the rest of this LIP we indicate with `ctx` the execution context which is passed as extra input to each method call.
+
+
+### Reward Computation
+
+We calculate the rewards for delegates as follows:
+
+| **Name**                                | **Mainchain Value** | **Computation**                                 | **Description**                                                                                                                                                                  |
+|-----------------------------------------|----------|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `minimumRewardActiveDelegates` |  10<sup>7</sup> |           `FACTOR_MINIMUM_REWARD_ACTIVE_DELEGATES * getDefaultRewardAtHeight(blockHeader.height)//DECIMAL_PERCENT_FACTOR`                            |The minimum reward per round for an active delegate. Here `DECIMAL_PERCENT_FACTOR == 10000` and `blockHeader.height` is the current block height.  |                           
+| `totalRewardActiveDelegates` |  101*10<sup>8</sup> |          `NUMBER_ACTIVE_DELEGATES * getDefaultRewardAtHeight(blockHeader.height)`                           |The total reward per round for active delegates. Here `blockHeader.height` is the current block height.|  
+| `stakeRewardActiveDelegates`| 90.9*10<sup>8</sup>  |           `totalRewardActiveDelegates - NUMBER_ACTIVE_DELEGATES * minimumRewardActiveDelegates`                          |The remaining rewards for active delegates (per round) after giving the minimum reward. |  
+| `defaultRewardStandByDelegates` | 10<sup>8</sup>  |           `getDefaultRewardAtHeight(blockHeader.height)`                           | The default reward per round for standby delegates irrespective of their delegate weight. Here `blockHeader.height` is the current block height. |  
+
+Here [`getDefaultRewardAtHeight`](#getdefaultrewardatheight), returns a 64-bit unsigned integer value, the default block reward, given the block height as input.
+
+
+### Functions from Other Modules
+
+Calling a function `fct` from another module (named `module`) is represented by `module.fct(required inputs)`.
+
+### Dynamic Block Rewards Module Store
+
+The key-value pairs in the module store are organized as follows:
+
+
+#### End-Of-Round Timestamp Substore  
+
+
+##### Substore Prefix, Store Key, and Store Value
+
+The entry in the end-of-round timestamp substore is as follows:
+
+* The substore prefix is set to `SUBSTORE_PREFIX_END_OF_ROUND_TIMESTAMP`.
+* The store key is set to empty bytes.
+* The store value is the serialization of an object following `endOfRoundTimestampStoreSchema`
+* Notation: For the rest of this proposal, let `endOfRoundTimestamp` be the `timestamp` property of the entry in the end-of-round timestamp substore.
+
+
+##### JSON Schema
+
+
+```java
+endOfRoundTimestampStoreSchema = {
+    "type": "object",
+    "required": ["timestamp"],
+    "properties": {
+        "timestamp": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        }
+    }
+}
+```
+
+
+
+##### Properties 
+
+* `timestamp`: The timestamp of the last block in a round.
+
+  
+### Token for Rewards
+
+The Dynamic Block Rewards module triggers the minting of rewards in the fungible token identified by the value of `TOKEN_ID_DYNAMIC_BLOCK_REWARD`, which denotes a token ID. The value of `TOKEN_ID_DYNAMIC_BLOCK_REWARD` is set according to the initial configuration of the Dynamic Block Rewards module.
+
+### Reward Brackets
+
+As part of the Dynamic Block Rewards module configuration, the module has to define certain reward brackets, i.e., the values of the default block reward depending on the height of the block. For this LIP, we assume the reward brackets are given by the function [`getDefaultRewardAtHeight`](#getdefaultrewardatheight), which returns a 64-bit unsigned integer value, the default block reward, given the block height as input.
+
+### Lisk Mainchain Configuration
+
+#### Mainchain Rewards Token
+The token for rewards on the Lisk mainchain is the LSK token.
+
+#### Mainchain Reward Brackets
+The reward brackets for the Lisk Mainchain are as follows:
+
+
+|  **Height**| **Default Reward**|
+|---|---|
+|  From 1,451,520 to 4,451,519 |  5 × 10<sup>8</sup> |
+|  From 4,451,520 to 7,451,519 |  4 × 10<sup>8</sup>   |
+|  From 7,451,520 to 10,451,519 | 3 × 10<sup>8 </sup>   |
+|From 10,451,520 to 13,451,519| 2 × 10<sup>8</sup>  |
+|From 13,451,520 onwards| 1 × 10<sup>8</sup>  |
+
+This corresponds to default rewards of 5 LSK, 4 LSK, 3 LSK, 2 LSK, and 1 LSK respectively.
+
+### Commands
+
+This module does not define any command.
+
+
+### Events
+
+
+#### rewardMinted
+
+The event is emitted when the reward is minted. In case of a reward reduction, it provides information about the reason for the reduction. This event has the `name = EVENT_NAME_REWARD_MINTED`.
+
+
+#### Topics
+
+
+* `generatorAddress`: the address of the block generator that obtains the reward.
+
+
+#### Data
+
+
+```java
+rewardMintedDataSchema = {
+    "type": "object",
+    "required": ["amount", "reduction"],
+    "properties": {
+        "amount": {
+            "dataType": "uint64",
+            "fieldNumber": 1
+        },
+        "reduction": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        }
+    }
+}
+```
+
+* `amount`: the amount of rewards minted.
+* `reduction`: an integer indicating whether the reward was reduced and for which reason. Allowed values are: `REWARD_NO_REDUCTION`, `REWARD_REDUCTION_SEED_REVEAL`, `REWARD_REDUCTION_MAX_PREVOTES`.
+
+
+### Internal Functions
+
+The Dynamic Block Rewards module has the following internal functions.
+
+
+#### getDynamicBlockReward
+
+This function is used to retrieve the reward of a block for a delegate.
+
+
+#### Returns
+
+* `amount`: amount of block reward to be minted.
+* `reduction`: an integer indicating whether the reward is reduced. Possible values are `REWARD_NO_REDUCTION, REWARD_REDUCTION_SEED_REVEAL, REWARD_REDUCTION_MAX_PREVOTES.`
+
+
+```python
+def getDynamicBlockReward(blockHeader: BlockHeader)-> tuple[uint64, uint32]:
+    if Random.isSeedRevealValid(blockHeader.generatorAddress, blockHeader.seedReveal) == False:
+        return (0, REWARD_REDUCTION_SEED_REVEAL)
+
+    delegateReward = getDelegateBlockReward(blockHeader)
+
+    if blockHeader.impliesMaximalPrevotes == False:
+        return (delegateReward // REWARD_REDUCTION_FACTOR_BFT, REWARD_REDUCTION_MAX_PREVOTES)
+
+    return (delegateReward, REWARD_NO_REDUCTION)
+```
+
+Here `//` represents integer division.
+
+
+#### getDelegateBlockReward
+
+This function is used to retrieve the block reward for a delegate.
+
+
+#### Returns
+
+* `reward:` amount of block reward for a delegate.
+
+
+```python
+def getDelegateBlockReward(blockHeader: BlockHeader) -> uint64:
+    if len(Validators.getGeneratorsBetweenTimestamps(endOfRoundTimestamp, blockHeader.timestamp)) >= ROUND_LENGTH:
+        return minimumRewardActiveDelegates
+
+    validatorParams = Validators.getValidatorParams()
+    totalBftWeight = sum(validator.bftWeight for validator in validatorParams.validators)
+
+    let validator be the item of validatorParams.validators with item.address == blockHeader.generatorAddress
+
+    if validator.bftWeight > 0:
+        reward = minimumRewardActiveDelegates + (validator.bftWeight * stakeRewardActiveDelegates)//totalBftWeight
+        return reward
+    else:
+        return defaultRewardStandByDelegates
+```
+
+
+### Protocol Logic for Other Modules
+
+The Dynamic Block Rewards module exposes the following functions for other modules.
+
+#### getDefaultRewardAtHeight
+This function is used to retrieve the expected default reward at a given height.
+
+#### Parameters
+The height of a block as a 32-bit unsigned integer.
+
+#### Returns
+The default reward of the block as a 64-bit unsigned integer.
+
+
+### Endpoints for Off-Chain Services
+
+TBD.
+
+
+### Genesis Block Processing
+
+
+#### Genesis State Initialization
+
+After the genesis block `b` is executed, the following logic is executed:
+
+
+* Create the entry in the end-of-round timestamp substore, setting `endOfRoundTimestamp.timestamp` to `b.header.timestamp`.
+
+#### Genesis State Finalization
+
+The Dynamic Block Rewards module does not execute any logic during the genesis state finalization.
+
+
+### Block Processing
+
+#### Before Transactions Execution
+
+Before the transactions of a block `b` are executed, the following logic is executed:
+
+
+```python
+def beforeTransactionsExecute(b: Block) -> None:
+    #update blockReward value of the block reward substore
+    (ctx.blockReward, ctx.reduction) = getDynamicBlockReward(b.header)
+```
+
+Here we calculate the reward for the block generator; then this value will be stored in the context in memory for the `afterTransactionsExecute` in order to mint this reward and assign it to the generator. The reason for calculating the reward here is to make sure that during the call to `getDynamicBlockReward` function, the Validators module takes the BFT weight from the DPoS module. Therefore, if we calculate the reward in `afterTransactionsExecute`, there might be a case where BFT weights are being updated by DPoS module before calculating the reward then the reward could be from the next/future round.
+
+#### After Transactions Execution
+
+The following function assigns block rewards after all transactions in the block are executed.
+
+
+```python
+def afterTransactionsExecute(b: Block) -> None:
+    if ctx.blockReward > 0:
+        Token.mint(b.header.generatorAddress, TOKEN_ID_DYNAMIC_BLOCK_REWARD, ctx.blockReward)
+        DPoS.updateSharedRewards(b.header.generatorAddress, TOKEN_ID_DYNAMIC_BLOCK_REWARD, ctx.blockReward)
+
+    if DPoS.isEndOfRound(b.header.height):
+	#update the entry in the End-Of-Round timestamp substore
+        endOfRoundTimestamp = b.header.timestamp
+
+    emitEvent(
+        module = MODULE_NAME_DYNAMIC_BLOCK_REWARDS,
+        name = EVENT_NAME_REWARD_MINTED,
+        data = {
+            "amount": ctx.blockReward,
+            "reduction": ctx.reduction
+            },
+        topics = [b.header.generatorAddress]
+    )
+```
+
+
+## Backwards Compatibility
+
+This LIP defines the interface for the Dynamic Block Rewards module but does not introduce any change to the protocol, hence it is a backward compatible change.
+
+[lip-0022]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0022.md
+[lip-0023]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0023.md
+[lip-0042]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0042.md
+[lip-0044]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0044.md
+[lip-0046]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0046.md
+[lip-0051]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md
+[lip-0051#token-id-and-native-tokens]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#token-id-and-native-tokens
+[lip-0055]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md
+[lip-0057]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md
+[lip-0058]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0058.md
+[lip-rewardsharing]: https://github.com/LiskHQ/lips-staging/blob/996a6ededf140e96caa855bdacc6c49b57fd6ce0/proposals/reward-sharing.md#updatesharedrewards
