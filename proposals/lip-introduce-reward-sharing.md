@@ -193,7 +193,6 @@ def execute(trs: Transaction) -> None:
 
     for i in range(len(voterStore(senderAddress).sentVotes)):
         assignVoteRewards(senderAddress, i)
-        voterStore(senderAddress).sentVotes[i].voteSharingCoefficients = delegateStore(voterStore(senderAddress).sentVotes[i].delegateAddress).sharingCoefficients
 ```
 
 The internal function [assignVoteRewards](#assignvoterewards) assigns the rewards of a specified vote to the voter. 
@@ -343,6 +342,9 @@ def assignVoteRewards(voterAddress: Address, i: uint32) -> None:
                 },
                 topics = [voterAddress]
             )
+
+    # update sharing coefficients
+    vote.voteSharingCoefficients = delegateStore(vote.delegateAddress).sharingCoefficients
 ```
 
 ### Protocol Logic for Other Modules
