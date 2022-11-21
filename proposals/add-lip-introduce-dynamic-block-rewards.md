@@ -86,7 +86,7 @@ We calculate the rewards for delegates as follows:
 
 | **Name**                                | **Mainchain Value** | **Computation**                                 | **Description**                                                                                                                                                                  |
 |-----------------------------------------|----------|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `minimumRewardActiveDelegates` |  10<sup>7</sup> |           `FACTOR_MINIMUM_REWARD_ACTIVE_DELEGATES * getDefaultRewardAtHeight(blockHeader.height)//DECIMAL_PERCENT_FACTOR`                            |The minimum reward per round for an active delegate. Here `DECIMAL_PERCENT_FACTOR == 10000` and `blockHeader.height` is the current block height.  |                           
+| `minimumRewardActiveDelegates` |  10<sup>7</sup> |           (`FACTOR_MINIMUM_REWARD_ACTIVE_DELEGATES * getDefaultRewardAtHeight(blockHeader.height))//DECIMAL_PERCENT_FACTOR`                            |The minimum reward per round for an active delegate. Here `DECIMAL_PERCENT_FACTOR == 10000` and `blockHeader.height` is the current block height.  |                           
 | `totalRewardActiveDelegates` |  101*10<sup>8</sup> |          `NUMBER_ACTIVE_DELEGATES * getDefaultRewardAtHeight(blockHeader.height)`                           |The total reward per round for active delegates. Here `blockHeader.height` is the current block height.|  
 | `stakeRewardActiveDelegates`| 90.9*10<sup>8</sup>  |           `totalRewardActiveDelegates - NUMBER_ACTIVE_DELEGATES * minimumRewardActiveDelegates`                          |The remaining rewards for active delegates (per round) after giving the minimum reward. |  
 | `defaultRewardStandByDelegates` | 10<sup>8</sup>  |           `getDefaultRewardAtHeight(blockHeader.height)`                           | The default reward per round for standby delegates irrespective of their delegate weight. Here `blockHeader.height` is the current block height. |  
@@ -359,4 +359,4 @@ This LIP defines the interface for the Dynamic Block Rewards module but does not
 [lip-0055]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md
 [lip-0057]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md
 [lip-0058]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0058.md
-[lip-rewardsharing]: https://github.com/LiskHQ/lips-staging/blob/996a6ededf140e96caa855bdacc6c49b57fd6ce0/proposals/reward-sharing.md#updatesharedrewards
+[lip-rewardsharing]: https://research.lisk.com/t/introduce-reward-sharing-mechanism/386#updatesharedrewards
