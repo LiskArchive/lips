@@ -82,3 +82,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0068](proposals/lip-0068.md) | Define new transaction schema | Grigorios Koumoutsos, Maxime Gagnebin | Standards Track | Draft |
 | [0069](proposals/lip-0069.md) | Update Lisk SDK modular blockchain architecture | Shusetsu Toda | Informational | Draft |
 | [0070](proposals/lip-0070.md) | Introduce reward sharing mechanism | Grigorios Koumoutsos | Standards Track | Draft |
+| [0071](proposals/lip-0071.md) | Introduce dynamic block rewards module | Vikas Jaiman | Standards Track | Draft |
