@@ -38,22 +38,22 @@ The values of all constants related to commissions are between 0 and 10000, corr
 
 Here we define the constants related to reward sharing. All other DPoS module constants are defined in [LIP 0057][lip-0057#type-definition]. 
 
-| Name                          | Type       | Value      | Description                             |
-|-------------------------------|------------|------------|-------------------------------------------------------------------------------------------------|
-| `COMMAND_NAME_CLAIM_REWARDS`  | string     | "claimRewards"    |  The command name for the claim rewards transaction                                             |
-| `COMMAND_NAME_COMMISSION_CHANGE`| string     | "changeCommission"   |  The command name of the commission change transaction.                             |
-| `COMMISSION_INCREASE_PERIOD`  | uint32     | 260000     |  Determines how frequently (after how many blocks) a delegate can increase their commission.      |
-| `MAX_COMMISSION_INCREASE_RATE`| uint32     | 500        | Determines the maximum allowed increase on the commission per transaction.                      |
-| `MAX_NUM_BYTES_Q96`           | uint32     | 24         | The maximal number of bytes of a serialized fractional number in Q96 format.                    |
+| Name | Type | Value | Description |
+|------|------|-------|-------------|
+| `COMMAND_NAME_CLAIM_REWARDS` | string | "claimRewards" | The command name for the claim rewards transaction |
+| `COMMAND_NAME_COMMISSION_CHANGE`| string | "changeCommission" | The command name of the commission change transaction. |
+| `COMMISSION_INCREASE_PERIOD` | uint32 | 260000 | Determines how frequently (after how many blocks) a delegate can increase their commission. |
+| `MAX_COMMISSION_INCREASE_RATE`| uint32 | 500 | Determines the maximum allowed increase on the commission per transaction. |
+| `MAX_NUM_BYTES_Q96` | uint32 | 24 | The maximal number of bytes of a serialized fractional number in Q96 format. |
 
 ### Types
 
 Here we define the newly introduced types. All other types used in this LIP are defined in [LIP 0057][lip-0057#type-definition].
 
-| Name   | Type     | Validation          | Description    |
-|--------|----------|---------------------|----------------|
-| `Q96`    | integer  | Must be non-negative| Internal representation of a Q96 number. |
-| `Vote`   | object   | Contains 3 elements (address, amount, votesharingCoefficients) of types Address, uint64 and array respectively (same as the items in the sentVotes array of the [voterStoreSchema](#json-schema)).| Object containing information regarding a vote.|
+| Name | Type | Validation | Description |
+|------|------|------------|-------------|
+| `Q96` | integer | Must be non-negative | Internal representation of a Q96 number. |
+| `Vote` | object | Contains 3 elements (address, amount, votesharingCoefficients) of types Address, uint64 and array respectively (same as the items in the sentVotes array of the [voterStoreSchema](#json-schema)). | Object containing information regarding a vote. |
 
 #### Q96 Type Conversion
 
@@ -438,11 +438,11 @@ Those two constraints provide the guarantee to the voters that if they check the
 
 Whenever rewards are attributed to a delegate, the part of rewards corresponding to the commission are sent to this delegate; the rest part of the rewards belongs to delegates and voters according to their vote amount. Therefore, if a delegate receives a reward $r$ and has commission percentage $c$, the overall reward assigned to the delegate is
 
-$$ r \cdot \frac{c}{100} +  r \cdot (1- \frac{c}{100}) \cdot \frac{selfVotes}{totalVotes}   $$
+$$ r \cdot \frac{c}{100} + r \cdot (1- \frac{c}{100}) \cdot \frac{selfVotes}{totalVotes} $$
 
 and the reward for a voter who has voted amount $myVotes$ is
 
-$$  r \cdot   (1- \frac{c}{100}) \cdot \frac{myVotes}{totalVotes}.  $$
+$$ r \cdot (1- \frac{c}{100}) \cdot \frac{myVotes}{totalVotes}. $$
 
 At first glance it might seem unclear why two types of rewards are attributed to delegates, one for commission and one for self-votes. It might look simpler if the delegates just get the commission and the rest is attributed to voters. The reason for choosing the current formulation is twofold: 
 
@@ -453,15 +453,15 @@ At first glance it might seem unclear why two types of rewards are attributed to
 
 Each delegate might have too many voters. Therefore it would be extremely inefficient to calculate the rewards for all voters at the time of generating a block. To avoid un-necessary calculations, we define a special transaction for claiming pending rewards. Voters can claim their rewards by submitting such a transaction. Rewards are calculated only at times when it is needed in order to credit the rewards to the voter. Assume a voter votes an amount $myVotes$ for a delegate at height $h_{vote}$ and submits a claim rewards transaction at height $h_{claim}$. The rewards attributed for this vote equal:
 
-$$ \sum_{i = h_{vote}}^{h_{claim}-1} r_i \cdot (1 -  \frac{c_i}{100}) \cdot \frac{myVotes}{totalVotes(i)} = myVotes \cdot \sum_{i = h_{vote}}^{h_{claim}-1}  \frac{r_i \cdot (1 -  \frac{c_i}{100})}{totalVotes(i)} $$ 
+$$ \sum_{i = h_{vote}}^{h_{claim}-1} r_i \cdot (1 - \frac{c_i}{100}) \cdot \frac{myVotes}{totalVotes(i)} = myVotes \cdot \sum_{i = h_{vote}}^{h_{claim}-1} \frac{r_i \cdot (1 - \frac{c_i}{100})}{totalVotes(i)} $$
 
 where $r_i$ is the reward, $c_i$ the commission and $totalVotes(i)$ the total votes for the delegate at height $i$. In order to be able to calculate this quantity efficiently, we define 
 
-$$F(h) = \sum_{i = 0}^{h - 1}  \frac{r_i \cdot (1 -  \frac{c_i}{100})}{totalVotes(i)},$$
+$$ F(h) = \sum_{i = 0}^{h - 1} \frac{r_i \cdot (1 - \frac{c_i}{100})}{totalVotes(i)}, $$
 
 which we call *sharing coefficient* of a delegate at height $h$. The reward is then equal to
 
-$$ myVotes \cdot ( F(h_{claim}) - F(h_{vote}))  $$
+$$ myVotes \cdot ( F(h_{claim}) - F(h_{vote})) $$
 
 This way, to calculate the reward we just need to have access to the values $F(h_{claim})$ and $F(h_{vote})$. To achieve this, we store the current value of the sharing coefficient in the delegate's account in the delegate substore and update it any time the delegate receives rewards. The value of the sharing coefficient at the time of voting, $F(h_{vote})$ is stored in the voter's account in the voter substore. When rewards are claimed,  $F(h_{claim})$ is recovered from the delegates substore and $F(h_{vote})$ from the voters substore. After a claim rewards transaction is submitted and the rewards are assigned to the voter, then the sharing coefficient of the vote $F(h_{vote})$ is updated to the current value of the delegate sharing coefficient. Note the robustness of the sharing coefficient quantity: it is able to incorporate dynamic change of rewards per block, commission of the delegate and total votes for the delegate.
 
