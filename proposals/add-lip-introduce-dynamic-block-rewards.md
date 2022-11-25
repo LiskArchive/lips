@@ -2,9 +2,11 @@
 LIP: <LIP number>
 Title: Introduce dynamic block rewards module
 Author: Vikas Jaiman <vikas.jaiman@lightcurve.io>
+Discussions-To: https://research.lisk.com/t/introduce-dynamic-block-rewards-module/387
+Status: Draft
 Type: Standards Track
-Created: <YYYY-MM-DD>
-Updated: <YYYY-MM-DD>
+Created: 2022-10-28
+Updated: 2022-11-25
 Required: LIP 0044, LIP 0051, LIP 0057, LIP 0058
 ```
 
