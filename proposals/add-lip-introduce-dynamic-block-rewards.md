@@ -323,4 +323,4 @@ This LIP defines the interface for the Dynamic Block Rewards module but does not
 [lip-0055]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0055.md
 [lip-0057]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md
 [lip-0058]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0058.md
-[lip-rewardsharing]: https://research.lisk.com/t/introduce-reward-sharing-mechanism/386#updatesharedrewards
+[lip-0071]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0071.md#updatesharedrewards
