@@ -8,17 +8,13 @@ Updated: <YYYY-MM-DD>
 Required: 0022, 0023, 0057
 ```
 
-
-
 ## Abstract
 
 We define an on-chain reward sharing mechanism for the Lisk ecosystem. This mechanism is defined as an additional part of the [DPoS module][lip-0057]. In this LIP, we specify the state transitions logic defined within the DPoS module due to reward sharing, i.e. the commands, the protocol logic injected during the block lifecycle, and the functions that can be called from other modules or off-chain services.
 
-
 ## Copyright
 
 This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
-
 
 ## Motivation
 
@@ -38,7 +34,6 @@ The values of all constants related to commissions are between 0 and 10000, corr
 
 **High-level description.**  2 new commands are introduced: One for claiming rewards and one for changing the commission value. Initially, after registration the commission of a delegate is initialized with 100 %. Afterwards, it can be decreased by submitting a commission change transaction. For Lisk Mainnet, as part of the migration process, we also initialize the commission of all already registered delegates with 100 %, see [LIP 0063][lip-0063] for details. To support reward sharing, the vote command execution specified in [LIP 0057][lip-0057#vote] is modified to send the rewards related to delegates that are unvoted or re-voted. The voter and user substores of the DPoS module are modified appropriately to contain all necessary new parameters.  
 
-
 ### Constants
 
 Here we define the constants related to reward sharing. All other DPoS module constants are defined in [LIP 0057][lip-0057#type-definition]. 
@@ -51,7 +46,6 @@ Here we define the constants related to reward sharing. All other DPoS module co
 | `MAX_COMMISSION_INCREASE_RATE`| uint32     | 500        | Determines the maximum allowed increase on the commission per transaction.                      |
 | `MAX_NUM_BYTES_Q96`           | uint32     | 24         | The maximal number of bytes of a serialized fractional number in Q96 format.                    |
 
-
 ### Types
 
 Here we define the newly introduced types. All other types used in this LIP are defined in [LIP 0057][lip-0057#type-definition].
@@ -61,12 +55,10 @@ Here we define the newly introduced types. All other types used in this LIP are 
 | `Q96`    | integer  | Must be non-negative| Internal representation of a Q96 number. |
 | `Vote`   | object   | Contains 3 elements (address, amount, votesharingCoefficients) of types Address, uint64 and array respectively (same as the items in the sentVotes array of the [voterStoreSchema](#json-schema)).| Object containing information regarding a vote.|
 
-
 #### Q96 Type Conversion
 
 For the sharing coefficient, we use the Q96 unsigned numbers with 96 bits for integer and 96 bits for fractional parts. The arithmetic is defined formally in the [Appendix](#appendix).
 The Q96 numbers are stored as byte arrays of maximal length `MAX_NUM_BYTES_Q96`, however whenever they are used in the DPoS module they are treated as objects of type `Q96` defined as in the table above. We define two functions to serialize and deserialize `Q96` numbers to type bytes, `bytesToQ96` and `q96ToBytes`. The functions check that the length of byte representation does not exceed `MAX_NUM_BYTES_Q96`.
-
 
 ```python
 def bytesToQ96(numberBytes: bytes) -> Q96:
@@ -123,24 +115,24 @@ changeCommissionParams = {
 
 ```python
 def verify(trs: Transaction) -> None:
-    senderAddress = SHA256(trs.senderPublicKey)[:ADDRESS_LENGTH]     # derive address from trs.senderPublicKey
+    senderAddress = SHA256(trs.senderPublicKey)[:ADDRESS_LENGTH] # Derive address from trs.senderPublicKey.
     b = block including trs
     h = b.header.height
-    
+
     if there does not exist an entry delegateStore(senderAddress) in the delegate substore:
         raise Exception('Transaction sender has not registered as a delegate.')
-     
-    # check valid commission value
-    if trs.params.newCommission > 10000: 
+
+    # Check valid commission value.
+    if trs.params.newCommission > 10000:
         raise Exception('Invalid commission value, not within range 0 to 10000.')
-    
-    # in case of increase in commission, check validity of new value
+
+    # In case of increase in commission, check validity of new value.
     oldCommission = delegateStore(senderAddress).commission
 
-    if trs.params.newCommission > oldCommission and 
+    if trs.params.newCommission > oldCommission and
        h - delegateStore(senderAddress).lastCommissionIncreaseHeight < COMMISSION_INCREASE_PERIOD:
-        raise Exception('Can only increase the commission again COMMISSION_INCREASE_PERIOD blocks after the last commission increase.')  
-     
+        raise Exception('Can only increase the commission again COMMISSION_INCREASE_PERIOD blocks after the last commission increase.')
+
     if (trs.params.newCommission - oldCommission) > MAX_COMMISSION_INCREASE_RATE:
         raise Exception('Invalid argument: Commission increase larger than MAX_COMMISSION_INCREASE_RATE.')
 ```
@@ -148,8 +140,8 @@ def verify(trs: Transaction) -> None:
 ##### Execution
 
 ```python
-def execute(trs: Transaction) -> None:    
-    senderAddress = SHA256(trs.senderPublicKey)[:ADDRESS_LENGTH]         # derive address from trs.senderPublicKey
+def execute(trs: Transaction) -> None:
+    senderAddress = SHA256(trs.senderPublicKey)[:ADDRESS_LENGTH] # Derive address from trs.senderPublicKey.
 
     oldCommission = delegateStore(senderAddress).commission
 
@@ -164,10 +156,10 @@ def execute(trs: Transaction) -> None:
         },
         topics = [delegateAddress]
     )
- 
+
     if trs.params.newCommission >= oldCommission:
         b = block including trs
-        delegateStore(senderAddress).lastCommissionIncreaseHeight = b.header.height 
+        delegateStore(senderAddress).lastCommissionIncreaseHeight = b.header.height
 ```
 
 #### Claim Rewards
@@ -189,13 +181,13 @@ No additional verification is performed for transactions executing this command.
 
 ```python
 def execute(trs: Transaction) -> None:
-    senderAddress = SHA256(trs.senderPublicKey)[:ADDRESS_LENGTH]         # derive address from trs.senderPublicKey
+    senderAddress = SHA256(trs.senderPublicKey)[:ADDRESS_LENGTH] # Derive address from trs.senderPublicKey.
 
     for i in range(len(voterStore(senderAddress).sentVotes)):
         assignVoteRewards(senderAddress, i)
 ```
 
-The internal function [assignVoteRewards](#assignvoterewards) assigns the rewards of a specified vote to the voter. 
+The internal function [assignVoteRewards](#assignvoterewards) assigns the rewards of a specified vote to the voter.
 
 ### Events
 
@@ -271,7 +263,6 @@ rewardsAssignedEventParams = {
 }
 ```
 
-
 ### Internal Functions
 
 We define the internal functions added in the DPoS module to support reward sharing. All other internal functions of the DPoS module are defined in [LIP 0057][lip-0057#internal-functions]. 
@@ -280,17 +271,16 @@ We define the internal functions added in the DPoS module to support reward shar
 
 This function calculates the current reward of a particular vote. The input is a `voteObject`, i.e., an object similar to the ones stored in the sentVotes array of the voter substore, containing `delegateAddress`, `amount` and `voteSharingCoefficients`.
 
-
 ```python
 def calculateVoteRewards(vote: Vote,tokenID: TokenID):
     i = index of item in delegateStore(vote.delegateAddress).sharingCoefficients with item.tokenID == tokenID
 
-    # transform variables to Q96    
+    # Transform variables to Q96.
     delegateSharingCoefficient = bytesToQ96(delegateStore(vote.delegateAddress).sharingCoefficients[i].coefficient)
     amount = Q96(vote.amount)
     voteSharingCoefficient = bytesToQ96(vote.voteSharingCoefficients[i].coefficient)
 
-    # calculate reward
+    # Calculate reward.
     reward = mul_96(amount, sub_96(delegateSharingCoefficient, voteSharingCoefficient))
 
     return Q_96_ToInt(reward)
@@ -305,28 +295,27 @@ This function assigns the rewards to the specified voter for a specific vote, th
 ```python
 def assignVoteRewards(voterAddress: Address, i: uint32) -> None:
     vote = voterStore(voterAddress).sentVotes[i]
-    # self-votes are excluded from reward sharing
+    # Self-votes are excluded from reward sharing.
     if vote.delegateAddress == voterAddress:
         return
 
-    # assign rewards for each token separately
+    # Assign rewards for each token separately.
     for elem in delegateStore(vote.delegateAddress).sharingCoefficients:
         if there does not exist an item in vote.voteSharingCoefficients with item.tokenID == elem.tokenID:
-            vote.voteSharingCoefficients.append({"tokenID": item.tokenID, "coefficient": q96ToBytes(Q96(0))})  
-            keep the vote.voteSharingCoefficients array ordered in lexicographic order of tokenID 
-            # this makes sure that the order is the same as in delegate substore
+            vote.voteSharingCoefficients.append({"tokenID": item.tokenID, "coefficient": q96ToBytes(Q96(0))})
+            keep the vote.voteSharingCoefficients array ordered in lexicographic order of tokenID
+            # This makes sure that the order is the same as in delegate substore.
 
         tokenID = elem.tokenID
         reward = calculateVoteRewards(vote, tokenID)
 
         if reward > 0:
-            # unlock and send tokens to voter
+            # Unlock and send tokens to voter.
             Token.unlock(vote.delegateAddress,
-                     	   MODULE_NAME_DPOS,
-                    	   tokenID,
-                    	   reward
-                    	)    
-            Token.transfer(vote.delegateAddress, 
+                         MODULE_NAME_DPOS,
+                         tokenID,
+                         reward)
+            Token.transfer(vote.delegateAddress,
                           voterAddress,
                           tokenID,
                           reward)
@@ -343,7 +332,7 @@ def assignVoteRewards(voterAddress: Address, i: uint32) -> None:
                 topics = [voterAddress]
             )
 
-    # update sharing coefficients
+    # Update sharing coefficients.
     vote.voteSharingCoefficients = delegateStore(vote.delegateAddress).sharingCoefficients
 ```
 
@@ -354,33 +343,33 @@ def assignVoteRewards(voterAddress: Address, i: uint32) -> None:
 This function is called after a reward is assigned to a delegate. It locks the amount of the reward which will be shared to voters and updates the delegate's sharing coefficient.
 
 ```python
-def updateSharedRewards(generatorAddress: Address, tokenID: TokenID, reward: uint64) -> None	
+def updateSharedRewards(generatorAddress: Address, tokenID: TokenID, reward: uint64) -> None
     if delegateStore(generatorAddress).totalVotesReceived == 0: # If sharing coefficient can not be defined, we return.
         return
-        
-    # use Q96 numbers
+
+    # Use Q96 numbers.
     reward = Q96(reward)
     rewardFraction = sub_96(Q96(1), div_96(Q96(delegateStore(generatorAddress).commission), Q96(10000)))
     selfVotes = Q96(delegateStore(generatorAddress).selfVotes)
     totalVotes = Q96(delegateStore(generatorAddress).totalVotesReceived)
-    
+
     if there does not exist an item in delegateStore(generatorAddress).sharingCoefficients with item.tokenID == tokenID:
         delegateStore(generatorAddress).sharingCoefficients.append({"tokenID":tokenID,
-                                                                    "sharingCoefficient": q96ToBytes(Q96(0))}) 
+                                                                    "sharingCoefficient": q96ToBytes(Q96(0))})
                                                                     # Initialize sharing coefficient for the specified token.
         keep the delegateStore(generatorAddress).sharingCoefficients array ordered
-        in lexicographic order of tokenID     # Sharing coefficients are sorted in lexicographic order of tokenID.
+        in lexicographic order of tokenID # Sharing coefficients are sorted in lexicographic order of tokenID.
 
     i = index of item in delegateStore(generatorAddress).sharingCoefficients with item.tokenID == tokenID
     oldSharingCoefficient = bytesToQ96(delegateStore(generatorAddress).sharingCoefficients[i].coefficient)
-    
+
     # Calculate the increase in sharing coefficient.
     sharingCoefficientIncrease = muldiv_96(reward, rewardFraction, totalVotes)
     # Lock the amount that needs to be shared.
     sharedRewards = mul_96(sharingCoefficientIncrease, sub_96(totalVotes, selfVotes))
     sharedRewards = Q_96_ToInt(sharedRewards)
     Token.lock(generatorAddress, MODULE_NAME_DPOS, tokenID, sharedRewards)
-    
+
     # Update sharing coefficient.
     newSharingCoefficient = add_96(oldSharingCoefficient, sharingCoefficientIncrease)
     delegateStore(generatorAddress).sharingCoefficients[i].coefficient = q96ToBytes(newSharingCoefficient)
@@ -395,13 +384,13 @@ This function returns the amount of rewards in the specified delegate's account 
 ```python
 def getLockedRewards(delegateAddress: Address, tokenID: TokenID) -> uint64:
     if tokenID == TOKEN_ID_DPOS:
-        return Token.getLockedAmount(delegateAddress, MODULE_NAME_DPOS, tokenID) - getLockedVotedAmount(delegateAddress) 
+        return Token.getLockedAmount(delegateAddress, MODULE_NAME_DPOS, tokenID) - getLockedVotedAmount(delegateAddress)
     return Token.getLockedAmount(delegateAddress, MODULE_NAME_DPOS, tokenID)
 ```
 
 #### getClaimableRewards
 
-This function returns the rewards that a user can claim. 
+This function returns the rewards that a user can claim.
 
 ```python
 def getClaimableRewards(voterAddress: Address) -> dict[TokenID, uint64]:
@@ -415,10 +404,10 @@ def getClaimableRewards(voterAddress: Address) -> dict[TokenID, uint64]:
                 if there does not exist an item in vote.voteSharingCoefficients
                 with item.tokenID == elem.tokenID:
 
-                    vote.voteSharingCoefficients.append({"tokenID": item.tokenID, 
+                    vote.voteSharingCoefficients.append({"tokenID": item.tokenID,
                                                          "coefficient": q96ToBytes(Q96(0))})
                     keep the vote.voteSharingCoefficients array ordered in lexicographic order of tokenID
-                    # this makes sure that the order is the same as in delegate substore
+                    # This makes sure that the order is the same as in delegate substore.
 
                 if elem.tokenID in rewards:
                     rewards[elem.tokenID]+= calculateVoteRewards(vote, elem.tokenID)
@@ -434,13 +423,13 @@ def getClaimableRewards(voterAddress: Address) -> dict[TokenID, uint64]:
 
 The commission defines the part of the rewards that are assigned to the delegate. We allow delegates to set their own commission. The reason is to provide flexibility to delegates. For example, it makes it easier for new delegates to enter in the ecosystem and attract voters: by setting the commission to a relatively small value compared to other delegates, it becomes more attractive for voters to vote for this delegate. Moreover, it allows delegates to choose if they want to share rewards or not: by setting a commission 100% a delegate can essentially disable reward sharing for the voters. Furthermore, it allows delegates to adapt their commission based on external factors (e.g., change in maintenance cost, change in value of the token). 
 
-### Constraints on Commission Increase 
+### Constraints on Commission Increase
 
 Delegates can change their commission using a change commission transaction. This might cause reward losses and bad user experience for voters in case of abrupt commission increases. For example, consider the scenario where a user votes a delegate with small commission (e.g., 5%), expecting a certain amount of rewards; shortly afterwards, the delegate increases highly the commission (e.g.,from 5% to 50%). Then, even if the voter realizes this change quickly, then switching to some other delegate(s) requires unvoting and choose again which delegates to vote; this situation could lead to bad user experience if it occurs repeatedly. Even worse, in case the voter does not realize the change in commission fast enough, the rewards obtained due to this vote are significantly decreased.
 
-To avoid such cases and provide guarantees to voters on their expected rewards, we introduce two constraints on the increase of the delegate commission: 
+To avoid such cases and provide guarantees to voters on their expected rewards, we introduce two constraints on the increase of the delegate commission:
 
-* The increase of the commission rate should be at most `MAX_COMMISSION_INCREASE_RATE`. For the mainchain this is set to 5%. 
+* The increase of the commission rate should be at most `MAX_COMMISSION_INCREASE_RATE`. For the mainchain this is set to 5%.
 * After increasing the commission, a delegate can not increase it again for the next  `COMMISSION_INCREASE_PERIOD` blocks. For the mainchain, this is set to 260000 blocks (roughly 30 days).
 
 Those two constraints provide the guarantee to the voters that if they check the changes in delegates' commissions reasonably often (e.g., once a month for the mainchain), then the potential loses in expected rewards of the voters are quite limited.  
@@ -451,7 +440,7 @@ Whenever rewards are attributed to a delegate, the part of rewards corresponding
 
 $$ r \cdot \frac{c}{100} +  r \cdot (1- \frac{c}{100}) \cdot \frac{selfVotes}{totalVotes}   $$
 
-and the reward for a voter who has voted amount $myVotes$ is 
+and the reward for a voter who has voted amount $myVotes$ is
 
 $$  r \cdot   (1- \frac{c}{100}) \cdot \frac{myVotes}{totalVotes}.  $$
 
@@ -460,7 +449,7 @@ At first glance it might seem unclear why two types of rewards are attributed to
 * First, it makes it easier for voters to calculate and compare their expected rewards for voting delegates. In particular, to calculate the rewards for voting an amount `myVotes` for a delegate, only two values are needed, the commission and total votes of this delegate. Otherwise, the self-votes of the delegate would be also needed to calculate the rewards. 
 * Second, the current formulation allows delegates to increase their rewards by increasing their self-votes by any amount they wish; this can not be done by increasing the commission due to the constaints on commission increase.  
 
-### Efficient Calculation of Rewards 
+### Efficient Calculation of Rewards
 
 Each delegate might have too many voters. Therefore it would be extremely inefficient to calculate the rewards for all voters at the time of generating a block. To avoid un-necessary calculations, we define a special transaction for claiming pending rewards. Voters can claim their rewards by submitting such a transaction. Rewards are calculated only at times when it is needed in order to credit the rewards to the voter. Assume a voter votes an amount $myVotes$ for a delegate at height $h_{vote}$ and submits a claim rewards transaction at height $h_{claim}$. The rewards attributed for this vote equal:
 
@@ -468,7 +457,7 @@ $$ \sum_{i = h_{vote}}^{h_{claim}-1} r_i \cdot (1 -  \frac{c_i}{100}) \cdot \fra
 
 where $r_i$ is the reward, $c_i$ the commission and $totalVotes(i)$ the total votes for the delegate at height $i$. In order to be able to calculate this quantity efficiently, we define 
 
-$$F(h) = \sum_{i = 0}^{h - 1}  \frac{r_i \cdot (1 -  \frac{c_i}{100})}{totalVotes(i)},$$ 
+$$F(h) = \sum_{i = 0}^{h - 1}  \frac{r_i \cdot (1 -  \frac{c_i}{100})}{totalVotes(i)},$$
 
 which we call *sharing coefficient* of a delegate at height $h$. The reward is then equal to
 
@@ -481,7 +470,6 @@ This way, to calculate the reward we just need to have access to the values $F(h
 **Number representation**. Note that the sharing coefficient is a fractional number, since we need to divide by the total votes of the delegate. The fractional number representation has to be completely deterministic and transparent for implementation. This guarantees that all the correct implementations of the reward sharing mechanism update the state in exactly the same way for the same inputs. Thus we rely on fixed point arithmetic, which is specified in the [Appendix](#fixed-point-arithmetic).
 
 In practice, we work with `Q96` unsigned numbers with 96 bits for integer and 96 bits for fractional parts (also see [the Wikipedia page about Q number format][Q_wiki]). Note that the intermediate results of arithmetic computations with `Q96` numbers may need more memory space, e.g. the implementation of `div_n(a, b) = (a << n) // b` needs to store the result of `a << n`.
-
 
 ### Supporting Rewards in Various Tokens
 
@@ -499,21 +487,17 @@ TBA
 
 ## Appendix
 
-
 ### Fixed Point Arithmetic
-
 
 #### Definition
 
 We represent a positive real number `r` as a `Qn` by the positive integer `Qn(r) = floor(r*2^n)` (inspired by the [Q number format](https://en.wikipedia.org/wiki/Q_(number_format)) for signed numbers). In this representation, we have `n` bits of fractional precision. We do not limit the size of `r` as modern libraries can handle integers of arbitrary size; note that all the `Qn` conversions assume no loss of significant digits.
-
 
 #### Operations on Integers
 
 For an integer `a` in the `Qn` format, we define:
 
 * Rounding down: `roundDown_n(a) = a >> n`
-
 
 #### Qn Arithmetic Operations
 
@@ -538,7 +522,6 @@ For two numbers `a`,`b` and `c` in `Qn` format, we define the following arithmet
 * Convert to integer rounding up: `Q_n_ToIntRoundUp(a) = roundUp_n(a)`
 
 * Inversion in the decimal precision space: `inv_n(a) = div_n(1 << n, a)`
-
 
 [lip-0022]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0022.md
 [lip-0023]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0023.md
