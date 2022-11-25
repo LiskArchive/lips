@@ -68,7 +68,7 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0054](proposals/lip-0054.md) | Introduce sidechain recovery mechanism | Iker Alustiza, Alessandro Ricottone | Standards Track | Draft |
 | [0055](proposals/lip-0055.md) | Update block schema and block processing | Andreas Kendziorra, Alessandro Ricottone, Rishi Mittal | Standards Track | Draft |
 | [0056](proposals/lip-0056.md) | Add weights to Lisk-BFT consensus protocol | Jan Hackfeld | Standards Track | Draft |
-| [0057](proposals/lip-0057.md) | Define state and state transitions of DPoS module | Maxime Gagnebin, Nazar Hussain, Mehmet Egemen Albayrak | Standards Track | Draft |
+| [0057](proposals/lip-0057.md) | Define state and state transitions of DPoS module | Maxime Gagnebin, Nazar Hussain, Mehmet Egemen Albayrak, Grigorios Koumoutsos | Standards Track | Draft |
 | [0058](proposals/lip-0058.md) | Define BFT store and block processing logic | Jan Hackfeld, Mitsuaki Uchimoto | Standards Track | Draft |
 | [0059](proposals/lip-0059.md) | Introduce unlocking condition for incentivizing certificate generation | Jan Hackfeld | Standards Track | Draft |
 | [0060](proposals/lip-0060.md) | Update genesis block schema and processing | Iker Alustiza, Rishi Mittal | Standards Track | Draft |
@@ -81,3 +81,4 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0067](proposals/lip-0067.md) | Introduce a generic keystore | Maxime Gagnebin | Informational | Draft |
 | [0068](proposals/lip-0068.md) | Define new transaction schema | Grigorios Koumoutsos, Maxime Gagnebin | Standards Track | Draft |
 | [0069](proposals/lip-0069.md) | Update Lisk SDK modular blockchain architecture | Shusetsu Toda | Informational | Draft |
+| [0070](proposals/lip-0070.md) | Introduce reward sharing mechanism | Grigorios Koumoutsos | Standards Track | Draft |
