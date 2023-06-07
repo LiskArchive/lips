@@ -11,7 +11,7 @@ Requires: 0043, 0045, 0049, 0053
 
 ## Abstract
 
-This LIP introduces one new command that extend the standard interoperability protocol and allow sidechains to register direct channels, enabling them to exchange cross-chain messages directly without routing them via the mainchain.
+This LIP introduces one new command that extend the standard interoperability protocol and allows sidechains to register direct channels, enabling them to exchange cross-chain messages directly without routing them via the mainchain.
 
 ## Copyright
 
