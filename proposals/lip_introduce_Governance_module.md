@@ -1,0 +1,1286 @@
+```
+LIP: <LIP number>
+Title:  Introduce Governance module
+Author: Sergey Shemyakov <sergey.shemyakov@lightcurve.io>
+Type: Standards Track
+Created: <YYYY-MM-DD>
+Updated: <YYYY-MM-DD>
+Required: LIP 0048, 0051, 0057
+```
+
+## Abstract
+
+This LIP introduces a Governance module that allows creating proposals and voting on them on-chain in a decentralized manner. Proposals can imply token spending from the treasury, or imply changing a modifiable parameter, or just indicate community's opinion. The Governance module expects the native PoS token to be used for governance. Additionally, the Governance module can be configured to mint a specified amount of tokens with every block in the treasury account.
+
+## Copyright
+
+This LIP is licensed under the [Creative Commons Zero 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
+
+## Motivation
+
+The goal of the Governance module is twofold. The prime motivation is to allow a community to influence the future direction and development of a PoS chain running the module. Currently, there is no natural decentralized way for a team or a project to receive funding support. The Governance module adds a financial incentive to improve the ecosystem while leaving the control in the hands of the public: a funding proposal can authorize a token transfer from the governance treasury.
+Additionally, the Governance module allows the community to influence the development by democratically voting on any project-related issue: any user can submit a universal proposal. This enables the community to identify important discussion points and bring them to public attention.
+
+The second goal of the Governance module is to alleviate hardforks in case when only modifiable parameters are changed. If a consensus is reached, the stakeholders can change the value of a modifiable parameter without a hardfork. This greatly simplifies tuning sensitive constants, for example tokenomics-related parameters, while putting community in control of the changes.
+
+## Rationale
+
+See the Terminology subsection below for clarifications on technical notions appearing in Rationale.
+
+### Creating a proposal
+
+Any account can at any time create a proposal to be voted on, as long as the account has a sufficient amount of PoS staking tokens and the proposal registration fee is paid (see `proposalCreationMinBalance` and `proposalCreationFee` in the [config overview](#config-overview). Additionally, a proposal creation deposit is collected as a protection measure against spam proposal.
+The imposed minimal balance, fees and the deposit are also supposed to ensure that only important proposals are created and the attention of the community is not wasted on insignificant protocol changes.
+
+The proposal content depends on the type of proposal: funding proposals must include an amount to be transferred from the treasury as well as an address to which the tokens are transferred. A config update proposal must include the name of the module and a modifiable parameter of this module, as well as the new value. A universal proposal must include the proposal text. For details see [proposal data section](#proposal-data).
+
+The proposal text should completely specify the suggested changes in a universal proposal.
+In case of a funding or config update proposal, it should make an argument for the suggested on-chain action.
+Since the proposal is stored on-chain and must be submitted entirely in a single block, the only requirement to the proposal text is a size limit of `MAX_LENGTH_PROPOSAL_TEXT` bytes.
+Keeping proposals on-chain guarantees that all blockchain nodes have immediate access to the complete proposal text and do not have to rely on any other services.
+We recommend using the [Markdown format](https://www.markdownguide.org/) for the proposal text.
+If the proposal size limit is too restrictive for a particular proposal, we advise to include a link to a document with extra information as well as the hash of this document in the proposal text.
+
+Additionally, every proposal is required to contain some further data: `title`, `author` and `summary` fields are mandatory, `discussionsTo` can be used to store a URL of a webpage with discussions of the proposal. These fields help users and services to fetch succinct proposal data.
+
+### Voting on a proposal
+
+Any account can vote on any currently active proposal.
+To do this, the account has to lock tokens in PoS staking and cast a vote for a particular proposal with a particular decision.
+The amount of the PoS staked tokens will be added to the total votes for the chosen decision.
+
+After a proposal is registered on-chain, users have a certain period of time to vote on it (see `voteDuration` in the [config overview](#config-overview)). This LIP assumes that the constant `LOCKING_PERIOD_STAKES` of [LIP 57][posModule] satisfies: `voteDuration >= LOCKING_PERIOD_STAKES` so the PoS locked tokens cannot be unlocked and used several times to vote on the same proposal. The PoS locking period guarantees that one token always equals at most one vote. For the same reason the outcome of a proposal is checked before executing any block transactions (see [`beforeTransactionsExecute` hook](#before-transactions-execution)).
+
+On the positive side, the introduced dependency on the [PoS module][posModule] strengthens the security of the PoS chain: in order to participate in governance, an account must participate in staking for a validator.
+In contrast, on-chain governance does not make sense for a PoA blockchain, since in this case all governmental decisions are made by the authorities and not by token holders.
+
+### Proposal lifecycle
+
+A proposal can be active for at most `voteDuration` blocks, including the block when it was created.
+When `quorumDuration` has elapsed, the vote quorum is checked.
+This means that a certain percentage of the total supply of PoS staking tokens should have acknowledged the existence of the proposal by voting on it (see `quorumPercentage` in the [config overview](#config-overview)).
+If the quorum is not reached, then the proposal fails prematurely and no additional votes on it are registered.
+The quorum guarantees that the proposal got sufficient attention from the community.
+The intermediate quorum check makes sure that the community has enough time to discuss important proposals that gained enough attention.
+After a successful quorum check the proposal creation deposit is returned to the proposal creator, after a failed quorum the deposit is burned.
+
+Users can vote on the proposal with "Yes", "No" and "Pass".
+The "Pass" option shows that a user agrees with the importance of the proposal and the need to make a decision on it, but does not have a particular opinion themself.
+All the "Pass" votes count towards the quorum. Note that proposal creation deposit allows users to penalize creators by ignoring the proposal, in this case the quorum would less likely to be reached and deposit more likely to be burned.
+
+User vote decisions are registered on-chain, which allows to recast votes with a different decision and token amount.
+For the storage reasons, decisions for only a certain number of proposals are recorded, which limits the total number of simultaneous proposals (see `MAX_NUM_RECORDED_VOTES` in the [table of constants](#notation-and-constants)). Note that the proposal information itself (for example, creation height, total votes, final conclusion) is stored for all proposals.
+
+### Turnout bias
+
+Once the proposal duration elapses, the vote on the proposal is concluded by checking the amount of votes Yes, No and Pass.
+The required percentage of Yes votes to accept a proposal depends on the vote turnout, i.e., on the amount of tokens that participated in the vote. We refer to this dependency as turnout bias.
+
+The use of turnout bias implies that at low turnout the voters must be much more unanimous to pass a proposal.
+If only a small amount of voting power is making a decision, there should be a clear consensus among the voters.
+
+The Governance module uses the following turnout bias scheme: a proposal is accepted if
+
+$$ \frac{Yes}{\sqrt{electorate}} > \frac{No}{\sqrt{turnout}}, $$
+
+where turnout denotes the total number of PoS staking tokens that participated in the vote (including Pass decisions), electorate denotes the total supply of PoS staking tokens. Here is an overview of approval values (i.e., the ratio #Yes / (#Yes + #No)) required to accept a proposal for certain values of turnout, measured in percentage of electorate.
+
+|   **Turnout**, % of electorate    |   **Approval needed to accept**   |
+|-----------------------------------|-----------------------------------|
+|               10%                 |                  76%              |
+|               20%                 |                  69%              |
+|               30%                 |                  64%              |
+|               50%                 |                  58%              |
+
+### Treasury
+
+The treasury is a dedicated account holding tokens that can be accessed by a funding proposal (see `ADDRESS_TREASURY` in the [table of constants](#notation-and-constants)). A funding proposal can only access tokens in the treasury if they are locked by the Governance module. Tokens could be minted into the treasury each block by the Governance module, the amount is specified by `treasuryTokensPerBlock` in [config overview](#config-overview).
+
+### Config substore
+
+The Governance module introduces a config update proposal which can modify parameters of the protocol. To make it possible, the parameters should be a part of blockchain state, so they are stored in a separate config substore. For clarity, all parameters are stored in the state, however, only some of them are allowed to be modified on-chain. See [this table](#config-overview) for details.
+
+In particular, token requirement for creating a proposal can be changed on-chain. Also the quorum percentage could be adjusted to the actual level of community participation. Finally, the amount of treasury tokens minted per block can be adjusted. This is needed to adjust the tokenomics of the Governance module to the needs of community and to the conditions of the chain.
+
+## Specification
+
+The Governance module has the name `MODULE_NAME_GOVERNANCE`.
+
+### Terminology
+
+This LIP uses the following terms:
+
+- The **electorate** or the total voting power is the total supply of PoS staking tokens. It represents the collection of all the tokens that can be used to vote on a proposal.
+- A **turnout** of a vote for a particular proposal is the total number of PoS staking tokens that were used to cast a vote for this proposal.
+- A **quorum** is the minimal percentage of the electorate that must vote on a proposal. Proposal fails if the quorum is not reached.
+- A **voting scheme** is an algorithm determining whether a proposal was accepted or rejected for a given amount of votes Yes, No and Pass.
+- A **turnout bias voting scheme** is a voting scheme that takes into account the ratio of turnout to the electorate. For example, a turnout bias voting scheme could require more unanimous vote outcomes for lower vote participation.
+- A **funding proposal** is a proposal type in the Governance module that requests spending a specified amount of tokens from the treasury. Once accepted, this proposal has immediate on-chain consequences.
+- A **config update proposal** is a proposal type in the Governance module that requests changing the value of a specified modifiable parameter in a specified module. Once accepted, this proposal has immediate on-chain consequences.
+- A **universal proposal** is a proposal type in the Governance module that provides means for collecting an opinion of token holders and agreeing on a strategy, upgrade or any general statement expressed as text. Once accepted, it implies no on-chain consequences.
+- An **active proposal** is a proposal in the Governance module that users can vote on.
+
+### Types
+
+| **Name**                  |   **Type**        |       **Validation**       |       **Description**                                 |
+|---------------------------|-------------------|-----------------------|-------------------------------------------------------|
+|   Proposal                |   object          | Must satisfy `proposalSchema`.| Object containing information of a particular proposal.|
+|   Address                 |   bytes           | Must have length `LENGTH_ADDRESS`.| Account address in Lisk ecosystem.              |
+
+
+### Notation and Constants
+
+We define the following constants:
+
+| **Name**                  |   **Type**        |       **Mainchain value**       |       **Description**                                 |
+|---------------------------|-------------------|-----------------------|-------------------------------------------------------|
+|`TOKEN_ID_POS`|`bytes`|`TOKEN_ID_LSK`|Token ID of the token used for PoS staking, as defined in [LIP 0057](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#notation-and-constants).|
+|`MAX_NUM_RECORDED_VOTES`|`uint32`|100|Maximal number of proposals allowed to exist simultaneously.|
+|`MAX_LENGTH_PROPOSAL_TEXT`|`uint32`|10*1024|The maximal allowed length for proposal text, in bytes.|
+|`ADDRESS_TREASURY`|`bytes`|`SHA256(b"GovernanceTreasuryAccount")[:20]`|The address of the governance treasury.|
+|`MAX_LENGTH_PROPOSAL_TITLE`|`uint32`|124|The maximal allowed length for data in the proposal `title` property, in bytes. |
+|`MAX_LENGTH_PROPOSAL_AUTHOR`|`uint32`|200|The maximal allowed length for data in the proposal `author` property, in bytes. |
+|`MAX_LENGTH_PROPOSAL_SUMMARY`|`uint32`|500|The maximal allowed length for proposal `summary` property, in bytes.|
+|`MAX_LENGTH_PROPOSAL_LINK`|`uint32`|200|The maximal allowed length for proposal `discussionsTo` property, in bytes.|
+|`MIN_MODULE_NAME_LENGTH`|`uint32`|1|The minimum length of a string specifying the name of a module, as defined in [LIP 0068][lip68Const].|
+|`MAX_MODULE_NAME_LENGTH`|`uint32`|32|The maximum length of a string specifying the name of a module, as defined in [LIP 0068][lip68Const].|
+|`MAX_PARAM_NAME_LENGTH`|`uint32`|64|The maximum length of a string specifying the name of a modifiable parameter.|
+|`MAX_PARAM_VALUE_LENGTH`|`uint32`|64|The maximum length of a byte array specifying the new value of a modifiable parameter.|
+|`LENGTH_PROPOSAL_ID`|`uint32`|4|The number of bytes of a proposal ID.|
+|`LENGTH_TOKEN_ID`|`uint32`|8|The number of bytes of a token ID.|
+|`LENGTH_ADDRESS`|`uint32`|20|The number of bytes of an address.|
+|`MODULE_NAME_GOVERNANCE`|`string`|"governance"|Name of the Governance module.|
+|`SUBSTORE_PREFIX_PROPOSALS`|`bytes`|`0x0000`|Substore prefix of the proposals substore.|
+|`SUBSTORE_PREFIX_VOTES`|`bytes`|`0x4000`|Substore prefix of the votes substore.|
+|`SUBSTORE_PREFIX_INDEX`|`bytes`|`0x8000`|Substore prefix of the index substore.|
+|`SUBSTORE_PREFIX_CONFIG`|`bytes`|`0xc000`|Substore prefix of the config substore.|
+|`COMMAND_CREATE_PROPOSAL`|`string`|"createProposal"|Command name of the create proposal command.|
+|`COMMAND_VOTE_ON_PROPOSAL`|`string`|"voteOnProposal"|Command name of the vote command. |
+|`EVENT_NAME_PROPOSAL_CREATED`|`string`|"proposalCreated"| Event name of the Proposal Created event. |
+|`EVENT_NAME_PROPOSAL_CREATION_FAILED`|`string`|"proposalCreationFailed"| Event name of the Proposal Creation Failed event.|
+|`EVENT_NAME_PROPOSAL_QUORUM_CHECKED`|`string`|"proposalQuorumChecked"| Event name of the Proposal Quorum Checked event.|
+|`EVENT_NAME_PROPOSAL_OUTCOME`|`string`|"proposalOutcome"| Event name of the Proposal Outcome event.|
+|`EVENT_NAME_PROPOSAL_VOTED`|`string`|"proposalVoted"| Event name of the Proposal Voted event.|
+|`PROPOSAL_TYPE_UNIVERSAL`|`uint32`|0|Code for universal type proposals.|
+|`PROPOSAL_TYPE_FUNDING`|`uint32`|1|Code for funding type proposals.|
+|`PROPOSAL_TYPE_CONFIG_UPDATE`|`uint32`|2|Code for config update type proposals.|
+|`PROPOSAL_STATUS_ACTIVE`|`uint32`|0|Status for a currently active proposal.|
+|`PROPOSAL_STATUS_FINISHED_ACCEPTED`|`uint32`|1|Status for a finished proposal that was accepted.|
+|`PROPOSAL_STATUS_ACCEPTED_ERROR`|`uint32`|2|Status for a finished proposal that was accepted, but on-chain application failed due to an error.|
+|`PROPOSAL_STATUS_FINISHED_REJECTED`|`uint32`|3|Status for a finished proposal that passed the quorum check but was rejected by the vote.|
+|`PROPOSAL_STATUS_FAILED_QUORUM`|`uint32`|4|Status for a proposal that has ended because of failed quorum after quorum duration had elapsed.|
+|`DECISION_YES`|`uint32`|0|Code for the vote decision "Yes".|
+|`DECISION_NO`|`uint32`|1|Code for the vote decision "No".|
+|`DECISION_PASS`|`uint32`|2|Code for the vote decision "Pass".|
+
+### State Store
+
+The key-value pairs in the module store are organized as follows.
+
+#### Proposals substore
+
+##### Substore Prefix, Store Key, and Store Value
+
+- The substore prefix is set to `SUBSTORE_PREFIX_PROPOSALS`.
+- Each store key given by `index.to_bytes(4, byteorder='big')` for the corresponding proposal index `index`. The store key is a byte array of length `LENGTH_PROPOSAL_ID`.
+- Each store value is the serialization of an object following the JSON schema `proposalSchema` presented below.
+- Notation: For the rest of this proposal let `proposalsStore[index]` be the object value stored in the proposals substore with store key `index.to_bytes(4, byteorder='big')`, deserialized using `proposalSchema`.
+
+##### JSON Schema
+
+```java
+proposalSchema = {
+    "type": "object",
+    "required": [
+        "creator",
+        "creationHeight",
+        "depositAmount",
+        "votesYes",
+        "votesNo",
+        "votesPass",
+        "type",
+        "description",
+        "data",
+        "status"
+    ],
+    "properties": {
+        "creator": {
+            "dataType": "bytes",
+            "length": LENGTH_ADDRESS,
+            "fieldNumber": 1
+        },
+        "creationHeight": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        },
+        "depositAmount": {
+            "dataType": "uint64",
+            "fieldNumber": 3
+        },
+        "votesYes": {
+            "dataType": "uint64",
+            "fieldNumber": 4
+        },
+        "votesNo": {
+            "dataType": "uint64",
+            "fieldNumber": 5
+        },
+        "votesPass": {
+            "dataType": "uint64",
+            "fieldNumber": 6
+        },
+        "type": {
+            "dataType": "uint32",
+            "fieldNumber": 7
+        },
+        "description": {
+            "fieldNumber": 8,
+            ...proposalDescriptionSchema
+        },
+        "data": {
+            "dataType": "bytes",
+            "fieldNumber": 9
+        },
+        "status": {
+            "dataType": "uint32",
+            "fieldNumber": 10
+        }
+    }
+}
+
+proposalDescriptionSchema = {
+    "type": "object",
+    "required": ["title", "author", "summary", "discussionsTo", "text"],
+    "properties": {
+        "title": {
+            "dataType": "bytes",
+            "minLength": 1,
+            "maxLength": MAX_LENGTH_PROPOSAL_TITLE,
+            "fieldNumber": 1
+        },
+        "author": {
+            "dataType": "bytes",
+            "minLength": 1,
+            "maxLength": MAX_LENGTH_PROPOSAL_AUTHOR,
+            "fieldNumber": 2
+        },
+        "summary": {
+            "dataType": "bytes",
+            "minLength": 1,
+            "maxLength": MAX_LENGTH_PROPOSAL_SUMMARY,
+            "fieldNumber": 3
+        },
+        "discussionsTo": {
+            "dataType": "bytes",
+            "maxLength": MAX_LENGTH_PROPOSAL_LINK,
+            "fieldNumber": 4
+        }
+        "text": {
+            "maxLength": MAX_LENGTH_PROPOSAL_TEXT,
+            "fieldNumber": 5
+            "dataType": "bytes"
+        }
+    }
+}
+```
+
+##### Properties
+
+- `creator`: Address of the proposal creator account.
+- `creationHeight`: The block height when the proposal was submitted.
+- `depositAmount`: The amount of PoS staking tokens deposited to create the proposal.
+- `votesYes`: The current staked amount voting "Yes" on the proposal.
+- `votesNo`: The current staked amount voting "No" on the proposal.
+- `votesPass`: The current staked amount voting "Pass" on the proposal.
+- `type`: The type of the proposal. Allowed values are `PROPOSAL_TYPE_UNIVERSAL`, `PROPOSAL_TYPE_FUNDING` and `PROPOSAL_TYPE_CONFIG_UPDATE`.
+- `description`: An object with the textual description of the proposal. Contains `text` with the complete description of the proposal as well as title, author, summary and link to a webpage with the discussion of the proposal. The fields `title`, `author` and `summary` are expected to be filled, the field `discussionsTo` can be left empty.
+- `data`: A byte string containing encoded data of the proposal. Decoding of the string depends on the type of the proposal, see [Proposal Data](#proposal-data).
+- `status`: The current status of the proposal. Allowed values are: `PROPOSAL_STATUS_ACTIVE`, `PROPOSAL_STATUS_FINISHED_ACCEPTED`, `PROPOSAL_STATUS_ACCEPTED_ERROR`, `PROPOSAL_STATUS_FINISHED_REJECTED`, `PROPOSAL_STATUS_FAILED_QUORUM`.
+
+#### Votes substore
+
+##### Substore Prefix, Store Key, and Store Value
+
+- The substore prefix is set to `SUBSTORE_PREFIX_VOTES`.
+- Each store key is a voter address given as a byte array of length `LENGTH_ADDRESS`.
+- Each store value is the serialization of an object following the JSON schema `votesSchema` presented below.
+- Notation: For the rest of this proposal let `votesStore[address]` be the object value stored in the votes substore with store key `address`, deserialized using `votesSchema`. Also `votesStore[address][i]` will denote the `i`-th object of the array `votesStore[address]`.
+
+##### JSON Schema
+
+```java
+votesSchema = {
+    "type": "object",
+    "required": ["voteInfos"],
+    "properties": {
+        "voteInfos": {
+            "fieldNumber": 1,
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["proposalIndex", "decision", "amount"],
+                "properties": {
+                    "proposalIndex": {
+                        "dataType": "uint32",
+                        "fieldNumber": 1
+                    },
+                    "decision": {
+                        "dataType": "uint32",
+                        "fieldNumber": 2
+                    },
+                    "amount": {
+                        "dataType": "uint64",
+                        "fieldNumber": 3
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+##### Properties
+
+- `voteInfos`: An array containing information about the votes cast from the address. Logically the array is structured as a queue (FIFO) and its length is limited by `MAX_NUM_RECORDED_VOTES`. An element of `voteInfos` includes:
+    - `proposalIndex`: The index of the proposal for which the vote was cast.
+    - `decision`: The decision cast by the voter.
+    - `amount`: The staked amount of tokens when casting the vote.
+
+#### Index substore
+
+##### Substore Prefix, Store Key, and Store Value
+- The substore prefix is set to `SUBSTORE_PREFIX_INDEX`.
+- The store key is empty bytes.
+- Each store value is the serialization of an object following the JSON schema `indexSchema` presented below.
+- Notation: For the rest of this proposal let `indexStore` be the object value stored in the index substore with store key empty bytes, deserialized using `indexSchema`.
+
+##### JSON Schema
+
+```java
+indexSchema = {
+    "type": "object",
+    "required": [
+        "nextIndex",
+        "nextOutcomeCheckIndex",
+        "nextQuorumCheckIndex"
+    ],
+    "properties": {
+        "nextIndex": {
+            "type": "uint32",
+            "fieldNumber": 1
+        },
+        "nextOutcomeCheckIndex": {
+            "type": "uint32",
+            "fieldNumber": 2
+        },
+        "nextQuorumCheckIndex": {
+            "type": "uint32",
+            "fieldNumber": 3
+        }
+    }
+}
+```
+
+##### Properties
+- `nextIndex`: The proposal index of the next proposal to be created.
+- `nextOutcomeCheckIndex`: The proposal index of the next proposal for which the vote duration still has not elapsed. Note that this proposal could be not active if it failed quorum.
+- `nextQuorumCheckIndex`: The proposal index of the oldest active proposal for which the quorum was not yet checked.
+
+#### Config Substore
+
+##### Substore Prefix, Store Key, and Store Value
+- The substore prefix is set to `SUBSTORE_PREFIX_CONFIG`.
+- The store key is empty bytes.
+- Each store value is the serialization of an object following the JSON schema `configSchema` presented below.
+- Notation: For the rest of this proposal let `configStore` be the object value stored in the config substore with store key empty bytes, deserialized using `configSchema`.
+
+##### JSON Schema
+
+```java
+configSchema = {
+    "type": "object",
+    "required": [
+        "tokenIdTreasury",
+        "voteDuration",
+        "quorumDuration",
+        "proposalCreationFee",
+        "proposalCreationDeposit",
+        "proposalCreationMinBalance",
+        "quorumPercentage",
+        "treasuryTokensPerBlock",
+    ],
+    "properties": {
+        "tokenIdTreasury": {
+            "type": "bytes",
+            "length": LENGTH_TOKEN_ID,
+            "fieldNumber": 1
+        },
+        "voteDuration": {
+            "type": "uint32",
+            "fieldNumber": 2
+        },
+        "quorumDuration": {
+            "type": "uint32",
+            "fieldNumber": 3
+        },
+        "proposalCreationFee": {
+            "type": "uint64",
+            "fieldNumber": 4
+        },
+        "proposalCreationDeposit": {
+            "type": "uint64",
+            "fieldNumber": 5
+        }
+        "proposalCreationMinBalance": {
+            "type": "uint64",
+            "fieldNumber": 6
+        },
+        "quorumPercentage": {
+            "type": "uint32",
+            "fieldNumber": 7
+        },
+        "treasuryTokensPerBlock": {
+            "type": "uint64",
+            "fieldNumber": 8
+        },
+    }
+}
+```
+
+##### Config overview
+
+|   **Name**      |  **Type**   |   **Modifiable**  |**Initial Mainchain Value**|**Description**         |
+|-----------------|-------------|-------------------|----------------------------------|------------------------|
+|`tokenIdTreasury`|   `bytes`   |     No            | `TOKEN_ID_LSK`                   |Token ID of the tokens stored in the treasury and handled by funding proposals.|
+|`voteDuration`   | `uint32`    |       No          |   240000                         |Length of the vote period in blocks. As clarified in [Rationale](#voting-on-a-proposal), `voteDuration >= LOCKING_PERIOD_STAKES`, where `LOCKING_PERIOD_STAKES` is defined in [LIP 0057][posModule].|
+|`quorumDuration` | `uint32`    |       No          |   120000                         |Length of the quorum period in blocks. After this period the quorum is checked.|
+|`proposalCreationFee` | `uint64`    |       Yes          |   10 * 10^8                |Proposal creation fee to be paid in fee tokens (`TOKEN_ID_FEE` is defined in the [Fee module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0048.md#notation-and-constants)).|
+|`proposalCreationDeposit` | `uint64`    |       Yes          |   1000 * 10^8          |The value of the proposal creation deposit.|
+|`proposalCreationMinBalance` | `uint64`    |       Yes          |   10000 * 10^8      |Minimal amount of PoS staking tokens an account should have to create a proposal (including PoS locked tokens).|
+|`quorumPercentage` | `uint32`    |       Yes          |   50000                       |Relative amount of votes required for a proposal to pass the quorum, in parts-per-million of the amount of the total supply.|
+|`treasuryTokensPerBlock` | `uint64`    |       Yes          |   0                     |The amount of tokens minted per block into treasury.|
+
+### Proposal Data
+
+This LIP defines proposals of types `PROPOSAL_TYPE_UNIVERSAL`, `PROPOSAL_TYPE_FUNDING` and `PROPOSAL_TYPE_CONFIG_UPDATE`. The schemata to decode proposal `data` are given below.
+
+#### Universal Proposal
+
+```java
+universalProposalDataSchema = {
+    "type": "object",
+    "required": []
+}
+```
+
+#### Funding Proposal
+
+```java
+fundingProposalDataSchema = {
+    "type": "object",
+    "required": ["receivingAddress", "fundingAmount"],
+    "properties": {
+        "receivingAddress": {
+            "dataType": "bytes",
+            "length": LENGTH_ADDRESS,
+            "fieldNumber": 1
+        },
+        "fundingAmount": {
+            "dataType": "uint64",
+            "fieldNumber": 2
+        }
+    }
+}
+```
+
+##### Properties
+
+- `receivingAddress`: Byte array with the address to receive tokens.
+- `fundingAmount`: The amount of tokens to transfer.
+
+#### Config Update Proposal
+
+```java
+configUpdateProposalDataSchema = {
+    "type": "object",
+    "required": ["moduleName", "paramName", "value"],
+    "properties": {
+        "moduleName": {
+            "dataType": "string",
+            "minLength": MIN_MODULE_NAME_LENGTH,
+            "maxLength": MAX_MODULE_NAME_LENGTH,
+            "fieldNumber": 1
+        },
+        "paramName": {
+            "dataType": "string",
+            "minLength": 1,
+            "maxLength": MAX_PARAM_NAME_LENGTH,
+            "fieldNumber": 2
+        },
+        "value": {
+            "dataType": "bytes",
+            "maxLength": MAX_PARAM_VALUE_LENGTH,
+            "fieldNumber": 3
+        }
+    }
+}
+```
+
+##### Properties
+
+- `moduleName`: String with the name of the module where to update config.
+- `paramName`: String with the name of the parameter to update.
+- `value`: The byte encoded new value of the parameter.
+
+
+### Commands
+
+#### create proposal command
+
+This command creates a new proposal. It has the command name `COMMAND_CREATE_PROPOSAL`.
+
+##### Parameters
+
+```java
+createProposalParamsSchema = {
+    "type": "object",
+    "required": ["type", "description", "data"],
+    "properties": {
+        "type": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "description": {
+            "fieldNumber": 2,
+            ...proposalDescriptionSchema
+        },
+        "data": {
+            "dataType": "bytes",
+            "fieldNumber": 3
+        }
+    }
+}
+```
+
+- `type`: The type of the proposal. Allowed values are `PROPOSAL_TYPE_UNIVERSAL`, `PROPOSAL_TYPE_FUNDING` and `PROPOSAL_TYPE_CONFIG_UPDATE`.
+- `description`: The object with the textual description of the proposal.
+- `data`: A byte string with encoded data of the proposal, depends on the proposal type.
+
+##### Verification
+
+The function [getAvailableBalance][getAvailableBalance] is defined in the Token module and [getLockedStakedAmount][getLockedStakedAmount] in the PoS module.
+
+```python
+def verify(trs: Transaction) -> None:
+    senderAddress = SHA256(trs.senderPublicKey)[:LENGTH_ADDRESS]
+    availableBalance = Token.getAvailableBalance(senderAddress, TOKEN_ID_POS)
+    lockedBalance = PoS.getLockedStakedAmount(senderAddress)
+    if availableBalance + lockedBalance < configStore.proposalCreationMinBalance:
+        raise Exception("Insufficient token balance to create proposal")
+
+    validateProposal(trs.params.type, trs.params.data, trs.params.description)
+```
+##### Execution
+
+The function [payFee][payFee] is defined in the Fee module, the function [lock][lock] in the Token module.
+
+```python
+def execute(trs: Transaction) -> None:
+    # non-trivial verification checks
+    currentHeight = height of the block containing trs
+    senderAddress = SHA256(trs.senderPublicKey)[:LENGTH_ADDRESS]
+    if not hasEnded(indexStore.nextIndex - MAX_NUM_RECORDED_VOTES, currentHeight, configStore.voteDuration):
+        emitPersistentEvent(
+            module = MODULE_NAME_GOVERNANCE,
+            name = EVENT_NAME_PROPOSAL_CREATION_FAILED,
+            data = {},
+            topics = []
+        )
+        raise Exception("Limit of proposals with recorded votes is reached")
+
+    # command execution
+    Fee.payFee(configStore.proposalCreationFee)
+    Token.lock(senderAddress, MODULE_NAME_GOVERNANCE, TOKEN_ID_POS, configStore.proposalCreationDeposit)
+
+    index = indexStore.nextIndex
+    proposalsStore[index] = encode(proposalSchema, {
+        "creator": senderAddress,
+        "creationHeight": currentHeight,
+        "depositAmount": configStore.proposalCreationDeposit,
+        "votesYes": 0,
+        "votesNo": 0,
+        "votesPass": 0,
+        "type": trs.params.type,
+        "description": trs.params.description,
+        "data": trs.params.data,
+        "status": PROPOSAL_STATUS_ACTIVE
+    })
+    indexStore.nextIndex = index + 1
+
+    emitEvent(
+        module = MODULE_NAME_GOVERNANCE,
+        name = EVENT_NAME_PROPOSAL_CREATED,
+        data = {
+            "creator": senderAddress,
+            "index": index,
+            "type": trs.params.type
+        },
+        topics = [index.to_bytes(4, byteorder='big'), senderAddres]
+    )
+```
+
+#### vote on proposal command
+
+This command submits votes with a particular decision for a given active proposal from the sender address. It also can be used to change the voting decision of the address, or to increase the votes if additional tokens were locked for voting. It has the command name `COMMAND_VOTE_ON_PROPOSAL`.
+
+##### Parameters
+
+```java
+voteOnProposalParamsSchema = {
+    "type": "object",
+    "required": ["proposalIndex", "decision"],
+    "properties": {
+        "proposalIndex": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "decision": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        }
+    }
+}
+```
+
+- `proposalIndex`: The index of the proposal for which the vote is cast.
+- `decision`: The code for the chosen vote decision for the proposal. Allowed values are: `DECISION_YES`, `DECISION_NO`, `DECISION_PASS`.
+
+##### Verification
+
+```python
+def verify(trs: Transaction) -> None:
+    if proposalsStore[trs.params.proposalIndex] does not exist:
+        raise Exception("Proposal does not exist")
+    if trs.params.decision > 2:
+        raise Exception("Decision does not exist")
+    if proposalsStore[trs.params.proposalIndex].status != PROPOSAL_STATUS_ACTIVE:
+        raise Exception("Proposal is not active")
+```
+
+##### Execution
+
+The function [getLockedStakedAmount][getLockedStakedAmount] is defined in the PoS module.
+
+```python
+def execute(trs: Transaction) -> None:
+    index = trs.params.proposalIndex
+    senderAddress = SHA256(trs.senderPublicKey)[:LENGTH_ADDRESS]
+    stakedAmount = PoS.getLockedStakedAmount(senderAddress)
+    if votesStore[senderAddress] does not exist:
+        votesStore[senderAddress] = []
+
+    newVoteInfo = {
+        "proposalIndex": index,
+        "decision": trs.params.decision,
+        "amount": stakedAmount
+    }
+    if votesStore[senderAddress] contains voteInfo with voteInfo.proposalIndex == index:
+        # deduce if the previous saved votes are for the current proposal
+        addVotes(index, -voteInfo.amount, voteInfo.decision)
+        replace voteInfo with newVoteInfo in votesStore[senderAddress]
+    elif length(votesStore[senderAddress]) < MAX_NUM_RECORDED_VOTES:
+        # append info about the vote to the vote infos queue
+        votesStore[senderAddress].append(newVoteInfo)
+    else:
+        # replace the oldest element in the vote infos queue withe the newest
+        replace an element voteInfo with smallest voteInfo.proposalIndex with newVoteInfo in votesStore[senderAddress]
+    # vote
+    addVotes(index, stakedAmount, trs.params.decision)
+
+    emitEvent(
+        module = MODULE_NAME_GOVERNANCE,
+        name = EVENT_NAME_PROPOSAL_VOTED,
+        data = {
+            "index": index,
+            "voterAddress": senderAddress,
+            "decision": trs.params.decision,
+            "amount": stakedAmount
+        },
+        topics = [senderAddress, index.to_bytes(4, byteorder='big')]
+    )
+```
+
+### Events
+
+#### Proposal Created
+
+This event is emitted when a new proposal is created. The name of this event is `EVENT_NAME_PROPOSAL_CREATED`.
+
+##### Topics
+
+- `index`: The index of the created proposal.
+- `creator`: The address of the account that created the proposal.
+
+##### Data
+
+```java
+proposalCreatedEventDataSchema = {
+    "type": "object",
+    "required": ["creator", "index", "type"],
+    "properties": {
+        "creator": {
+            "dataType": "bytes",
+            "length": LENGTH_ADDRESS,
+            "fieldNumber": 1
+        },
+        "index": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        },
+        "type": {
+            "dataType": "uint32",
+            "fieldNumber": 3
+        }
+    }
+}
+```
+
+- `creator`: The address of the account that created the proposal.
+- `index`: The index of the created proposal.
+- `type`: The type of the created proposal. Allowed values are `PROPOSAL_TYPE_UNIVERSAL`, `PROPOSAL_TYPE_FUNDING` and `PROPOSAL_TYPE_CONFIG_UPDATE`.
+
+#### Proposal Creation Failed
+
+This event is emitted when a proposal creation fails because the limit of proposals with recorded votes is reached. The name of this event is `EVENT_NAME_PROPOSAL_CREATION_FAILED`.
+
+The event does not define additional topics and its event data is an empty object.
+
+#### Proposal Quorum Checked
+
+This event is emitted after the quorum condition was checked for a proposal. The name of this event is `EVENT_NAME_PROPOSAL_QUORUM_CHECKED`.
+
+##### Topics
+
+- `index`: The index of the proposal, for which the quorum was checked.
+
+##### Data
+
+```java
+proposalQuorumCheckedEventDataSchema = {
+    "type": "object",
+    "required": ["index", "status"],
+    "properties": {
+        "index": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "status": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        }
+    }
+}
+```
+
+- `index`: The index of the created proposal.
+- `status`: The status of the proposal after the quorum check. Possible values are: `PROPOSAL_STATUS_ACTIVE` and `PROPOSAL_STATUS_FAILED_QUORUM`.
+
+#### Proposal Outcome
+
+This event is emitted after the outcome of a particular proposal is checked. The name of this event is `EVENT_NAME_PROPOSAL_OUTCOME`.
+
+##### Topics
+
+- `index`: The index of the proposal, for which the outcome was checked.
+
+##### Data
+
+```java
+proposalOutcomeEventDataSchema = {
+    "type": "object",
+    "required": ["index", "status"],
+    "properties": {
+        "index": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "status": {
+            "dataType": "uint32",
+            "fieldNumber": 2
+        }
+    }
+}
+```
+
+- `index`: The index of the created proposal.
+- `status`: The status of the proposal after the outcome check. Possible values are: `PROPOSAL_STATUS_FINISHED_ACCEPTED`, `PROPOSAL_STATUS_ACCEPTED_ERROR`, `PROPOSAL_STATUS_FINISHED_REJECTED`.
+
+#### Proposal Voted
+
+This event is emitted after a user voted on a particular proposal. The name of this event is `EVENT_NAME_PROPOSAL_VOTED`
+
+##### Topics
+
+- `voterAddress`: The address of the account that cast a vote.
+- `index`: The index of the proposal that was voted on.
+
+##### Data
+
+```java
+proposalVotedEventSchema = {
+    "type": "object",
+    "required": [
+        "index",
+        "voterAddress",
+        "decision",
+        "amount"
+    ],
+    "properties": {
+        "index": {
+            "dataType": "uint32",
+            "fieldNumber": 1
+        },
+        "voterAddress": {
+            "dataType": "bytes",
+            "length": LENGTH_ADDRESS,
+            "fieldNumber": 2
+        },
+        "decision": {
+            "dataType": "uint32",
+            "fieldNumber": 3
+        },
+        "amount": {
+            "dataType": "uint64",
+            "fieldNumber": 4
+        }
+    }
+}
+```
+
+- `index`: The index of the proposal that was voted on.
+- `voterAddress`: The address of the account that cast a vote.
+- `decision`: The code for the chosen vote decision for the proposal. Allowed values are: `DECISION_YES`, `DECISION_NO`, `DECISION_PASS`.
+- `amount`: The vote amount.
+
+### Internal functions
+
+#### validateProposal
+
+The function validates encoded proposal data bytes and description depending on the proposal type and raises an exception if invalid.
+
+```python
+def validateProposal(type: int, data: bytes, description: dict) -> None:
+    # decode and validateObjectSchema
+    # raise exceptions if does not comply with the corresponding schema
+    if type == PROPOSAL_TYPE_UNIVERSAL:
+        if data != b'':     # empty bytes
+            raise Exception("Universal proposal data must be empty")
+        if length(description.text) == 0:
+             raise Exception("Proposal text can not be empty for universal proposal")
+    elif type == PROPOSAL_TYPE_FUNDING:
+        proposalDataObj = decode(fundingProposalDataSchema, data)
+        validateObjectSchema(fundingProposalDataSchema, proposalDataObj)
+    elif type == PROPOSAL_TYPE_CONFIG_UPDATE:
+        proposalDataObj = decode(configUpdateProposalDataSchema, data)
+        validateObjectSchema(configUpdateProposalDataSchema, proposalDataObj)
+    else:
+        raise Exception("Wrong proposal type")
+```
+
+#### applyProposalOutcome
+
+The function encapsulates doing all the required steps to apply a given proposal depending on its type. The functions [getLockedAmount][getLockedAmount], [unlock][unlock] and [transfer][transfer] are defined in the Token module.
+
+```python
+def applyProposalOutcome(type: int, data: bytes) -> None:
+    if type == PROPOSAL_TYPE_FUNDING:
+        # assume that the data is valid
+        dataObj = decode(fundingProposalDataSchema, data)
+        # unlock and send treasury funds, all requested amount or nothing
+        treasuryBalance = Token.getLockedAmount(ADDRESS_TREASURY, MODULE_NAME_GOVERNANCE, configStore.tokenIdTreasury)
+        if treasuryBalance >= dataObj.fundingAmount:
+            Token.unlock(ADDRESS_TREASURY, MODULE_NAME_GOVERNANCE, configStore.tokenIdTreasury, dataObj.fundingAmount)
+            Token.transfer(ADDRESS_TREASURY, dataObj.receivingAddress, configStore.tokenIdTreasury, dataObj.fundingAmount)
+        else:
+            # Insufficient treasury balance for the funding proposal
+            raise Exception()
+    elif type == PROPOSAL_TYPE_CONFIG_UPDATE:
+        # assume that the data is valid
+        dataObj = decode(configUpdateProposalDataSchema, data)
+        if dataObj.paramName is not registered for dataObj.moduleName:
+            raise Exception()
+        call updateConfig(dataObj.paramName, dataObj.value) method of module dataObj.moduleName
+```
+
+#### updateConfig
+
+The function updates a value in the config substore.
+
+```python
+def updateConfig(name: string, value: bytes) -> None:
+    type = type of value with name in configSchema
+    valueDecoded = validateAndDecode(value, type)
+    # update the store value
+    configStore.name = valueDecoded
+```
+
+#### validateAndDecode
+
+This function validates and decodes a value from bytes depending on the type. If the value is encoded incorrectly, an exception is raised.
+
+```python
+def validateAndDecode(value: bytes, type: string) -> Any:
+    if type == "uint32":
+        if length(value) != 4:
+            raise Exception("Wrong uint32 encoding")
+        return int.from_bytes(value, byteorder='big', signed=False)
+    elif type == "uint64":
+        if length(value) != 8:
+            raise Exception("Wrong uint64 encoding")
+        return int.from_bytes(value, byteorder='big', signed=False)
+    else:
+        # todo: uint32 and uin64 are sufficient for the Governance module
+        # General config updates require support of all types
+        raise Exception("Unsupported type")
+```
+
+#### hasEnded
+
+The function checks whether a given proposal was created more than a particular number of blocks in the past.
+
+```python
+def hasEnded(index: uint32, currentHeight: uint32, duration: uint32) -> bool:
+    if index < 0:
+        # for technical reasons, we always assume that proposals with negative indices have ended
+        return True
+    if proposalsStore[index] does not exist:
+        return False
+    return (currentHeight - proposalsStore[index].creationHeight) >= duration
+```
+
+#### addVotes
+
+The function adds a given number of votes to the given proposal, depending on the vote decision. Note that the number of votes could be negative.
+
+```python
+def addVotes(index: uint32, votes: int64, decision: uint32) -> None:
+    if decision == DECISION_YES:
+        votesYes = votes + proposalsStore[index].votesYes
+        checkNonNegative(votesYes)
+        proposalsStore[index].votesYes = votesYes
+    elif decision == DECISION_NO:
+        votesNo = votes + proposalsStore[index].votesNo
+        checkNonNegative(votesNo)
+        proposalsStore[index].votesNo = votesNo
+    elif decision == DECISION_PASS:
+        votesPass = votes + proposalsStore[index].votesPass
+        checkNonNegative(votesPass)
+        proposalsStore[index].votesPass = votesPass
+    else:
+        raise Exception("Decision does not exist")
+```
+
+#### checkNonNegative
+
+This helper function checks if the given number is non negative and throws an exception otherwise.
+
+```python
+def checkNonNegative(number: int64) -> None:
+    if number < 0:
+        raise Exception("Given number must be non-negative")
+```
+
+#### getVoteOutcome
+
+For a given number of Yes, No and Pass votes, the function checks whether the proposal passes or fails. The function applies the majority with turnout bias voting scheme (see [Rationale](#turnout-bias)). The function [getTotalSupply][getTotalSupply] is defined in the Token module.
+
+```python
+def getVoteOutcome(amountYes: uint64, amountNo: uint64, amountPass: uint64) -> uint32:
+    electorate = Token.getTotalSupply(TOKEN_ID_POS)
+    turnout = amountYes + amountNo + amountPass
+    if amountYes * amountYes * turnout > amountNo * amountNo * electorate:
+        return PROPOSAL_STATUS_FINISHED_ACCEPTED
+    else:
+        return PROPOSAL_STATUS_FINISHED_REJECTED
+```
+
+### Endpoints for Off-Chain Services
+
+This section specifies the non-trivial or recommended endpoints of the module and does not include all endpoints.
+
+#### getProposal
+
+The function returns the proposal object with a given index.
+
+```python
+def getProposal(index: uint32) -> Proposal:
+    if proposalsStore[index] does not exist:
+        raise Exception("Proposal with the given index does not exist")
+    return proposalsStore[index]
+```
+
+#### getUserVotes
+
+The function returns the vote information submitted by a particular user.
+
+```python
+def getUserVotes(voterAddress: Address) -> list[object]:
+    if votesStore[voterAddress] does not exist:
+        return []
+    return votesStore[voterAddress]
+```
+
+#### getIndexStore
+
+The function returns the index store information.
+
+```python
+def getIndexStore() -> object:
+    return indexStore
+```
+
+#### getConfig
+
+The function returns the config substore.
+
+```python
+def getConfig() -> object:
+    return configStore
+```
+
+### Block Processing
+
+#### Before Transactions Execution
+
+The following logic checks whether the vote or quorum period of the active proposals has elapsed. Functions [getTotalSupply][getTotalSupply], [burn][burn] and [unlock][unlock] are defined in the Token module.
+
+```python
+def beforeTransactionsExecute(b: Block) -> None:
+    height = b.header.height
+    # check quorum if the quorum duration has elapsed
+    while hasEnded(indexStore.nextQuorumCheckIndex, height, configStore.quorumDuration):
+        index = indexStore.nextQuorumCheckIndex
+        proposal = proposalsStore[index]
+        turnout = proposal.votesYes + proposal.votesNo + proposal.votesPass
+        # check quorum without division to avoid float arithmetic
+        Token.unlock(proposal.creator, MODULE_NAME_GOVERNANCE, TOKEN_ID_POS, proposal.depositAmount)
+        if turnout * 1000000 < configStore.quorumPercentage * Token.getTotalSupply(TOKEN_ID_POS):
+            # quorum is failed
+            proposalsStore[index].status = PROPOSAL_STATUS_FAILED_QUORUM
+            Token.burn(proposal.creator, TOKEN_ID_POS, proposal.depositAmount)
+
+        emitEvent(
+            module = MODULE_NAME_GOVERNANCE,
+            name = EVENT_NAME_PROPOSAL_QUORUM_CHECKED,
+            data = {
+                "index": index,
+                "status": proposalsStore[index].status
+            },
+            topics = [index.to_bytes(4, byteorder='big')]
+        )
+        indexStore.nextQuorumCheckIndex += 1
+
+    # check proposal outcome if vote duration has elapsed
+    while hasEnded(indexStore.nextOutcomeCheckIndex, height, configStore.voteDuration):
+        index = indexStore.nextOutcomeCheckIndex
+        proposal = proposalsStore[index]
+        if proposal.status == PROPOSAL_STATUS_ACTIVE:
+            # conclude the vote
+            outcome = getVoteOutcome(proposal.votesYes, proposal.votesNo, proposal.votesPass)
+            proposalsStore[index].status = outcome
+            if outcome == PROPOSAL_STATUS_FINISHED_ACCEPTED:
+                try:
+                    applyProposalOutcome(proposal.type, proposal.data)
+                except:
+                    proposalsStore[index].status = PROPOSAL_STATUS_ACCEPTED_ERROR
+
+            emitEvent(
+                module = MODULE_NAME_GOVERNANCE,
+                name = EVENT_NAME_PROPOSAL_OUTCOME,
+                data = {
+                    "index": index,
+                    "status": proposalsStore[index].status
+                },
+                topics = [index.to_bytes(4, byteorder='big')]
+            )
+        indexStore.nextOutcomeCheckIndex += 1
+```
+
+#### After Transactions Execution
+
+The following steps are executed after processing all transactions in a block to mint new tokens into the treasury. Functions [mint][mint] and [lock][lock] are defined in the Token module.
+
+```python
+def afterTransactionsExecute(b: Block) -> None:
+    if configStore.treasuryTokensPerBlock > 0:
+        Token.mint(ADDRESS_TREASURY, configStore.tokenIdTreasury, configStore.treasuryTokensPerBlock)
+        Token.lock(ADDRESS_TREASURY, MODULE_NAME_GOVERNANCE, configStore.tokenIdTreasury, configStore.treasuryTokensPerBlock)
+```
+
+### Genesis block processing
+
+#### Genesis assets schema
+
+```java
+genesisGovernanceSchema = {
+    "type": "object",
+    "required": [
+        "proposalsStore",
+        "votesStore",
+        "configStore"
+    ],
+    "properties": {
+        "proposalsStore": {
+            "type": "array",
+            "fieldNumber": 1,
+            "items": {
+            ...proposalSchema
+            }
+        },
+        "votesStore": {
+            "type": "array",
+            "fieldNumber": 2,
+            "items": {
+                "type": "object",
+                "required": [
+                    "address",
+                    "votes"
+                ],
+                "properties": {
+                    "address": {
+                        "dataType": "bytes",
+                        "length": LENGTH_ADDRESS,
+                        "fieldNumber": 1
+                    },
+                    "votes": {
+                        "fieldNumber": 2,
+                        ...votesSchema
+                    }
+                }
+            }
+        }
+        "configStore": {
+            ...configSchema,
+            "fieldNumber": 3
+        }
+    }
+}
+```
+
+#### Genesis state initialization
+
+The genesis state is initialized as follows. Note that the correct work of the Governance module requires the treasury account with address `ADDRESS_TREASURY` to be initialized before or during genesis block processing.
+
+```python
+def initGenesisState(b: GenesisBlock) -> None:
+    # genesis block verification is defined below
+    verifyGenesisBlock(b)
+
+    genesisData = genesis block assets decoded with genesisGovernanceSchema
+    height = b.header.height
+    genesisConfig = genesisData.configStore
+    # initialize proposals substore and compute values for index substore
+    for i, proposal in enumerate(genesisData.proposalsStore):
+        proposalsStore[i] = encode(proposalSchema, proposal)
+
+    # initialize votes substore
+    for entry in genesisData.votesStore:
+        votesStore[votes.address] = encode(votesSchema, {"voteInfos": entry.votes})
+
+    # initialize index substore
+    nextOutcomeCheckIndex = 0
+    nextQuorumCheckIndex = 0
+    nextIndex = length(genesisData.proposalsStore)
+    for i in range(nextIndex):
+        # proposals substore is already initialized
+        if not hasEnded(i, height, genesisConfig.voteDuration):
+            nextOutcomeCheckIndex = i
+            break
+
+    for i in range(nextIndex):        
+        if not hasEnded(i, height, genesisConfig.quorumDuration):
+            nextQuorumCheckIndex = i
+            break
+    indexStore = encode(indexSchema, { "nextIndex": nextIndex,
+        "nextOutcomeCheckIndex": nextOutcomeCheckIndex,
+        "nextQuorumCheckIndex": nextQuorumCheckIndex
+    })
+    configStore = encode(configSchema, genesisConfig)
+
+def verifyGenesisBlock(b: GenesisBlock) -> None:
+    genesisData = genesis block assets decoded with genesisGovernanceSchema
+    proposalsStore = genesisData.proposalsStore
+    votesStore = genesisData.votesStore
+    genesisConfig = genesisData.configStore
+    height = b.header.height
+
+    # creation heights can not decrease in the array
+    previousCreationHeight = 0
+    for proposal in proposalsStore:
+        if proposal.creationHeight < previousCreationHeight:
+            raise Exception("Proposals must be indexed in the creation order")
+        previousCreationHeight = proposal.creationHeight
+
+    # checks for proposalsStore
+    for proposal in proposalsStore:
+        creationHeight = proposal.creationHeight
+        if creationHeight >= height:
+            raise Exception("Proposal can not be created in the future")
+        if proposal.type > 2:
+            raise Exception("Invalid proposal type")
+        validateProposal(proposal.type, proposal.data, proposal.description)
+
+        if proposal.status > 3:
+            raise Exception("Invalid proposal status")
+
+    # checks for votesStore
+    if not all votes.address are unique for votes in votesStore:
+        raise Exception("All addresses in votes store must be unique")
+    for entry in votesStore:
+        for i, voteInfo in enumerate(entry.votes.voteInfos):
+            if voteInfo.proposalIndex >= length(proposalsStore):
+                raise Exception("Vote info references incorrect proposal index")    
+            if voteInfo.decision > 2:
+                raise Exception("Incorrect vote decision")
+
+    # check vote calculation for the proposals with recorded votes
+    firstWithRecordedVotes = max(0, length(proposalsStore) - MAX_NUM_RECORDED_VOTES)
+    votesYes = {}
+    votesNo = {}
+    votesPass = {}
+    rangeWithRecordedVotes = range(firstWithRecordedVotes, length(proposalsStore))
+    for index in rangeWithRecordedVotes:
+        votesYes[index] = 0
+        votesNo[index] = 0
+        votesPass[index] = 0
+    for votesEntry in votesStore:
+        for voteInfo in votesEntry.votes:
+            if voteInfo.proposalIndex in rangeWithRecordedVotes:
+                index = voteInfo.proposalIndex
+                decision = voteInfo.decision
+                amount = voteInfo.amount
+                if decision == DECISION_YES:
+                    votesYes[index] += amount
+                elif decision == DECISION_NO:
+                    votesNo[index] += amount
+                elif decision == DECISION_PASS:
+                    votesPass[index] += amount
+    for index in rangeWithRecordedVotes:
+        if proposalsStore[index].votesYes != votesYes[index] or
+            proposalsStore[index].votesNo != votesNo[index] or
+            proposalsStore[index].votesPass != votesPass[index]:
+            raise Exception("Incorrect vote data about the proposals with recorded votes")
+```
+
+[lip68Const]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0068.md#constants
+[getLockedStakedAmount]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md#getlockedstakedamount
+[posModule]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0057.md
+[payFee]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0048.md#payfee
+[getAvailableBalance]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#getavailablebalance
+[getTotalSupply]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#gettotalsupply
+[getLockedAmount]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#getlockedamount
+[unlock]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#unlock-2
+[transfer]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#transfer-2
+[mint]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#mint-2
+[lock]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#lock-2
+[burn]: https://github.com/LiskHQ/lips/blob/main/proposals/lip-0051.md#burn-2
