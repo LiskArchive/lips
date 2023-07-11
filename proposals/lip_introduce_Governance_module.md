@@ -49,7 +49,7 @@ Any account can vote on any currently active proposal.
 To do this, the account has to lock tokens in PoS staking and cast a vote for a particular proposal with a particular decision.
 The amount of the PoS staked tokens will be added to the total votes for the chosen decision.
 
-After a proposal is registered on-chain, users have a certain period of time to vote on it (see `voteDuration` in the [config overview](#config-overview)). This LIP assumes that the constant `LOCKING_PERIOD_STAKES` of [LIP 57][posModule] satisfies: `voteDuration >= LOCKING_PERIOD_STAKES` so the PoS locked tokens cannot be unlocked and used several times to vote on the same proposal. The PoS locking period guarantees that one token always equals at most one vote. For the same reason the outcome of a proposal is checked before executing any block transactions (see [`beforeTransactionsExecute` hook](#before-transactions-execution)).
+After a proposal is registered on-chain, users have a certain period of time to vote on it (see `voteDuration` in the [config overview](#config-overview)). This LIP assumes that the constant `LOCKING_PERIOD_STAKES` of [LIP 57][posModule] satisfies: `voteDuration < LOCKING_PERIOD_STAKES` so the PoS locked tokens cannot be unlocked and used several times to vote on the same proposal. The PoS locking period guarantees that one token always equals at most one vote. For the same reason the outcome of a proposal is checked before executing any block transactions (see [`beforeTransactionsExecute` hook](#before-transactions-execution)).
 
 On the positive side, the introduced dependency on the [PoS module][posModule] strengthens the security of the PoS chain: in order to participate in governance, an account must participate in staking for a validator.
 In contrast, on-chain governance does not make sense for a PoA blockchain, since in this case all governmental decisions are made by the authorities and not by token holders.
@@ -452,7 +452,7 @@ configSchema = {
 |   **Name**      |  **Type**   |   **Modifiable**  |**Initial Mainchain Value**|**Description**         |
 |-----------------|-------------|-------------------|----------------------------------|------------------------|
 |`tokenIdTreasury`|   `bytes`   |     No            | `TOKEN_ID_LSK`                   |Token ID of the tokens stored in the treasury and handled by funding proposals.|
-|`voteDuration`   | `uint32`    |       No          |   240000                         |Length of the vote period in blocks. As clarified in [Rationale](#voting-on-a-proposal), `voteDuration >= LOCKING_PERIOD_STAKES`, where `LOCKING_PERIOD_STAKES` is defined in [LIP 0057][posModule].|
+|`voteDuration`   | `uint32`    |       No          |   240000                         |Length of the vote period in blocks. As clarified in [Rationale](#voting-on-a-proposal), `voteDuration < LOCKING_PERIOD_STAKES`, where `LOCKING_PERIOD_STAKES` is defined in [LIP 0057][posModule].|
 |`quorumDuration` | `uint32`    |       No          |   120000                         |Length of the quorum period in blocks. After this period the quorum is checked.|
 |`proposalCreationFee` | `uint64`    |       Yes          |   10 * 10^8                |Proposal creation fee to be paid in fee tokens (`TOKEN_ID_FEE` is defined in the [Fee module](https://github.com/LiskHQ/lips/blob/main/proposals/lip-0048.md#notation-and-constants)).|
 |`proposalCreationDeposit` | `uint64`    |       Yes          |   1000 * 10^8          |The value of the proposal creation deposit.|
