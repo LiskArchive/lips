@@ -1169,7 +1169,7 @@ genesisGovernanceSchema = {
 
 #### Genesis state initialization
 
-The genesis state is initialized as follows. Note that the correct work of the Governance module requires the treasury account with address `ADDRESS_TREASURY` to be initialized before or during genesis block processing.
+The genesis state is initialized as follows. Note that the correct work of the Governance module requires the treasury account with address `ADDRESS_TREASURY` to be initialized before or during genesis block processing. In addition, the `voteDuration` parameter in `configStore` must be smaller than `LOCKING_PERIOD_STAKES` parameter of the PoS module, as explained in the [Rationale](#voting-on-a-proposal).
 
 ```python
 def initGenesisState(b: GenesisBlock) -> None:
