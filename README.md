@@ -48,41 +48,41 @@ If you have any questions on how to proceed with a new or existing proposal, ple
 | [0034](proposals/lip-0034.md) | Define new block schema and processing for genesis block | Jan Hackfeld, Nazar Hussain | Standards Track | Replaced |
 | [0035](proposals/lip-0035.md) | Define decentralized snapshot and hardfork process | Jan Hackfeld, Nazar Hussain | Standards Track | Replaced |
 | [0036](proposals/lip-0036.md) | Introduce transaction properties moduleID and assetID | Shusetsu Toda | Standards Track | Replaced |
-| [0037](proposals/lip-0037.md) | Use message tags and chain identifiers for signatures | Andreas Kendziorra | Standards Track | Draft |
-| [0038](proposals/lip-0038.md) | Introduce BLS signatures | Andreas Kendziorra | Informational | Draft |
-| [0039](proposals/lip-0039.md) | Introduce sparse Merkle trees | Alessandro Ricottone | Informational | Draft |
-| [0040](proposals/lip-0040.md) | Define state model and state root | Alessandro Ricottone | Informational | Draft |
-| [0041](proposals/lip-0041.md) | Introduce Auth module | Alessandro Ricottone, Ishan Tiwari | Standards Track | Draft |
-| [0042](proposals/lip-0042.md) | Define state transitions of Reward module | Iker Alustiza, Mehmet Egemen Albayrak | Standards Track | Draft |
-| [0043](proposals/lip-0043.md) | Introduce chain registration mechanism | Iker Alustiza | Standards Track | Draft |
-| [0044](proposals/lip-0044.md) | Introduce Validators module | Alessandro Ricottone, Andreas Kendziorra, Rishi Mittal | Standards Track | Draft |
-| [0045](proposals/lip-0045.md) | Introduce Interoperability module | Alessandro Ricottone, Mitsuaki Uchimoto | Standards Track | Draft |
-| [0046](proposals/lip-0046.md) | Define state and state transitions of Random module | Iker Alustiza, Ishan Tiwari | Standards Track | Draft |
-| [0047](proposals/lip-0047.md) | Introduce PoA module | Iker Alustiza, Ishan Tiwari | Standards Track | Draft |
-| [0048](proposals/lip-0048.md) | Introduce Fee module | Maxime Gagnebin, Mitsuaki Uchimoto | Standards Track | Draft |
-| [0049](proposals/lip-0049.md) | Introduce cross-chain messages | Maxime Gagnebin, Alessandro Ricottone | Standards Track | Draft |
-| [0050](proposals/lip-0050.md) | Introduce Legacy module | Maxime Gagnebin | Standards Track | Draft |
-| [0051](proposals/lip-0051.md) | Define state and state transitions of Token module | Maxime Gagnebin, Grigorios Koumoutsos | Standards Track | Draft |
-| [0052](proposals/lip-0052.md) | Introduce NFT module | Maxime Gagnebin | Standards Track | Draft |
-| [0053](proposals/lip-0053.md) | Introduce cross-chain update mechanism | Maxime Gagnebin, Alessandro Ricottone | Standards Track | Draft |
-| [0054](proposals/lip-0054.md) | Introduce sidechain recovery mechanism | Iker Alustiza, Alessandro Ricottone | Standards Track | Draft |
-| [0055](proposals/lip-0055.md) | Update block schema and block processing | Andreas Kendziorra, Alessandro Ricottone, Rishi Mittal | Standards Track | Draft |
-| [0056](proposals/lip-0056.md) | Add weights to Lisk-BFT consensus protocol | Jan Hackfeld | Standards Track | Draft |
-| [0057](proposals/lip-0057.md) | Define state and state transitions of PoS module | Maxime Gagnebin, Nazar Hussain, Mehmet Egemen Albayrak, Grigorios Koumoutsos | Standards Track | Draft |
-| [0058](proposals/lip-0058.md) | Define BFT store and block processing logic | Jan Hackfeld, Mitsuaki Uchimoto | Standards Track | Draft |
-| [0059](proposals/lip-0059.md) | Introduce unlocking condition for incentivizing certificate generation | Jan Hackfeld | Standards Track | Draft |
-| [0060](proposals/lip-0060.md) | Update genesis block schema and processing | Iker Alustiza, Rishi Mittal | Standards Track | Draft |
-| [0061](proposals/lip-0061.md) | Introduce certificate generation mechanism | Jan Hackfeld | Standards Track | Draft |
-| [0062](proposals/lip-0062.md) | Use pre-hashing for signatures | Maxime Gagnebin | Standards Track | Draft |
-| [0063](proposals/lip-0063.md) | Define mainnet configuration and migration for Lisk Core v4 | Andreas Kendziorra, Sergey Shemyakov | Standards Track | Draft |
-| [0064](proposals/lip-0064.md) | Disallow non-required properties in Lisk codec | Andreas Kendziorra | Standards Track | Draft |
-| [0065](proposals/lip-0065.md) | Introduce events and add events root to block headers | Alessandro Ricottone, Mehmet Egemen Albayrak | Standards Track | Draft |
-| [0066](proposals/lip-0066.md) | Introduce tree based key derivation and account recovery | Maxime Gagnebin | Informational | Draft |
-| [0067](proposals/lip-0067.md) | Introduce a generic keystore | Maxime Gagnebin | Informational | Draft |
-| [0068](proposals/lip-0068.md) | Define new transaction schema | Grigorios Koumoutsos, Maxime Gagnebin | Standards Track | Draft |
-| [0069](proposals/lip-0069.md) | Update Lisk SDK modular blockchain architecture | Shusetsu Toda | Informational | Draft |
-| [0070](proposals/lip-0070.md) | Introduce reward sharing mechanism | Grigorios Koumoutsos | Standards Track | Draft |
-| [0071](proposals/lip-0071.md) | Introduce dynamic reward module | Vikas Jaiman | Standards Track | Draft |
+| [0037](proposals/lip-0037.md) | Use message tags and chain identifiers for signatures | Andreas Kendziorra | Standards Track | Active |
+| [0038](proposals/lip-0038.md) | Introduce BLS signatures | Andreas Kendziorra | Informational | Active |
+| [0039](proposals/lip-0039.md) | Introduce sparse Merkle trees | Alessandro Ricottone | Informational | Active |
+| [0040](proposals/lip-0040.md) | Define state model and state root | Alessandro Ricottone | Informational | Active |
+| [0041](proposals/lip-0041.md) | Introduce Auth module | Alessandro Ricottone, Ishan Tiwari | Standards Track | Active |
+| [0042](proposals/lip-0042.md) | Define state transitions of Reward module | Iker Alustiza, Mehmet Egemen Albayrak | Standards Track | Active |
+| [0043](proposals/lip-0043.md) | Introduce chain registration mechanism | Iker Alustiza | Standards Track | Active |
+| [0044](proposals/lip-0044.md) | Introduce Validators module | Alessandro Ricottone, Andreas Kendziorra, Rishi Mittal | Standards Track | Active |
+| [0045](proposals/lip-0045.md) | Introduce Interoperability module | Alessandro Ricottone, Mitsuaki Uchimoto | Standards Track | Active |
+| [0046](proposals/lip-0046.md) | Define state and state transitions of Random module | Iker Alustiza, Ishan Tiwari | Standards Track | Active |
+| [0047](proposals/lip-0047.md) | Introduce PoA module | Iker Alustiza, Ishan Tiwari | Standards Track | Active (Lisk SDK only) |
+| [0048](proposals/lip-0048.md) | Introduce Fee module | Maxime Gagnebin, Mitsuaki Uchimoto | Standards Track | Active |
+| [0049](proposals/lip-0049.md) | Introduce cross-chain messages | Maxime Gagnebin, Alessandro Ricottone | Standards Track | Active |
+| [0050](proposals/lip-0050.md) | Introduce Legacy module | Maxime Gagnebin | Standards Track | Active (Lisk Core only) |
+| [0051](proposals/lip-0051.md) | Define state and state transitions of Token module | Maxime Gagnebin, Grigorios Koumoutsos | Standards Track | Active |
+| [0052](proposals/lip-0052.md) | Introduce NFT module | Maxime Gagnebin | Standards Track | Active (Lisk SDK only) |
+| [0053](proposals/lip-0053.md) | Introduce cross-chain update mechanism | Maxime Gagnebin, Alessandro Ricottone | Standards Track | Active |
+| [0054](proposals/lip-0054.md) | Introduce sidechain recovery mechanism | Iker Alustiza, Alessandro Ricottone | Standards Track | Active |
+| [0055](proposals/lip-0055.md) | Update block schema and block processing | Andreas Kendziorra, Alessandro Ricottone, Rishi Mittal | Standards Track | Active |
+| [0056](proposals/lip-0056.md) | Add weights to Lisk-BFT consensus protocol | Jan Hackfeld | Standards Track | Active |
+| [0057](proposals/lip-0057.md) | Define state and state transitions of PoS module | Maxime Gagnebin, Nazar Hussain, Mehmet Egemen Albayrak, Grigorios Koumoutsos | Standards Track | Active |
+| [0058](proposals/lip-0058.md) | Define BFT store and block processing logic | Jan Hackfeld, Mitsuaki Uchimoto | Standards Track | Active |
+| [0059](proposals/lip-0059.md) | Introduce unlocking condition for incentivizing certificate generation | Jan Hackfeld | Standards Track | Active |
+| [0060](proposals/lip-0060.md) | Update genesis block schema and processing | Iker Alustiza, Rishi Mittal | Standards Track | Active |
+| [0061](proposals/lip-0061.md) | Introduce certificate generation mechanism | Jan Hackfeld | Standards Track | Active |
+| [0062](proposals/lip-0062.md) | Use pre-hashing for signatures | Maxime Gagnebin | Standards Track | Active |
+| [0063](proposals/lip-0063.md) | Define mainnet configuration and migration for Lisk Core v4 | Andreas Kendziorra, Sergey Shemyakov | Standards Track | Active |
+| [0064](proposals/lip-0064.md) | Disallow non-required properties in Lisk codec | Andreas Kendziorra | Standards Track | Active |
+| [0065](proposals/lip-0065.md) | Introduce events and add events root to block headers | Alessandro Ricottone, Mehmet Egemen Albayrak | Standards Track | Active |
+| [0066](proposals/lip-0066.md) | Introduce tree based key derivation and account recovery | Maxime Gagnebin | Informational | Active |
+| [0067](proposals/lip-0067.md) | Introduce a generic keystore | Maxime Gagnebin | Informational | Active |
+| [0068](proposals/lip-0068.md) | Define new transaction schema | Grigorios Koumoutsos, Maxime Gagnebin | Standards Track | Active |
+| [0069](proposals/lip-0069.md) | Update Lisk SDK modular blockchain architecture | Shusetsu Toda | Informational | Active |
+| [0070](proposals/lip-0070.md) | Introduce reward sharing mechanism | Grigorios Koumoutsos | Standards Track | Active |
+| [0071](proposals/lip-0071.md) | Introduce dynamic reward module | Vikas Jaiman | Standards Track | Active |
 | [0072](proposals/lip-0072.md) | Introduce direct sidechain channels | Alessandro Ricottone, Mitsuaki Uchimoto | Standards Track | Draft |
 | [0073](proposals/lip-0073.md) | Add 256-bit Integer Types to Lisk Codec | Andreas Kendziorra | Standards Track | Draft |
 | [0074](proposals/lip-0074.md) | Introduce Governance module | Sergey Shemyakov | Standards Track | Draft |
